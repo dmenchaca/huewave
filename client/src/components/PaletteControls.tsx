@@ -29,12 +29,18 @@ export default function PaletteControls({
         Generate New Palette
       </Button>
 
-      {user && (
+      {user ? (
         <SavePaletteDialog 
           colors={colors} 
           isOpen={isDialogOpen}
           onOpenChange={onDialogOpenChange}
         />
+      ) : (
+        <Button variant="outline" asChild className="flex items-center gap-2">
+          <a href="/auth">
+            Login to Save Palette
+          </a>
+        </Button>
       )}
 
       <div className="w-full text-center text-sm text-muted-foreground">

@@ -41,7 +41,7 @@ declare global {
 export function setupAuth(app: Express) {
   const MemoryStore = createMemoryStore(session);
   
-  // Add rate limiting
+  // Add rate limiting with proper typing
   const loginAttempts = new Map<string, { count: number; lastAttempt: number }>();
   const MAX_ATTEMPTS = 5;
   const LOCKOUT_TIME = 15 * 60 * 1000; // 15 minutes
@@ -152,9 +152,9 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", async (req, res, next) => {
-    const ip = req.ip;
+    const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
     const now = Date.now();
-    const attempts = loginAttempts.get(ip) || { count: 0, lastAttempt: 0 };
+    const attempts = loginAttempts.get(clientIp) || { count: 0, lastAttempt: 0 };
 
     // Check if user is locked out
     if (attempts.count >= MAX_ATTEMPTS && now - attempts.lastAttempt < LOCKOUT_TIME) {
@@ -176,13 +176,13 @@ export function setupAuth(app: Express) {
         // Update login attempts
         attempts.count += 1;
         attempts.lastAttempt = now;
-        loginAttempts.set(ip, attempts);
+        loginAttempts.set(clientIp, attempts);
         
         return res.status(400).send(info?.message ?? "Login failed");
       }
 
       // Successful login - reset attempts
-      loginAttempts.delete(ip);
+      loginAttempts.delete(clientIp);
 
       // Use a promise to handle login
       const loginPromise = new Promise((resolve, reject) => {
