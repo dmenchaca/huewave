@@ -49,18 +49,19 @@ export function setupAuth(app: Express) {
   app.use(
     session({
       cookie: {
-        maxAge: 86400000, // 24 hours
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
         secure: app.get("env") === "production",
         httpOnly: true,
-        sameSite: 'strict'
+        sameSite: 'lax',
+        path: '/'
       },
       secret: process.env.REPL_ID || "color-palette-secret",
       resave: false,
       saveUninitialized: false,
       store: new MemoryStore({
-        checkPeriod: 86400000,
+        checkPeriod: 24 * 60 * 60 * 1000, // Clean up expired sessions every 24 hours
       }),
-      name: 'sessionId', // Custom session ID name
+      name: 'sessionId',
       rolling: true, // Refresh session with each request
     }),
   );
