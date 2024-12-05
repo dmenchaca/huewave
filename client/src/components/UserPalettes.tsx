@@ -1,10 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { TrashIcon, EditIcon } from "lucide-react";
+import { TrashIcon, EditIcon, MoreVerticalIcon, PaletteIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
 import EditPaletteDialog from "./EditPaletteDialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Palette {
   id: number;
@@ -17,6 +23,15 @@ export default function UserPalettes() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [editingPalette, setEditingPalette] = useState<Palette | null>(null);
+  
+  const applyPalette = async (colors: string[]) => {
+    // Dispatch a custom event that the HomePage component will listen to
+    window.dispatchEvent(new CustomEvent('applyPalette', { detail: { colors } }));
+    toast({
+      title: "Palette Applied",
+      description: "The selected palette has been applied to the canvas.",
+    });
+  };
 
   const { data: palettes, isLoading } = useQuery<Palette[]>({
     queryKey: ["palettes"],
@@ -68,23 +83,35 @@ export default function UserPalettes() {
           >
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-medium">{palette.name}</h3>
-              <div className="flex gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setEditingPalette(palette)}
-                >
-                  <EditIcon className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => deleteMutation.mutate(palette.id)}
-                  disabled={deleteMutation.isPending}
-                >
-                  <TrashIcon className="h-4 w-4" />
-                </Button>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <MoreVerticalIcon className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => applyPalette(palette.colors)}
+                  >
+                    <PaletteIcon className="h-4 w-4 mr-2" />
+                    Apply Palette
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setEditingPalette(palette)}
+                  >
+                    <EditIcon className="h-4 w-4 mr-2" />
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="text-destructive"
+                    onClick={() => deleteMutation.mutate(palette.id)}
+                    disabled={deleteMutation.isPending}
+                  >
+                    <TrashIcon className="h-4 w-4 mr-2" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             <div className="flex h-8 gap-1 rounded-md overflow-hidden">
               {palette.colors.map((color, index) => (
