@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { MoonIcon, SunIcon } from "lucide-react";
 import ColorPalette from "../components/ColorPalette";
