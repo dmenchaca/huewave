@@ -23,7 +23,7 @@ export function useColorPalette() {
     ];
 
     setColors(prev => 
-      prev.map((color, index) => lockedColors[index] ? color : newColors[index])
+      prev.length === 0 ? newColors : prev.map((color, index) => lockedColors[index] ? color : newColors[index])
     );
   }, [lockedColors]);
 
