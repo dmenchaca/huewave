@@ -62,7 +62,9 @@ export default function SavePaletteDialog({
         title: "Success",
         description: selectedPalette ? "Palette updated successfully" : "Palette saved successfully",
       });
-      onSaveSuccess?.(palette);
+      if (onSaveSuccess) {
+        onSaveSuccess(palette);
+      }
       onOpenChange(false);
       setName("");
     },
