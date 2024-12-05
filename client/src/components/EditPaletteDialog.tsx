@@ -7,9 +7,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { EditIcon } from "lucide-react";
+import { EditIcon, RefreshCwIcon } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import ColorPalette from "./ColorPalette";
+import { useColorPalette } from "../hooks/use-color-palette";
 
 interface EditPaletteDialogProps {
   palette: {
@@ -29,7 +31,15 @@ export default function EditPaletteDialog({
   const [name, setName] = useState(palette.name);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  
+  const {
+    colors,
+    generateNewPalette,
+    lockedColors,
+    toggleLock,
+  } = useColorPalette({ isDialogOpen: isOpen });
 
+  // Set initial colors when dialog opens
   useEffect(() => {
     if (isOpen) {
       setName(palette.name);
@@ -77,12 +87,12 @@ export default function EditPaletteDialog({
       return;
     }
 
-    editPaletteMutation.mutate({ name, colors: palette.colors });
+    editPaletteMutation.mutate({ name, colors });
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Edit Palette</DialogTitle>
         </DialogHeader>
@@ -92,18 +102,27 @@ export default function EditPaletteDialog({
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
-          <div className="flex h-10 gap-2">
-            {palette.colors.map((color, index) => (
-              <div
-                key={index}
-                className="flex-1 rounded"
-                style={{ backgroundColor: color }}
-              />
-            ))}
+          <ColorPalette 
+            colors={colors}
+            lockedColors={lockedColors}
+            onToggleLock={toggleLock}
+          />
+          <div className="flex justify-between gap-4">
+            <Button
+              variant="outline"
+              onClick={generateNewPalette}
+              className="flex items-center gap-2"
+            >
+              <RefreshCwIcon className="h-4 w-4" />
+              Generate New Colors
+            </Button>
+            <Button onClick={handleSave} disabled={editPaletteMutation.isPending}>
+              {editPaletteMutation.isPending ? "Saving..." : "Save Changes"}
+            </Button>
           </div>
-          <Button onClick={handleSave} disabled={editPaletteMutation.isPending}>
-            {editPaletteMutation.isPending ? "Saving..." : "Save Changes"}
-          </Button>
+          <div className="text-sm text-muted-foreground text-center">
+            Press spacebar to generate new colors
+          </div>
         </div>
       </DialogContent>
     </Dialog>
