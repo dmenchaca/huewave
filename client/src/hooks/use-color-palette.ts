@@ -14,20 +14,52 @@ export function useColorPalette({ isDialogOpen = false }: UseColorPaletteProps =
   });
 
   const generateNewPalette = useCallback(() => {
-    // Generate a random base color with good saturation and brightness
-    const baseColor: Color = chroma.random().set('hsl.s', 0.5 + Math.random() * 0.3);
+    // Generate a random base color with controlled saturation and brightness
+    const baseColor: Color = chroma.random()
+      .set('hsl.s', 0.6 + Math.random() * 0.2) // Higher saturation for vibrant base
+      .set('hsl.l', 0.4 + Math.random() * 0.2); // Controlled lightness
     
-    // Generate harmonious colors using different methods
+    // Generate harmonious colors using color theory
     const newColors = [
       baseColor.hex(), // Base color
-      baseColor.set('hsl.h', '+72').set('hsl.s', 0.6 + Math.random() * 0.2).hex(), // Analogous
-      baseColor.set('hsl.h', '+144').set('hsl.l', 0.4 + Math.random() * 0.2).hex(), // Triadic
-      baseColor.set('hsl.h', '+180').set('hsl.s', 0.5 + Math.random() * 0.3).hex(), // Complementary
-      baseColor.set('hsl.h', '+216').set('hsl.l', 0.6 + Math.random() * 0.2).hex(), // Split complementary
+      chroma.mix(baseColor, baseColor.set('hsl.h', '+30'), 0.5) // Analogous 1
+        .set('hsl.s', 0.7)
+        .set('hsl.l', 0.5)
+        .hex(),
+      chroma.mix(baseColor, baseColor.set('hsl.h', '+60'), 0.3) // Analogous 2
+        .saturate(1)
+        .set('hsl.l', 0.6)
+        .hex(),
+      baseColor.set('hsl.h', '+180') // Complementary
+        .set('hsl.s', 0.8)
+        .set('hsl.l', 0.5)
+        .hex(),
+      chroma.mix(baseColor.set('hsl.h', '+180'), baseColor, 0.3) // Split complementary
+        .set('hsl.s', 0.7)
+        .set('hsl.l', 0.45)
+        .hex(),
     ];
 
+    // Ensure minimum contrast between adjacent colors
+    const adjustedColors = newColors.map((color, i) => {
+      if (i === 0) return color;
+      const prevColor = chroma(newColors[i - 1]);
+      const currentColor = chroma(color);
+      const contrast = chroma.contrast(prevColor, currentColor);
+      
+      if (contrast < 1.5) {
+        return currentColor
+          .set('hsl.l', currentColor.get('hsl.l') + 0.2)
+          .saturate(1)
+          .hex();
+      }
+      return color;
+    });
+
     setColors(prev => 
-      prev.length === 0 ? newColors : prev.map((color, index) => lockedColors[index] ? color : newColors[index])
+      prev.length === 0 ? adjustedColors : prev.map((color, index) => 
+        lockedColors[index] ? color : adjustedColors[index]
+      )
     );
   }, [lockedColors]);
 
