@@ -83,21 +83,37 @@ export function registerRoutes(app: Express) {
     }
 
     try {
-      const [palette] = await db
+      // First verify the palette exists and belongs to the user
+      const [existingPalette] = await db
+        .select()
+        .from(palettes)
+        .where(
+          and(
+            eq(palettes.id, parseInt(id)),
+            eq(palettes.user_id, req.user.id)
+          )
+        )
+        .limit(1);
+
+      if (!existingPalette) {
+        return res.status(404).send("Palette not found");
+      }
+
+      // Update the palette
+      const [updatedPalette] = await db
         .update(palettes)
         .set({ name, colors })
         .where(
-          eq(palettes.id, parseInt(id)) &&
-          eq(palettes.user_id, req.user.id)
+          and(
+            eq(palettes.id, parseInt(id)),
+            eq(palettes.user_id, req.user.id)
+          )
         )
         .returning();
-        
-      if (!palette) {
-        return res.status(404).send("Palette not found");
-      }
       
-      res.json(palette);
+      res.json(updatedPalette);
     } catch (error) {
+      console.error('Error updating palette:', error);
       res.status(500).send("Failed to update palette");
     }
   });
