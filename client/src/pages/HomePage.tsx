@@ -54,9 +54,15 @@ export default function HomePage() {
               <MoonIcon className="h-5 w-5" />
             )}
           </Button>
-          <Button variant="outline" onClick={() => logout()}>
-            Logout
-          </Button>
+          {user ? (
+            <Button variant="outline" onClick={() => logout()}>
+              Logout
+            </Button>
+          ) : (
+            <Button variant="outline" asChild>
+              <a href="/auth">Login</a>
+            </Button>
+          )}
         </div>
       </header>
 

@@ -21,12 +21,9 @@ function Router() {
     );
   }
 
-  if (!user) {
-    return <AuthPage />;
-  }
-
   return (
     <Switch>
+      <Route path="/auth" component={AuthPage} />
       <Route path="/" component={HomePage} />
       <Route>404 Page Not Found</Route>
     </Switch>
