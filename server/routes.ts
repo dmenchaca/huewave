@@ -60,8 +60,10 @@ export function registerRoutes(app: Express) {
     try {
       await db
         .delete(palettes)
-        .where(eq(palettes.id, parseInt(id)))
-        .where(eq(palettes.user_id, req.user.id));
+        .where(
+          eq(palettes.id, parseInt(id)) && 
+          eq(palettes.user_id, req.user.id)
+        );
       res.status(200).send("Palette deleted");
     } catch (error) {
       res.status(500).send("Failed to delete palette");

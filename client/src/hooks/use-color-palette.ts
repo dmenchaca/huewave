@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import chroma from "chroma-js";
+import chroma, { Color } from "chroma-js";
 
 export function useColorPalette() {
   const [colors, setColors] = useState<string[]>([]);
@@ -10,7 +10,7 @@ export function useColorPalette() {
   });
 
   const generateNewPalette = useCallback(() => {
-    const baseColor = chroma.random();
+    const baseColor: Color = chroma.random();
     const scheme = chroma.scale([
       baseColor,
       baseColor.set("hsl.h", "+60"),
@@ -20,7 +20,7 @@ export function useColorPalette() {
     ]);
 
     setColors(prev => {
-      const newColors = scheme.colors(5).map(color => color.hex());
+      const newColors = scheme.colors(5);
       return prev.map((color, index) => 
         lockedColors[index] ? color : newColors[index]
       );
@@ -36,7 +36,7 @@ export function useColorPalette() {
   }, []);
 
   const toggleDarkMode = useCallback(() => {
-    setDarkMode(prev => {
+    setDarkMode((prev: boolean) => {
       const next = !prev;
       localStorage.setItem("darkMode", JSON.stringify(next));
       return next;
@@ -46,7 +46,7 @@ export function useColorPalette() {
   // Generate initial palette
   useEffect(() => {
     generateNewPalette();
-  }, []);
+  }, [generateNewPalette]);
 
   // Apply dark mode
   useEffect(() => {
