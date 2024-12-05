@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { SaveIcon } from "lucide-react";
@@ -98,6 +99,12 @@ export default function SavePaletteDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{selectedPalette ? 'Update Palette' : 'Save Palette'}</DialogTitle>
+          <DialogDescription>
+            {selectedPalette 
+              ? 'Update the name or colors of your existing palette'
+              : 'Give your palette a name to save it to your collection'
+            }
+          </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <Input
