@@ -32,7 +32,8 @@ export default function SavePaletteDialog({
   colors, 
   isOpen, 
   onOpenChange,
-  selectedPalette 
+  selectedPalette,
+  onSaveSuccess
 }: SavePaletteDialogProps) {
   const [name, setName] = useState(selectedPalette?.name || "");
   const queryClient = useQueryClient();
@@ -62,8 +63,8 @@ export default function SavePaletteDialog({
         title: "Success",
         description: selectedPalette ? "Palette updated successfully" : "Palette saved successfully",
       });
-      onOpenChange(false);
       onSaveSuccess(palette);
+      onOpenChange(false);
       setName("");
     },
     onError: (error: Error) => {

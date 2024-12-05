@@ -81,7 +81,7 @@ export default function SavedPalettesDropdown({
             {filteredPalettes?.map((palette) => (
               <DropdownMenuItem 
                 key={palette.id} 
-                className="flex flex-col items-start cursor-pointer"
+                className={`flex flex-col items-start cursor-pointer ${selectedPalette?.id === palette.id ? 'bg-accent' : ''}`}
                 onClick={() => onPaletteSelect?.(palette)}
               >
                 <span className="font-medium">
