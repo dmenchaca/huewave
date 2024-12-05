@@ -110,9 +110,11 @@ export default function EditPaletteDialog({
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent 
-        className="max-w-3xl"
+        className="max-w-3xl focus:outline-none"
+        style={{ outline: 'none' }}
         onKeyDown={(e) => {
           if (e.code === "Space") {
+            e.preventDefault();
             e.stopPropagation();
           }
         }}
