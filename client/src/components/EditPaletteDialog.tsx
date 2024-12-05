@@ -29,6 +29,7 @@ export default function EditPaletteDialog({
   isOpen, 
   onOpenChange 
 }: EditPaletteDialogProps) {
+  // Separate state for name to prevent color updates
   const [name, setName] = useState(palette.name);
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -43,7 +44,7 @@ export default function EditPaletteDialog({
     initialColors: palette.colors 
   });
 
-  // Set initial name when dialog opens
+  // Reset name when dialog opens
   useEffect(() => {
     if (isOpen) {
       setName(palette.name);
@@ -94,18 +95,18 @@ export default function EditPaletteDialog({
     editPaletteMutation.mutate({ name, colors });
   };
 
-  // Add spacebar handler
+  // Handle spacebar only when dialog is open
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.code === "Space" && isOpen) {
         e.preventDefault();
-        e.stopPropagation();  // Add this line
+        e.stopPropagation();
         generateNewPalette();
       }
     };
 
     if (isOpen) {
-      window.addEventListener("keydown", handleKeyPress, true); // Add capture phase
+      window.addEventListener("keydown", handleKeyPress, true);
       return () => window.removeEventListener("keydown", handleKeyPress, true);
     }
   }, [generateNewPalette, isOpen]);
