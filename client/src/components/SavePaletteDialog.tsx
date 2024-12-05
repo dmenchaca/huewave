@@ -12,10 +12,6 @@ import { SaveIcon } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
-interface SavePaletteDialogProps {
-  colors: string[];
-}
-
 interface Palette {
   id: number;
   name: string;
