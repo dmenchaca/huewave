@@ -89,11 +89,8 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
 
   // Apply dark mode
   useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    document.documentElement.classList.toggle('dark', darkMode);
+    document.documentElement.style.colorScheme = darkMode ? 'dark' : 'light';
   }, [darkMode]);
 
   return {
