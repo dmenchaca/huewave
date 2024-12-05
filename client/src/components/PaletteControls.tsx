@@ -16,7 +16,7 @@ interface PaletteControlsProps {
   isDialogOpen: boolean;
   onDialogOpenChange: (open: boolean) => void;
   selectedPalette?: Palette | null;
-  onSavePalette?: (palette: Palette) => void;
+  onSavePalette: (palette: Palette) => void;
 }
 
 export default function PaletteControls({ 

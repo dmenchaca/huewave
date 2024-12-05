@@ -25,7 +25,7 @@ interface SavePaletteDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   selectedPalette?: Palette | null;
-  onSaveSuccess: (palette: Palette) => void;
+  onSaveSuccess: (palette: Palette) => void; // Required prop
 }
 
 export default function SavePaletteDialog({ 
@@ -62,10 +62,8 @@ export default function SavePaletteDialog({
         title: "Success",
         description: selectedPalette ? "Palette updated successfully" : "Palette saved successfully",
       });
-      if (onSaveSuccess) {
-        onSaveSuccess(palette);
-      }
       onOpenChange(false);
+      onSaveSuccess(palette);
       setName("");
     },
     onError: (error: Error) => {
