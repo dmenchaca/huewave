@@ -11,7 +11,7 @@ import { useUser } from "./hooks/use-user";
 import { Loader2 } from "lucide-react";
 
 function Router() {
-  const { user, isLoading } = useUser();
+  const { isLoading } = useUser();
 
   if (isLoading) {
     return (

@@ -41,11 +41,18 @@ declare global {
 export function setupAuth(app: Express) {
   const MemoryStore = createMemoryStore(session);
   
+  // Add rate limiting
+  const loginAttempts = new Map<string, { count: number; lastAttempt: number }>();
+  const MAX_ATTEMPTS = 5;
+  const LOCKOUT_TIME = 15 * 60 * 1000; // 15 minutes
+
   app.use(
     session({
       cookie: {
-        maxAge: 86400000,
+        maxAge: 86400000, // 24 hours
         secure: app.get("env") === "production",
+        httpOnly: true,
+        sameSite: 'strict'
       },
       secret: process.env.REPL_ID || "color-palette-secret",
       resave: false,
@@ -53,6 +60,8 @@ export function setupAuth(app: Express) {
       store: new MemoryStore({
         checkPeriod: 86400000,
       }),
+      name: 'sessionId', // Custom session ID name
+      rolling: true, // Refresh session with each request
     }),
   );
 
@@ -142,23 +151,55 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/login", (req, res, next) => {
+  app.post("/api/login", async (req, res, next) => {
+    const ip = req.ip;
+    const now = Date.now();
+    const attempts = loginAttempts.get(ip) || { count: 0, lastAttempt: 0 };
+
+    // Check if user is locked out
+    if (attempts.count >= MAX_ATTEMPTS && now - attempts.lastAttempt < LOCKOUT_TIME) {
+      const remainingTime = Math.ceil((LOCKOUT_TIME - (now - attempts.lastAttempt)) / 1000 / 60);
+      return res.status(429).send(`Too many login attempts. Please try again in ${remainingTime} minutes.`);
+    }
+
+    // Reset attempts if lockout period has passed
+    if (now - attempts.lastAttempt > LOCKOUT_TIME) {
+      attempts.count = 0;
+    }
+
     passport.authenticate("local", (err: Error | null, user: Express.User | false, info: { message: string } | undefined) => {
       if (err) {
         return next(err);
       }
+      
       if (!user) {
+        // Update login attempts
+        attempts.count += 1;
+        attempts.lastAttempt = now;
+        loginAttempts.set(ip, attempts);
+        
         return res.status(400).send(info?.message ?? "Login failed");
       }
-      req.login(user, (err) => {
-        if (err) {
-          return next(err);
-        }
-        return res.json({
-          message: "Login successful",
-          user: { id: user.id, username: user.username },
+
+      // Successful login - reset attempts
+      loginAttempts.delete(ip);
+
+      // Use a promise to handle login
+      const loginPromise = new Promise((resolve, reject) => {
+        req.login(user, (err) => {
+          if (err) reject(err);
+          else resolve(user);
         });
       });
+
+      loginPromise
+        .then((user: any) => {
+          return res.json({
+            message: "Login successful",
+            user: { id: user.id, username: user.username },
+          });
+        })
+        .catch(next);
     })(req, res, next);
   });
 
