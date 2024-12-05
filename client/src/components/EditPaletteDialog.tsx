@@ -98,13 +98,14 @@ export default function EditPaletteDialog({
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.code === "Space" && isOpen) {
         e.preventDefault();
-        e.stopPropagation(); // Prevent background palette from updating
         generateNewPalette();
       }
     };
 
-    window.addEventListener("keydown", handleKeyPress);
-    return () => window.removeEventListener("keydown", handleKeyPress);
+    if (isOpen) {
+      window.addEventListener("keydown", handleKeyPress);
+      return () => window.removeEventListener("keydown", handleKeyPress);
+    }
   }, [generateNewPalette, isOpen]);
 
   return (
@@ -112,12 +113,6 @@ export default function EditPaletteDialog({
       <DialogContent 
         className="max-w-3xl focus:outline-none"
         style={{ outline: 'none' }}
-        onKeyDown={(e) => {
-          if (e.code === "Space") {
-            e.preventDefault();
-            e.stopPropagation();
-          }
-        }}
       >
         <DialogHeader>
           <DialogTitle>Edit Palette</DialogTitle>
