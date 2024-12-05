@@ -16,9 +16,14 @@ interface SavePaletteDialogProps {
   colors: string[];
 }
 
-export default function SavePaletteDialog({ colors }: SavePaletteDialogProps) {
+interface SavePaletteDialogProps {
+  colors: string[];
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export default function SavePaletteDialog({ colors, isOpen, onOpenChange }: SavePaletteDialogProps) {
   const [name, setName] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -42,7 +47,7 @@ export default function SavePaletteDialog({ colors }: SavePaletteDialogProps) {
         title: "Success",
         description: "Palette saved successfully",
       });
-      setIsOpen(false);
+      onOpenChange(false);
       setName("");
     },
     onError: (error: Error) => {
@@ -68,7 +73,7 @@ export default function SavePaletteDialog({ colors }: SavePaletteDialogProps) {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button variant="outline" className="flex items-center gap-2">
           <SaveIcon className="h-4 w-4" />

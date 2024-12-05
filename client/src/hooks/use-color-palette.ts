@@ -1,7 +1,11 @@
 import { useState, useCallback, useEffect } from "react";
 import chroma, { Color } from "chroma-js";
 
-export function useColorPalette() {
+interface UseColorPaletteProps {
+  isDialogOpen?: boolean;
+}
+
+export function useColorPalette({ isDialogOpen = false }: UseColorPaletteProps = {}) {
   const [colors, setColors] = useState<string[]>([]);
   const [lockedColors, setLockedColors] = useState<boolean[]>([false, false, false, false, false]);
   const [darkMode, setDarkMode] = useState(() => {

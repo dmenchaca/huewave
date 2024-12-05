@@ -9,6 +9,7 @@ import { useUser } from "../hooks/use-user";
 
 export default function HomePage() {
   const { user, logout } = useUser();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { 
     colors,
     generateNewPalette,
@@ -16,11 +17,11 @@ export default function HomePage() {
     toggleLock,
     darkMode,
     toggleDarkMode 
-  } = useColorPalette();
+  } = useColorPalette({ isDialogOpen });
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.code === "Space") {
+      if (e.code === "Space" && !isDialogOpen) {
         e.preventDefault();
         generateNewPalette();
       }
@@ -28,7 +29,7 @@ export default function HomePage() {
 
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
-  }, [generateNewPalette]);
+  }, [generateNewPalette, isDialogOpen]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -64,6 +65,8 @@ export default function HomePage() {
           <PaletteControls 
             onGenerate={generateNewPalette}
             colors={colors}
+            isDialogOpen={isDialogOpen}
+            onDialogOpenChange={setIsDialogOpen}
           />
 
           {user && (

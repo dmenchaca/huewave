@@ -6,9 +6,16 @@ import { useUser } from "../hooks/use-user";
 interface PaletteControlsProps {
   onGenerate: () => void;
   colors: string[];
+  isDialogOpen: boolean;
+  onDialogOpenChange: (open: boolean) => void;
 }
 
-export default function PaletteControls({ onGenerate, colors }: PaletteControlsProps) {
+export default function PaletteControls({ 
+  onGenerate, 
+  colors, 
+  isDialogOpen, 
+  onDialogOpenChange 
+}: PaletteControlsProps) {
   const { user } = useUser();
 
   return (
@@ -23,7 +30,11 @@ export default function PaletteControls({ onGenerate, colors }: PaletteControlsP
       </Button>
 
       {user && (
-        <SavePaletteDialog colors={colors} />
+        <SavePaletteDialog 
+          colors={colors} 
+          isOpen={isDialogOpen}
+          onOpenChange={onDialogOpenChange}
+        />
       )}
 
       <div className="w-full text-center text-sm text-muted-foreground">
