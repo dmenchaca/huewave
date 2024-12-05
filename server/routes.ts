@@ -69,4 +69,36 @@ export function registerRoutes(app: Express) {
       res.status(500).send("Failed to delete palette");
     }
   });
+  // Update a palette
+  app.put("/api/palettes/:id", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    const { id } = req.params;
+    const { name, colors } = req.body;
+    
+    if (!name || !colors || !Array.isArray(colors)) {
+      return res.status(400).send("Invalid palette data");
+    }
+
+    try {
+      const [palette] = await db
+        .update(palettes)
+        .set({ name, colors })
+        .where(
+          eq(palettes.id, parseInt(id)) &&
+          eq(palettes.user_id, req.user.id)
+        )
+        .returning();
+        
+      if (!palette) {
+        return res.status(404).send("Palette not found");
+      }
+      
+      res.json(palette);
+    } catch (error) {
+      res.status(500).send("Failed to update palette");
+    }
+  });
 }
