@@ -35,7 +35,7 @@ export default function PaletteControls({
           isOpen={isDialogOpen}
           onOpenChange={onDialogOpenChange}
         />
-      ) : (
+      ) : colors.length > 0 && (
         <Button
           variant="outline"
           onClick={() => window.location.href = '/auth'}

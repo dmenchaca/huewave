@@ -24,7 +24,14 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={HomePage} />
-      <Route path="/auth" component={AuthPage} />
+      <Route path="/auth">
+        {user ? (
+          // If already logged in, redirect to home
+          typeof window !== "undefined" && (window.location.href = '/')
+        ) : (
+          <AuthPage />
+        )}
+      </Route>
       <Route>404 Page Not Found</Route>
     </Switch>
   );
