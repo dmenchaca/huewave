@@ -62,7 +62,7 @@ export default function SavePaletteDialog({
       queryClient.invalidateQueries({ queryKey: ["palettes"] });
       toast({
         title: "Success",
-        description: "Palette saved successfully",
+        description: selectedPalette ? "Palette updated successfully" : "Palette saved successfully",
       });
       onOpenChange(false);
       setName("");
@@ -94,7 +94,7 @@ export default function SavePaletteDialog({
       <DialogTrigger asChild>
         <Button variant="outline" className="flex items-center gap-2">
           <SaveIcon className="h-4 w-4" />
-          Save Palette
+          {selectedPalette ? 'Update Palette' : 'Save Palette'}
         </Button>
       </DialogTrigger>
       <DialogContent>
