@@ -8,11 +8,13 @@ import { insertUserSchema } from "@db/schema";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useLocation } from "wouter";
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const { login, register } = useUser();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   const form = useForm({
     resolver: zodResolver(insertUserSchema),
@@ -25,7 +27,9 @@ export default function AuthPage() {
   const onSubmit = async (values: { username: string; password: string }) => {
     try {
       const result = await (isLogin ? login(values) : register(values));
-      if (!result.ok) {
+      if (result.ok) {
+        setLocation('/');
+      } else {
         toast({
           variant: "destructive",
           title: isLogin ? "Login failed" : "Registration failed",
