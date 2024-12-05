@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { MoonIcon, SunIcon } from "lucide-react";
 import ColorPalette from "../components/ColorPalette";
 import PaletteControls from "../components/PaletteControls";
-import UserPalettes from "../components/UserPalettes";
+import SavedPalettesDropdown from "../components/SavedPalettesDropdown";
 import { useColorPalette } from "../hooks/use-color-palette";
 import { useUser } from "../hooks/use-user";
 
@@ -40,7 +40,10 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
       <header className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Color Palette Generator</h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-bold">Color Palette Generator</h1>
+          {user && <SavedPalettesDropdown />}
+        </div>
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
@@ -81,12 +84,7 @@ export default function HomePage() {
             onDialogOpenChange={setIsDialogOpen}
           />
 
-          {user && (
-            <div className="mt-8">
-              <h2 className="text-xl font-semibold mb-4">Your Saved Palettes</h2>
-              <UserPalettes />
-            </div>
-          )}
+          {/* Saved palettes are now shown in the header dropdown */}
         </div>
       </main>
     </div>
