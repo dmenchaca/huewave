@@ -1,8 +1,8 @@
 import type { Express } from "express";
+import { eq, and } from "drizzle-orm";
 import { setupAuth } from "./auth";
 import { db } from "../db";
 import { palettes } from "@db/schema";
-import { eq } from "drizzle-orm";
 
 export function registerRoutes(app: Express) {
   setupAuth(app);

@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { EditIcon, RefreshCwIcon } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -98,13 +99,14 @@ export default function EditPaletteDialog({
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.code === "Space" && isOpen) {
         e.preventDefault();
+        e.stopPropagation();  // Add this line
         generateNewPalette();
       }
     };
 
     if (isOpen) {
-      window.addEventListener("keydown", handleKeyPress);
-      return () => window.removeEventListener("keydown", handleKeyPress);
+      window.addEventListener("keydown", handleKeyPress, true); // Add capture phase
+      return () => window.removeEventListener("keydown", handleKeyPress, true);
     }
   }, [generateNewPalette, isOpen]);
 
@@ -116,6 +118,9 @@ export default function EditPaletteDialog({
       >
         <DialogHeader>
           <DialogTitle>Edit Palette</DialogTitle>
+          <DialogDescription>
+            Modify your palette colors and name. Press spacebar to generate new colors or lock individual colors to keep them.
+          </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <Input
