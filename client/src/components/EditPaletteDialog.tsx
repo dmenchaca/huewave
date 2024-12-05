@@ -44,10 +44,12 @@ export default function EditPaletteDialog({
 
   // Set initial colors when dialog opens
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && palette?.colors) {
       setName(palette.name);
+      // Reset the color state when dialog opens
+      setColors(palette.colors);
     }
-  }, [isOpen, palette.name]);
+  }, [isOpen, palette?.colors, palette.name]);
 
   const editPaletteMutation = useMutation({
     mutationFn: async (data: { name: string; colors: string[] }) => {

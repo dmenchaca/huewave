@@ -7,7 +7,7 @@ interface UseColorPaletteProps {
 }
 
 export function useColorPalette({ isDialogOpen = false, initialColors }: UseColorPaletteProps = {}) {
-  const [colors, setColors] = useState<string[]>(initialColors || []);
+  const [colors, setColors] = useState<string[]>(() => initialColors || []);
   const [lockedColors, setLockedColors] = useState<boolean[]>([false, false, false, false, false]);
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem("darkMode");
@@ -80,10 +80,12 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
     });
   }, []);
 
-  // Generate initial palette
+  // Generate initial palette only if there are no colors
   useEffect(() => {
-    generateNewPalette();
-  }, [generateNewPalette]);
+    if (colors.length === 0) {
+      generateNewPalette();
+    }
+  }, [generateNewPalette, colors.length]);
 
   // Apply dark mode
   useEffect(() => {
