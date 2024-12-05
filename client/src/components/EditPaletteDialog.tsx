@@ -99,6 +99,10 @@ export default function EditPaletteDialog({
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.code === "Space" && isOpen) {
+        // Check if the target is an input element
+        if (e.target instanceof HTMLInputElement) {
+          return; // Don't generate new colors when input is focused
+        }
         e.preventDefault();
         e.stopPropagation();
         generateNewPalette();

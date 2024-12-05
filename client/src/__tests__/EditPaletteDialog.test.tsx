@@ -57,4 +57,36 @@ describe('EditPaletteDialog', () => {
     expect(mockPreventDefault).toHaveBeenCalled();
     expect(mockStopPropagation).toHaveBeenCalled();
   });
+
+  it('should not update colors when input field is focused', () => {
+    const mockGenerateNewPalette = vi.fn();
+    
+    render(
+      <EditPaletteDialog
+        palette={{
+          id: 1,
+          name: 'Test Palette',
+          colors: ['#000000', '#111111', '#222222', '#333333', '#444444']
+        }}
+        isOpen={true}
+        onOpenChange={() => {}}
+      />
+    );
+
+    // Get the input field with the specific classes
+    const input = screen.getByPlaceholderText('Palette name');
+    
+    // Focus the input
+    fireEvent.focus(input);
+    
+    // Simulate spacebar press
+    fireEvent.keyDown(input, { 
+      code: 'Space',
+      preventDefault: () => {},
+      stopPropagation: () => {}
+    });
+
+    // Verify colors were not updated
+    expect(mockGenerateNewPalette).not.toHaveBeenCalled();
+  });
 });
