@@ -3,10 +3,11 @@ import chroma, { Color } from "chroma-js";
 
 interface UseColorPaletteProps {
   isDialogOpen?: boolean;
+  initialColors?: string[];
 }
 
-export function useColorPalette({ isDialogOpen = false }: UseColorPaletteProps = {}) {
-  const [colors, setColors] = useState<string[]>([]);
+export function useColorPalette({ isDialogOpen = false, initialColors }: UseColorPaletteProps = {}) {
+  const [colors, setColors] = useState<string[]>(initialColors || []);
   const [lockedColors, setLockedColors] = useState<boolean[]>([false, false, false, false, false]);
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem("darkMode");

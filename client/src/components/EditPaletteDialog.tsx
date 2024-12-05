@@ -37,7 +37,10 @@ export default function EditPaletteDialog({
     generateNewPalette,
     lockedColors,
     toggleLock,
-  } = useColorPalette({ isDialogOpen: isOpen });
+  } = useColorPalette({ 
+    isDialogOpen: isOpen,
+    initialColors: palette.colors 
+  });
 
   // Set initial colors when dialog opens
   useEffect(() => {
