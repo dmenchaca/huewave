@@ -21,16 +21,16 @@ async function handleRequest(
       credentials: "include",
     });
 
-    const data = await response.json().catch(() => null);
-    
     if (!response.ok) {
       if (response.status >= 500) {
         return { ok: false, message: response.statusText };
       }
-      return { ok: false, message: data?.message || 'Authentication failed' };
+
+      const message = await response.text();
+      return { ok: false, message };
     }
 
-    return { ok: true, ...data };
+    return { ok: true };
   } catch (e: any) {
     return { ok: false, message: e.toString() };
   }

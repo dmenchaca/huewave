@@ -31,17 +31,7 @@ export default function AuthPage() {
           title: isLogin ? "Login failed" : "Registration failed",
           description: result.message
         });
-        return;
       }
-      
-      // Show success message
-      toast({
-        title: "Success",
-        description: isLogin ? "Successfully logged in" : "Successfully registered"
-      });
-
-      // Redirect to home page
-      window.location.href = '/';
     } catch (error: any) {
       toast({
         variant: "destructive",

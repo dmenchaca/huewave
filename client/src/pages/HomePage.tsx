@@ -54,15 +54,9 @@ export default function HomePage() {
               <MoonIcon className="h-5 w-5" />
             )}
           </Button>
-          {user ? (
-            <Button variant="outline" onClick={() => logout()}>
-              Logout
-            </Button>
-          ) : (
-            <Button variant="outline" onClick={() => window.location.href = '/auth'}>
-              Login
-            </Button>
-          )}
+          <Button variant="outline" onClick={() => logout()}>
+            Logout
+          </Button>
         </div>
       </header>
 

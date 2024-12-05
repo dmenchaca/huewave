@@ -7,17 +7,7 @@ import { palettes } from "@db/schema";
 export function registerRoutes(app: Express) {
   setupAuth(app);
 
-  // Generate new palette - no authentication required
-  app.post("/api/palettes/generate", async (req, res) => {
-    try {
-      // Return success response - actual palette generation happens client-side
-      res.json({ success: true });
-    } catch (error) {
-      res.status(500).send("Failed to generate palette");
-    }
-  });
-
-  // Get user's palettes - requires authentication
+  // Get user's palettes
   app.get("/api/palettes", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
@@ -31,25 +21,6 @@ export function registerRoutes(app: Express) {
       res.json(userPalettes);
     } catch (error) {
       res.status(500).send("Failed to fetch palettes");
-    }
-  });
-
-  // Get a single palette - no authentication required
-  app.get("/api/palettes/:id", async (req, res) => {
-    try {
-      const [palette] = await db
-        .select()
-        .from(palettes)
-        .where(eq(palettes.id, parseInt(req.params.id)))
-        .limit(1);
-
-      if (!palette) {
-        return res.status(404).send("Palette not found");
-      }
-
-      res.json(palette);
-    } catch (error) {
-      res.status(500).send("Failed to fetch palette");
     }
   });
 

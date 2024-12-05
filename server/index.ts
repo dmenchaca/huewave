@@ -2,8 +2,6 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic } from "./vite";
 import { createServer } from "http";
-import { db } from "../db";
-import { users } from "@db/schema";
 
 function log(message: string) {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -51,13 +49,8 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  try {
-    // Verify database connection
-    await db.select().from(users).limit(1);
-    console.log("Database connection successful");
-
-    registerRoutes(app);
-    const server = createServer(app);
+  registerRoutes(app);
+  const server = createServer(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -80,10 +73,6 @@ app.use((req, res, next) => {
   // this serves both the API and the client
   const PORT = 5000;
   server.listen(PORT, "0.0.0.0", () => {
-      log(`Server is running at http://0.0.0.0:${PORT}`);
-    });
-  } catch (error) {
-    console.error("Failed to start server:", error);
-    process.exit(1);
-  }
+    log(`serving on port ${PORT}`);
+  });
 })();
