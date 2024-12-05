@@ -33,24 +33,9 @@ export default function HomePage() {
       }
     };
 
-    const handleApplyPalette = (event: CustomEvent<{ colors: string[] }>) => {
-      const newColors = event.detail.colors;
-      // Set colors while preserving locked state
-      setColors(prev => 
-        prev.map((color, index) => 
-          lockedColors[index] ? color : newColors[index]
-        )
-      );
-    };
-
     window.addEventListener("keydown", handleKeyPress);
-    window.addEventListener("applyPalette", handleApplyPalette as EventListener);
-    
-    return () => {
-      window.removeEventListener("keydown", handleKeyPress);
-      window.removeEventListener("applyPalette", handleApplyPalette as EventListener);
-    };
-  }, [generateNewPalette, isDialogOpen, lockedColors]);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [generateNewPalette, isDialogOpen]);
 
   return (
     <div className="min-h-screen bg-background">
