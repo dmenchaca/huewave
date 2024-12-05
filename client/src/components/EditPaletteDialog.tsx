@@ -93,9 +93,30 @@ export default function EditPaletteDialog({
     editPaletteMutation.mutate({ name, colors });
   };
 
+  // Add spacebar handler
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.code === "Space" && isOpen) {
+        e.preventDefault();
+        e.stopPropagation(); // Prevent background palette from updating
+        generateNewPalette();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [generateNewPalette, isOpen]);
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent 
+        className="max-w-3xl"
+        onKeyDown={(e) => {
+          if (e.code === "Space") {
+            e.stopPropagation();
+          }
+        }}
+      >
         <DialogHeader>
           <DialogTitle>Edit Palette</DialogTitle>
         </DialogHeader>
