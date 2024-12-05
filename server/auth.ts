@@ -50,21 +50,19 @@ export function setupAuth(app: Express) {
     session({
       cookie: {
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-        secure: false, // Set to false for development
+        secure: false,
         httpOnly: true,
         sameSite: 'lax',
         path: '/'
       },
       secret: process.env.REPL_ID || "color-palette-secret",
-      resave: true,
-      saveUninitialized: true,
+      resave: false,
+      saveUninitialized: false,
       store: new MemoryStore({
-        checkPeriod: 86400000, // 24 hours
-        stale: false, // Don't remove stale sessions
+        checkPeriod: 86400000
       }),
-      name: 'sessionId',
-      rolling: true,
-    }),
+      name: 'sessionId'
+    })
   );
 
   app.use(passport.initialize());
@@ -96,15 +94,11 @@ export function setupAuth(app: Express) {
   );
 
   passport.serializeUser((user, done) => {
-    process.nextTick(() => {
-      done(null, { id: user.id, username: user.username });
-    });
+    done(null, { id: user.id, username: user.username });
   });
 
   passport.deserializeUser((user: Express.User, done) => {
-    process.nextTick(() => {
-      done(null, user);
-    });
+    done(null, user);
   });
 
   app.post("/api/register", async (req, res, next) => {
