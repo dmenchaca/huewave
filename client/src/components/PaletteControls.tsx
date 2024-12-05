@@ -3,18 +3,27 @@ import { RefreshCwIcon } from "lucide-react";
 import SavePaletteDialog from "./SavePaletteDialog";
 import { useUser } from "../hooks/use-user";
 
+interface Palette {
+  id: number;
+  name: string;
+  colors: string[];
+  created_at: string;
+}
+
 interface PaletteControlsProps {
   onGenerate: () => void;
   colors: string[];
   isDialogOpen: boolean;
   onDialogOpenChange: (open: boolean) => void;
+  selectedPalette?: Palette | null;
 }
 
 export default function PaletteControls({ 
   onGenerate, 
   colors, 
   isDialogOpen, 
-  onDialogOpenChange 
+  onDialogOpenChange,
+  selectedPalette
 }: PaletteControlsProps) {
   const { user } = useUser();
 
@@ -34,6 +43,7 @@ export default function PaletteControls({
           colors={colors} 
           isOpen={isDialogOpen}
           onOpenChange={onDialogOpenChange}
+          selectedPalette={selectedPalette}
         />
       ) : (
         <Button variant="outline" asChild className="flex items-center gap-2">

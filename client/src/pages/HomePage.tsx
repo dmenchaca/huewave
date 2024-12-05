@@ -7,9 +7,17 @@ import SavedPalettesDropdown from "../components/SavedPalettesDropdown";
 import { useColorPalette } from "../hooks/use-color-palette";
 import { useUser } from "../hooks/use-user";
 
+interface Palette {
+  id: number;
+  name: string;
+  colors: string[];
+  created_at: string;
+}
+
 export default function HomePage() {
   const { user, logout } = useUser();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedPalette, setSelectedPalette] = useState<Palette | null>(null);
   const { 
     colors,
     generateNewPalette,
@@ -42,7 +50,17 @@ export default function HomePage() {
       <header className="container mx-auto px-4 py-4 flex justify-between items-center">
         <div className="flex items-center gap-4">
           <h1 className="text-2xl font-bold">Color Palette Generator</h1>
-          {user && <SavedPalettesDropdown />}
+          {user && (
+            <SavedPalettesDropdown 
+              selectedPalette={selectedPalette}
+              onPaletteSelect={(palette) => {
+                setSelectedPalette(palette);
+                // Update the current color palette
+                const colors = [...palette.colors];
+                setColors(colors);
+              }}
+            />
+          )}
         </div>
         <div className="flex items-center gap-4">
           <Button
@@ -82,6 +100,7 @@ export default function HomePage() {
             colors={colors}
             isDialogOpen={isDialogOpen}
             onDialogOpenChange={setIsDialogOpen}
+            selectedPalette={selectedPalette}
           />
 
           {/* Saved palettes are now shown in the header dropdown */}

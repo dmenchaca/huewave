@@ -16,21 +16,38 @@ interface SavePaletteDialogProps {
   colors: string[];
 }
 
+interface Palette {
+  id: number;
+  name: string;
+  colors: string[];
+  created_at: string;
+}
+
 interface SavePaletteDialogProps {
   colors: string[];
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  selectedPalette?: Palette | null;
 }
 
-export default function SavePaletteDialog({ colors, isOpen, onOpenChange }: SavePaletteDialogProps) {
-  const [name, setName] = useState("");
+export default function SavePaletteDialog({ 
+  colors, 
+  isOpen, 
+  onOpenChange,
+  selectedPalette 
+}: SavePaletteDialogProps) {
+  const [name, setName] = useState(selectedPalette?.name || "");
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const savePaletteMutation = useMutation({
     mutationFn: async (data: { name: string; colors: string[] }) => {
-      const response = await fetch("/api/palettes", {
-        method: "POST",
+      const url = selectedPalette 
+        ? `/api/palettes/${selectedPalette.id}`
+        : "/api/palettes";
+      
+      const response = await fetch(url, {
+        method: selectedPalette ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
@@ -82,7 +99,7 @@ export default function SavePaletteDialog({ colors, isOpen, onOpenChange }: Save
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Save Palette</DialogTitle>
+          <DialogTitle>{selectedPalette ? 'Update Palette' : 'Save Palette'}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <Input
@@ -100,7 +117,7 @@ export default function SavePaletteDialog({ colors, isOpen, onOpenChange }: Save
             ))}
           </div>
           <Button onClick={handleSave} disabled={savePaletteMutation.isPending}>
-            {savePaletteMutation.isPending ? "Saving..." : "Save"}
+            {savePaletteMutation.isPending ? "Saving..." : (selectedPalette ? "Update" : "Save")}
           </Button>
         </div>
       </DialogContent>

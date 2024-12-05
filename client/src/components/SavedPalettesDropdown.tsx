@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FolderIcon, SearchIcon } from "lucide-react";
+import { useColorPalette } from "@/hooks/use-color-palette";
 
 interface Palette {
   id: number;
@@ -19,8 +20,17 @@ interface Palette {
   created_at: string;
 }
 
-export default function SavedPalettesDropdown() {
+interface SavedPalettesDropdownProps {
+  onPaletteSelect?: (palette: Palette) => void;
+  selectedPalette?: Palette | null;
+}
+
+export default function SavedPalettesDropdown({ 
+  onPaletteSelect,
+  selectedPalette 
+}: SavedPalettesDropdownProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const { generateNewPalette } = useColorPalette();
 
   const { data: palettes, isLoading } = useQuery<Palette[]>({
     queryKey: ["palettes"],
@@ -40,8 +50,9 @@ export default function SavedPalettesDropdown() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon">
+        <Button variant="outline" className="flex items-center gap-2">
           <FolderIcon className="h-4 w-4" />
+          {selectedPalette ? selectedPalette.name : "Saved Palettes"}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-64">
@@ -68,8 +79,15 @@ export default function SavedPalettesDropdown() {
         ) : (
           <div className="max-h-[300px] overflow-y-auto">
             {filteredPalettes?.map((palette) => (
-              <DropdownMenuItem key={palette.id} className="flex flex-col items-start">
-                <span className="font-medium">{palette.name}</span>
+              <DropdownMenuItem 
+                key={palette.id} 
+                className="flex flex-col items-start cursor-pointer"
+                onClick={() => onPaletteSelect?.(palette)}
+              >
+                <span className="font-medium">
+                  {palette.name}
+                  {selectedPalette?.id === palette.id && " (Selected)"}
+                </span>
                 <div className="flex w-full gap-1 h-4 mt-1 rounded-sm overflow-hidden">
                   {palette.colors.map((color, index) => (
                     <div
