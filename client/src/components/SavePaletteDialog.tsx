@@ -25,7 +25,7 @@ interface SavePaletteDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   selectedPalette?: Palette | null;
-  onSaveSuccess?: (palette: Palette) => void;
+  onSaveSuccess: (palette: Palette) => void;
 }
 
 export default function SavePaletteDialog({ 
