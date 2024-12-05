@@ -16,6 +16,7 @@ interface PaletteControlsProps {
   isDialogOpen: boolean;
   onDialogOpenChange: (open: boolean) => void;
   selectedPalette?: Palette | null;
+  onSavePalette?: (palette: Palette) => void;
 }
 
 export default function PaletteControls({ 
@@ -23,7 +24,8 @@ export default function PaletteControls({
   colors, 
   isDialogOpen, 
   onDialogOpenChange,
-  selectedPalette
+  selectedPalette,
+  onSavePalette
 }: PaletteControlsProps) {
   const { user } = useUser();
 
@@ -44,6 +46,7 @@ export default function PaletteControls({
           isOpen={isDialogOpen}
           onOpenChange={onDialogOpenChange}
           selectedPalette={selectedPalette}
+          onSaveSuccess={onSavePalette}
         />
       ) : (
         <Button variant="outline" asChild className="flex items-center gap-2">

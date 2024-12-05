@@ -28,6 +28,7 @@ interface SavePaletteDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   selectedPalette?: Palette | null;
+  onSaveSuccess?: (palette: Palette) => void;
 }
 
 export default function SavePaletteDialog({ 
@@ -58,12 +59,13 @@ export default function SavePaletteDialog({
       
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (palette: Palette) => {
       queryClient.invalidateQueries({ queryKey: ["palettes"] });
       toast({
         title: "Success",
         description: selectedPalette ? "Palette updated successfully" : "Palette saved successfully",
       });
+      onSaveSuccess?.(palette);
       onOpenChange(false);
       setName("");
     },

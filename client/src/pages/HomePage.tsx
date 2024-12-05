@@ -28,6 +28,11 @@ export default function HomePage() {
     toggleDarkMode 
   } = useColorPalette({ isDialogOpen });
 
+  const handlePaletteSave = (palette: Palette) => {
+    setSelectedPalette(palette);
+    setColors(palette.colors);
+  };
+
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       // Don't trigger if any input element is focused
@@ -56,9 +61,7 @@ export default function HomePage() {
               selectedPalette={selectedPalette}
               onPaletteSelect={(palette) => {
                 setSelectedPalette(palette);
-                // Update the current color palette
-                const colors = [...palette.colors];
-                setColors(colors);
+                setColors(palette.colors);
               }}
             />
           )}
@@ -102,9 +105,8 @@ export default function HomePage() {
             isDialogOpen={isDialogOpen}
             onDialogOpenChange={setIsDialogOpen}
             selectedPalette={selectedPalette}
+            onSavePalette={handlePaletteSave}
           />
-
-          {/* Saved palettes are now shown in the header dropdown */}
         </div>
       </main>
     </div>
