@@ -20,6 +20,7 @@ export default function HomePage() {
   const [selectedPalette, setSelectedPalette] = useState<Palette | null>(null);
   const { 
     colors,
+    setColors,
     generateNewPalette,
     lockedColors,
     toggleLock,

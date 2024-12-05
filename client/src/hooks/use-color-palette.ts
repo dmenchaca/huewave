@@ -95,6 +95,7 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
 
   return {
     colors,
+    setColors,
     lockedColors,
     darkMode,
     generateNewPalette,
