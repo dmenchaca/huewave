@@ -21,6 +21,12 @@ export default function HomePage() {
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
+      // Don't trigger if any input element is focused
+      if (document.activeElement instanceof HTMLInputElement || 
+          document.activeElement instanceof HTMLTextAreaElement) {
+        return;
+      }
+      
       if (e.code === "Space" && !isDialogOpen) {
         e.preventDefault();
         generateNewPalette();
