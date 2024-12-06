@@ -5,7 +5,7 @@ import session from "express-session";
 import createMemoryStore from "memorystore";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
-import { users, insertUserSchema } from "@db/schema";
+import { users, palettes, insertUserSchema } from "@db/schema";
 import { db } from "../db";
 import { eq } from "drizzle-orm";
 
