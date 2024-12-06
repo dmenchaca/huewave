@@ -9,70 +9,80 @@ interface UseColorPaletteProps {
 export function useColorPalette({ isDialogOpen = false, initialColors }: UseColorPaletteProps = {}) {
   const [colors, setColors] = useState<string[]>(() => initialColors ?? []);
   const [lockedColors, setLockedColors] = useState<boolean[]>([false, false, false, false, false]);
-  const [colorHistory, setColorHistory] = useState<string[][]>(() => initialColors ? [initialColors] : [[]]);
+  const [colorHistory, setColorHistory] = useState<string[][]>(() => 
+    initialColors ? [[...initialColors]] : [[]]
+  );
   const [historyIndex, setHistoryIndex] = useState<number>(0);
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem("darkMode");
     return saved ? JSON.parse(saved) : false;
   });
 
+  const addToHistory = useCallback((newColors: string[]) => {
+    setColorHistory(prev => {
+      // Remove any future states if we're not at the end
+      const newHistory = prev.slice(0, historyIndex + 1);
+      // Add new state
+      return [...newHistory, [...newColors]];
+    });
+    setHistoryIndex(prev => prev + 1);
+  }, [historyIndex]);
+
   const generateNewPalette = useCallback(() => {
     // Generate a random base color with controlled saturation and brightness
     const baseColor: Color = chroma.random()
-      .set('hsl.s', 0.6 + Math.random() * 0.2) // Higher saturation for vibrant base
-      .set('hsl.l', 0.4 + Math.random() * 0.2); // Controlled lightness
+      .set('hsl.s', 0.6 + Math.random() * 0.2)
+      .set('hsl.l', 0.4 + Math.random() * 0.2);
     
     // Generate harmonious colors using color theory
-    const newColors = [
-      baseColor.hex(), // Base color
-      chroma.mix(baseColor, baseColor.set('hsl.h', '+30'), 0.5) // Analogous 1
+    const adjustedColors = [
+      baseColor.hex(),
+      chroma.mix(baseColor, baseColor.set('hsl.h', '+30'), 0.5)
         .set('hsl.s', 0.7)
         .set('hsl.l', 0.5)
         .hex(),
-      chroma.mix(baseColor, baseColor.set('hsl.h', '+60'), 0.3) // Analogous 2
+      chroma.mix(baseColor, baseColor.set('hsl.h', '+60'), 0.3)
         .saturate(1)
         .set('hsl.l', 0.6)
         .hex(),
-      baseColor.set('hsl.h', '+180') // Complementary
+      baseColor.set('hsl.h', '+180')
         .set('hsl.s', 0.8)
         .set('hsl.l', 0.5)
         .hex(),
-      chroma.mix(baseColor.set('hsl.h', '+180'), baseColor, 0.3) // Split complementary
+      chroma.mix(baseColor.set('hsl.h', '+180'), baseColor, 0.3)
         .set('hsl.s', 0.7)
         .set('hsl.l', 0.45)
         .hex(),
     ];
 
-    // Ensure minimum contrast between adjacent colors
-    const adjustedColors = newColors.map((color, i) => {
-      if (i === 0) return color;
-      const prevColor = chroma(newColors[i - 1]);
-      const currentColor = chroma(color);
-      const contrast = chroma.contrast(prevColor, currentColor);
-      
-      if (contrast < 1.5) {
-        return currentColor
-          .set('hsl.l', currentColor.get('hsl.l') + 0.2)
-          .saturate(1)
-          .hex();
-      }
-      return color;
-    });
+    // Apply locked colors
+    const newColors = colors.length === 0 
+      ? [...adjustedColors] 
+      : adjustedColors.map((color, index) => lockedColors[index] ? colors[index] : color);
 
+    // Update colors state
+    setColors(newColors);
+    
+    // Add to history if colors changed
+    if (JSON.stringify(colors) !== JSON.stringify(newColors)) {
+      addToHistory(newColors);
+    }
+  }, [colors, lockedColors, addToHistory]);
+
+  const handleColorChange = useCallback((index: number, newColor: string) => {
     setColors(prev => {
-      // Handle initial state and locked colors
-      const newColors = prev.length === 0 ? [...adjustedColors] : prev.map((color, index) => 
-        lockedColors[index] ? color : adjustedColors[index]
-      );
-      
-      // Only add to history if colors actually changed
-      if (JSON.stringify(prev) !== JSON.stringify(newColors)) {
-        addToHistory(newColors);
-      }
-      
-      return newColors;
+      const next = [...prev];
+      next[index] = newColor;
+      return next;
     });
-  }, [lockedColors]);
+  }, []);
+
+  // Handle history updates when colors change
+  useEffect(() => {
+    if (colors.length === 5) {
+      addToHistory([...colors]);
+    }
+  }, [colors, addToHistory]);
 
   const toggleLock = useCallback((index: number) => {
     setLockedColors(prev => {
@@ -92,11 +102,10 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
 
   // Generate initial palette only if there are no colors
   useEffect(() => {
-    // Safe check for colors array
     if (Array.isArray(colors) && colors.length === 0) {
       generateNewPalette();
     }
-  }, [generateNewPalette]);
+  }, [generateNewPalette, colors]);
 
   // Apply dark mode
   useEffect(() => {
@@ -104,35 +113,10 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
     document.documentElement.style.colorScheme = darkMode ? 'dark' : 'light';
   }, [darkMode]);
 
-  const addToHistory = useCallback((newColors: string[]) => {
-    setColorHistory(prev => {
-      // Create a copy of the new colors array to prevent reference issues
-      const colorsCopy = [...newColors];
-      // Remove any future states if we're not at the end
-      const newHistory = prev.slice(0, historyIndex + 1);
-      return [...newHistory, colorsCopy];
-    });
-    setHistoryIndex(prev => prev + 1);
-  }, [historyIndex]);
-
-  const handleColorChange = useCallback((index: number, newColor: string) => {
-    setColors(prev => {
-      // Create a new array with the updated color
-      const next = [...prev];
-      next[index] = newColor;
-      // Add to history after ensuring we have a valid color array
-      if (next.length === 5) {
-        addToHistory(next);
-      }
-      return next;
-    });
-  }, [addToHistory]);
-
   const undo = useCallback(() => {
     if (historyIndex > 0) {
       const newIndex = historyIndex - 1;
       setHistoryIndex(newIndex);
-      // Ensure we're accessing the correct history state
       setColors([...colorHistory[newIndex]]);
     }
   }, [historyIndex, colorHistory]);
@@ -141,7 +125,6 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
     if (historyIndex < colorHistory.length - 1) {
       const newIndex = historyIndex + 1;
       setHistoryIndex(newIndex);
-      // Ensure we're accessing the correct history state
       setColors([...colorHistory[newIndex]]);
     }
   }, [historyIndex, colorHistory]);
