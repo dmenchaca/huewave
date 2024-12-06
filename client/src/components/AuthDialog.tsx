@@ -11,11 +11,28 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { insertUserSchema, type Palette } from "@db/schema";
+import { insertUserSchema } from "@db/schema";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import confetti from 'canvas-confetti';
+
+interface Palette {
+  id: number;
+  name: string;
+  colors: string[];
+  created_at: string;
+}
+
+interface AuthResponse {
+  ok: boolean;
+  message?: string;
+  user?: {
+    id: number;
+    email: string;
+  };
+  palette?: Palette;
+}
 
 interface AuthDialogProps {
   isOpen: boolean;
@@ -40,7 +57,7 @@ export default function AuthDialog({ isOpen, onOpenChange, triggerContent, custo
 
   const onSubmit = async (values: { email: string; password: string }) => {
     try {
-      const result = await (isLogin ? login(values) : register(values));
+      const result: AuthResponse = await (isLogin ? login(values) : register(values));
       if (result.ok) {
         // Close dialog before showing success message
         onOpenChange(false);
@@ -126,7 +143,7 @@ export default function AuthDialog({ isOpen, onOpenChange, triggerContent, custo
 
             <div className="space-y-2">
               <Button type="submit" className="w-full">
-                {isLogin ? "Log in" : "Register"}
+                {isLogin ? "Log in" : "Create an account"}
               </Button>
               <Button
                 type="button"
