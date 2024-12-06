@@ -42,8 +42,10 @@ export default function AuthDialog({ isOpen, onOpenChange, triggerContent, custo
     try {
       const result = await (isLogin ? login(values) : register(values));
       if (result.ok) {
+        // Close dialog before showing success message
         onOpenChange(false);
         form.reset();
+        
         toast({
           title: isLogin ? "Welcome back!" : "Account created",
           description: isLogin ? "Successfully logged in" : "Your account has been created",
@@ -55,6 +57,11 @@ export default function AuthDialog({ isOpen, onOpenChange, triggerContent, custo
             spread: 70,
             origin: { y: 0.6 }
           });
+        }
+
+        // Call onSuccess callback with result data if provided
+        if (onSuccess && result.palette) {
+          onSuccess(result.palette);
         }
       } else {
         toast({
