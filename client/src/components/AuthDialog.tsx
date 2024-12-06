@@ -26,7 +26,7 @@ interface AuthDialogProps {
 }
 
 export default function AuthDialog({ isOpen, onOpenChange, triggerContent, customTitle, onSuccess }: AuthDialogProps) {
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(false);
   const { login, register } = useUser();
   const { toast } = useToast();
 
@@ -86,11 +86,11 @@ export default function AuthDialog({ isOpen, onOpenChange, triggerContent, custo
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{customTitle || (isLogin ? "Log in" : "Register")}</DialogTitle>
+          <DialogTitle>{customTitle || (isLogin ? "Log in" : "Create account")}</DialogTitle>
           <DialogDescription>
             {isLogin 
               ? "Welcome back! Please log in to continue."
-              : "Create an account to save your palettes."
+              : "Create an account to save your palette"
             }
           </DialogDescription>
         </DialogHeader>

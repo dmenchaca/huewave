@@ -99,6 +99,7 @@ export default function SavePaletteDialog({
 
     if (!user) {
       onSaveAttempt?.();
+      onOpenChange(false); // Close the save dialog
       return;
     }
 
