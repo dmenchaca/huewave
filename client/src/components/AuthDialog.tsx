@@ -59,7 +59,12 @@ export default function AuthDialog({ isOpen, onOpenChange, triggerContent, custo
     try {
       const result: AuthResponse = await (isLogin ? login(values) : register(values));
       if (result.ok) {
-        // Close dialog before showing success message
+        // Call onSuccess callback with palette data before closing dialog
+        if (!isLogin && onSuccess && result.palette) {
+          onSuccess(result.palette);
+        }
+
+        // Close dialog and show success message
         onOpenChange(false);
         form.reset();
         
@@ -74,11 +79,6 @@ export default function AuthDialog({ isOpen, onOpenChange, triggerContent, custo
             spread: 70,
             origin: { y: 0.6 }
           });
-        }
-
-        // Call onSuccess callback with result data if provided
-        if (onSuccess && result.palette) {
-          onSuccess(result.palette);
         }
       } else {
         toast({
