@@ -111,7 +111,7 @@ export default function ColorPalette({
           </div>
 
           <div 
-            className="flex flex-col items-center gap-2"
+            className="flex flex-col items-center gap-2 relative z-10"
             style={{ color: getContrastColor(color) }}
           >
             <input
@@ -125,7 +125,7 @@ export default function ColorPalette({
                 }
               }}
               onBlur={() => setEditingIndex(null)}
-              className="bg-transparent text-lg font-mono text-center uppercase w-24 focus:outline-none cursor-text"
+              className="bg-transparent text-lg font-mono text-center uppercase w-24 focus:outline-none cursor-text relative"
               style={{
                 color: getContrastColor(color),
                 caretColor: getContrastColor(color),
