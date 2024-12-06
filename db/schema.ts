@@ -4,7 +4,7 @@ import { z } from "zod";
 
 export const users = pgTable("users", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  username: text("username").unique().notNull(),
+  email: text("email").unique().notNull(),
   password: text("password").notNull(),
 });
 
@@ -16,7 +16,9 @@ export const palettes = pgTable("palettes", {
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertUserSchema = createInsertSchema(users);
+export const insertUserSchema = createInsertSchema(users).extend({
+  email: z.string().email("Please enter a valid email address"),
+});
 export const selectUserSchema = createSelectSchema(users);
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = z.infer<typeof selectUserSchema>;

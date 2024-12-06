@@ -30,12 +30,12 @@ export default function AuthDialog({ isOpen, onOpenChange, triggerContent }: Aut
   const form = useForm({
     resolver: zodResolver(insertUserSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: ""
     }
   });
 
-  const onSubmit = async (values: { username: string; password: string }) => {
+  const onSubmit = async (values: { email: string; password: string }) => {
     try {
       const result = await (isLogin ? login(values) : register(values));
       if (result.ok) {
@@ -80,12 +80,12 @@ export default function AuthDialog({ isOpen, onOpenChange, triggerContent }: Aut
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="username"
+              name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Username</FormLabel>
+                  <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input type="email" {...field} placeholder="Enter your email" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

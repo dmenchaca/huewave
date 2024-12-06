@@ -33,7 +33,7 @@ declare global {
   namespace Express {
     interface User {
       id: number;
-      username: string;
+      email: string;
     }
   }
 }
@@ -69,16 +69,16 @@ export function setupAuth(app: Express) {
   app.use(passport.session());
 
   passport.use(
-    new LocalStrategy(async (username, password, done) => {
+    new LocalStrategy(async (email, password, done) => {
       try {
         const [user] = await db
           .select()
           .from(users)
-          .where(eq(users.username, username))
+          .where(eq(users.email, email))
           .limit(1);
 
         if (!user) {
-          return done(null, false, { message: "Incorrect username." });
+          return done(null, false, { message: "Incorrect email." });
         }
 
         const isMatch = await crypto.compare(password, user.password);
@@ -94,7 +94,7 @@ export function setupAuth(app: Express) {
   );
 
   passport.serializeUser((user, done) => {
-    done(null, { id: user.id, username: user.username });
+    done(null, { id: user.id, email: user.email });
   });
 
   passport.deserializeUser((user: Express.User, done) => {
