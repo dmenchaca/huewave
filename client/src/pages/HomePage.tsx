@@ -65,7 +65,6 @@ export default function HomePage() {
           <h1 className="text-2xl font-bold">Color palette generator</h1>
           {user && (
             <SavedPalettesDropdown 
-              key={selectedPalette?.id} // Force re-render when palette changes
               selectedPalette={selectedPalette}
               onPaletteSelect={(palette) => {
                 setSelectedPalette(palette);
@@ -90,10 +89,12 @@ export default function HomePage() {
                 onOpenChange={setIsAuthDialogOpen}
                 customTitle="You are almost there"
                 onSuccess={(palette) => {
-                  // First update all states synchronously
-                  setIsAuthDialogOpen(false);
-                  setColors(palette.colors);
+                  // Update selected palette first
                   setSelectedPalette(palette);
+                  // Then update colors
+                  setColors(palette.colors);
+                  // Finally close the dialog
+                  setIsAuthDialogOpen(false);
                 }}
               />
             </>
