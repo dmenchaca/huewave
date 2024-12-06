@@ -6,5 +6,6 @@ declare module 'express-session' {
       name: string;
       colors: string[];
     };
+    passport?: any;
   }
 }
