@@ -19,6 +19,7 @@ interface Palette {
 export default function HomePage() {
   const { user, logout } = useUser();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
   const [selectedPalette, setSelectedPalette] = useState<Palette | null>(null);
   const { 
     colors,
@@ -75,8 +76,8 @@ export default function HomePage() {
         <div className="flex items-center gap-4">
           {!user ? (
             <AuthDialog
-              isOpen={false}
-              onOpenChange={() => {}}
+              isOpen={isAuthDialogOpen}
+              onOpenChange={setIsAuthDialogOpen}
               triggerContent={
                 <Button 
                   variant="outline"
