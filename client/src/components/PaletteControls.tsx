@@ -11,7 +11,6 @@ interface Palette {
 }
 
 interface PaletteControlsProps {
-  onGenerate: () => void;
   colors: string[];
   isDialogOpen: boolean;
   onDialogOpenChange: (open: boolean) => void;
@@ -20,7 +19,6 @@ interface PaletteControlsProps {
 }
 
 export default function PaletteControls({ 
-  onGenerate, 
   colors, 
   isDialogOpen, 
   onDialogOpenChange,
@@ -31,24 +29,7 @@ export default function PaletteControls({
 
   return (
     <div className="flex flex-wrap gap-4 justify-center">
-      <Button
-        size="lg"
-        onClick={onGenerate}
-        className="flex items-center gap-2"
-      >
-        <RefreshCwIcon className="h-4 w-4" />
-        Generate New Palette
-      </Button>
-
-      {user ? (
-        <SavePaletteDialog 
-          colors={colors} 
-          isOpen={isDialogOpen}
-          onOpenChange={onDialogOpenChange}
-          selectedPalette={selectedPalette}
-          onSaveSuccess={onSavePalette}
-        />
-      ) : (
+      {!user && (
         <Button variant="outline" asChild className="flex items-center gap-2">
           <a href="/auth">
             Login to Save Palette

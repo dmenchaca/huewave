@@ -99,7 +99,7 @@ export default function SavePaletteDialog({
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="flex items-center gap-2">
+        <Button variant="primary" className="flex items-center gap-2">
           <SaveIcon className="h-4 w-4" />
           {selectedPalette ? 'Update Palette' : 'Save Palette'}
         </Button>

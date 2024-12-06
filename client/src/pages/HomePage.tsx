@@ -67,6 +67,15 @@ export default function HomePage() {
           )}
         </div>
         <div className="flex items-center gap-4">
+          {user && (
+            <SavePaletteDialog 
+              colors={colors} 
+              isOpen={isDialogOpen}
+              onOpenChange={setIsDialogOpen}
+              selectedPalette={selectedPalette}
+              onSaveSuccess={handlePaletteSave}
+            />
+          )}
           <Button
             variant="ghost"
             size="icon"
