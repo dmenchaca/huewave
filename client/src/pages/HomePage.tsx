@@ -35,6 +35,14 @@ export default function HomePage() {
     initialColors: selectedPalette?.colors 
   });
 
+  useEffect(() => {
+    console.log('Selected Palette changed:', selectedPalette);
+  }, [selectedPalette]);
+
+  useEffect(() => {
+    console.log('Colors changed:', colors);
+  }, [colors]);
+
   const handlePaletteSave = (palette: Palette) => {
     setSelectedPalette(palette);
     setColors(palette.colors);
@@ -89,12 +97,16 @@ export default function HomePage() {
                 onOpenChange={setIsAuthDialogOpen}
                 customTitle="You are almost there"
                 onSuccess={(palette) => {
-                  // Update selected palette first
+                  console.log('AuthDialog onSuccess - Received palette:', palette);
+                  
                   setSelectedPalette(palette);
-                  // Then update colors
+                  console.log('AuthDialog onSuccess - After setSelectedPalette:', palette);
+                  
                   setColors(palette.colors);
-                  // Finally close the dialog
+                  console.log('AuthDialog onSuccess - After setColors:', palette.colors);
+                  
                   setIsAuthDialogOpen(false);
+                  console.log('AuthDialog onSuccess - Dialog closed');
                 }}
               />
             </>
