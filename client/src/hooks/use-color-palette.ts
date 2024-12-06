@@ -9,6 +9,8 @@ interface UseColorPaletteProps {
 export function useColorPalette({ isDialogOpen = false, initialColors }: UseColorPaletteProps = {}) {
   const [colors, setColors] = useState<string[]>(() => initialColors || []);
   const [lockedColors, setLockedColors] = useState<boolean[]>([false, false, false, false, false]);
+  const [colorHistory, setColorHistory] = useState<string[][]>(() => initialColors ? [initialColors] : []);
+  const [historyIndex, setHistoryIndex] = useState<number>(0);
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem("darkMode");
     return saved ? JSON.parse(saved) : false;
@@ -57,11 +59,13 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
       return color;
     });
 
-    setColors(prev => 
-      prev.length === 0 ? adjustedColors : prev.map((color, index) => 
+    setColors(prev => {
+      const newColors = prev.length === 0 ? adjustedColors : prev.map((color, index) => 
         lockedColors[index] ? color : adjustedColors[index]
-      )
-    );
+      );
+      addToHistory(newColors);
+      return newColors;
+    });
   }, [lockedColors]);
 
   const toggleLock = useCallback((index: number) => {
@@ -93,13 +97,37 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
     document.documentElement.style.colorScheme = darkMode ? 'dark' : 'light';
   }, [darkMode]);
 
+  const addToHistory = useCallback((newColors: string[]) => {
+    setColorHistory(prev => {
+      // Remove any future states if we're not at the end
+      const newHistory = prev.slice(0, historyIndex + 1);
+      return [...newHistory, newColors];
+    });
+    setHistoryIndex(prev => prev + 1);
+  }, [historyIndex]);
+
   const handleColorChange = useCallback((index: number, newColor: string) => {
     setColors(prev => {
       const next = [...prev];
       next[index] = newColor;
+      addToHistory(next);
       return next;
     });
-  }, []);
+  }, [addToHistory]);
+
+  const undo = useCallback(() => {
+    if (historyIndex > 0) {
+      setHistoryIndex(prev => prev - 1);
+      setColors(colorHistory[historyIndex - 1]);
+    }
+  }, [historyIndex, colorHistory]);
+
+  const redo = useCallback(() => {
+    if (historyIndex < colorHistory.length - 1) {
+      setHistoryIndex(prev => prev + 1);
+      setColors(colorHistory[historyIndex + 1]);
+    }
+  }, [historyIndex, colorHistory]);
 
   return {
     colors,
@@ -110,5 +138,9 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
     toggleLock,
     toggleDarkMode,
     handleColorChange,
+    undo,
+    redo,
+    canUndo: historyIndex > 0,
+    canRedo: historyIndex < colorHistory.length - 1,
   };
 }
