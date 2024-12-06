@@ -15,6 +15,7 @@ import { insertUserSchema } from "@db/schema";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import confetti from 'canvas-confetti';
 
 interface AuthDialogProps {
   isOpen: boolean;
@@ -45,6 +46,14 @@ export default function AuthDialog({ isOpen, onOpenChange, triggerContent }: Aut
           title: isLogin ? "Welcome back!" : "Account created",
           description: isLogin ? "Successfully logged in" : "Your account has been created",
         });
+        
+        if (!isLogin) {
+          confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 }
+          });
+        }
       } else {
         toast({
           variant: "destructive",
