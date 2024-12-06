@@ -36,10 +36,16 @@ export default function HomePage() {
   });
 
   useEffect(() => {
-    if (user && selectedPalette) {
-      setColors(selectedPalette.colors);
+    if (selectedPalette) {
+      // Force a re-render of the dropdown to ensure it's mounted
+      setSelectedPalette(null);
+      // Then set the palette in the next render cycle
+      setTimeout(() => {
+        setSelectedPalette(selectedPalette);
+        setColors(selectedPalette.colors);
+      }, 0);
     }
-  }, [user, selectedPalette]);
+  }, [user]); // This will run when user auth state changes
 
   const handlePaletteSave = (palette: Palette) => {
     setSelectedPalette(palette);
