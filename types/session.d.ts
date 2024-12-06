@@ -5,7 +5,15 @@ declare module 'express-session' {
     palette?: {
       name: string;
       colors: string[];
+      created_at?: string;
+      id?: number;
+      user_id?: number;
     };
-    passport?: any;
+    passport?: {
+      user?: {
+        id: number;
+        email: string;
+      };
+    };
   }
 }

@@ -24,6 +24,30 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  // Get user's latest palette
+  app.get("/api/palettes/latest", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const [latestPalette] = await db.query.palettes.findMany({
+        where: eq(palettes.user_id, req.user.id),
+        orderBy: (palettes, { desc }) => [desc(palettes.created_at)],
+        limit: 1,
+      });
+      
+      if (!latestPalette) {
+        return res.status(404).send("No palettes found");
+      }
+      
+      res.json(latestPalette);
+    } catch (error) {
+      console.error('Error fetching latest palette:', error);
+      res.status(500).send("Failed to fetch latest palette");
+    }
+  });
+
   // Save a new palette
   app.post("/api/palettes", async (req, res) => {
     if (!req.user) {

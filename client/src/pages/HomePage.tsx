@@ -35,16 +35,30 @@ export default function HomePage() {
     initialColors: selectedPalette?.colors 
   });
 
+  // Handle palette synchronization when user auth state changes
   useEffect(() => {
-    if (selectedPalette) {
-      // Force a re-render of the dropdown to ensure it's mounted
-      setSelectedPalette(null);
-      // Then set the palette in the next render cycle
-      setTimeout(() => {
-        setSelectedPalette(selectedPalette);
-        setColors(selectedPalette.colors);
-      }, 0);
-    }
+    const syncPalette = async () => {
+      if (user) {
+        try {
+          const response = await fetch('/api/palettes/latest');
+          if (response.ok) {
+            const latestPalette = await response.json();
+            if (latestPalette) {
+              setSelectedPalette(latestPalette);
+              setColors(latestPalette.colors);
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching latest palette:', error);
+        }
+      } else {
+        // Reset state when user logs out
+        setSelectedPalette(null);
+        generateNewPalette();
+      }
+    };
+
+    syncPalette();
   }, [user]); // This will run when user auth state changes
 
   const handlePaletteSave = (palette: Palette) => {
