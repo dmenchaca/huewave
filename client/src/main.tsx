@@ -1,39 +1,22 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { Switch, Route } from "wouter";
 import "./index.css";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import HomePage from "./pages/HomePage";
 
-import { useUser } from "./hooks/use-user";
-import { Loader2 } from "lucide-react";
-
-function Router() {
-  const { isLoading } = useUser();
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-border" />
-      </div>
-    );
-  }
-
+function App() {
   return (
-    <Switch>
-      <Route path="/" component={HomePage} />
-      <Route>404 Page Not Found</Route>
-    </Switch>
+    <QueryClientProvider client={queryClient}>
+      <HomePage />
+      <Toaster />
+    </QueryClientProvider>
   );
 }
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <Router />
-      <Toaster />
-    </QueryClientProvider>
+    <App />
   </StrictMode>,
 );

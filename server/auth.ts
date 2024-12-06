@@ -108,22 +108,22 @@ export function setupAuth(app: Express) {
         return res.status(400).send(result.error.message);
       }
 
-      const { username, password } = result.data;
+      const { email, password } = result.data;
       const [existingUser] = await db
         .select()
         .from(users)
-        .where(eq(users.username, username))
+        .where(eq(users.email, email))
         .limit(1);
 
       if (existingUser) {
-        return res.status(400).send("Username already exists");
+        return res.status(400).send("Email already exists");
       }
 
       const hashedPassword = await crypto.hash(password);
       const [newUser] = await db
         .insert(users)
         .values({
-          username,
+          email,
           password: hashedPassword,
         })
         .returning();
@@ -134,7 +134,7 @@ export function setupAuth(app: Express) {
         }
         return res.json({
           message: "Registration successful",
-          user: { id: newUser.id, username: newUser.username },
+          user: { id: newUser.id, email: newUser.email },
         });
       });
     } catch (error) {
@@ -187,7 +187,7 @@ export function setupAuth(app: Express) {
         .then((user: any) => {
           return res.json({
             message: "Login successful",
-            user: { id: user.id, username: user.username },
+            user: { id: user.id, email: user.email },
           });
         })
         .catch(next);
