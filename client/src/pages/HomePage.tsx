@@ -89,12 +89,15 @@ export default function HomePage() {
                 onOpenChange={setIsAuthDialogOpen}
                 customTitle="You are almost there"
                 onSuccess={(palette) => {
-                  // Update palette selection first
-                  setSelectedPalette(palette);
-                  // Then update colors
-                  setColors(palette.colors);
-                  // Finally close dialog
+                  // Close dialog first to trigger re-render
                   setIsAuthDialogOpen(false);
+                  
+                  // Use setTimeout to ensure dropdown is rendered
+                  setTimeout(() => {
+                    // Then update palette and colors
+                    setSelectedPalette(palette);
+                    setColors(palette.colors);
+                  }, 0);
                 }}
               />
             </>
