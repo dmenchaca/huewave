@@ -5,18 +5,15 @@ export default function PaletteControls() {
   const { user } = useUser();
 
   return (
-    <div className="flex flex-wrap gap-4 justify-center">
+    <div className="text-center text-sm text-muted-foreground">
       {!user && (
-        <Button variant="outline" asChild className="flex items-center gap-2">
+        <Button variant="outline" asChild className="mb-4 flex items-center gap-2">
           <a href="/auth">
             Login to Save Palette
           </a>
         </Button>
       )}
-
-      <div className="w-full text-center text-sm text-muted-foreground">
-        Press spacebar to generate a new palette
-      </div>
+      Press spacebar to generate a new palette
     </div>
   );
 }
