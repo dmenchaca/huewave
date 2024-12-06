@@ -75,18 +75,25 @@ export default function HomePage() {
         </div>
         <div className="flex items-center gap-4">
           {!user ? (
-            <AuthDialog
-              isOpen={isAuthDialogOpen}
-              onOpenChange={setIsAuthDialogOpen}
-              triggerContent={
-                <Button 
-                  variant="outline"
-                  className="flex items-center gap-2"
-                >
-                  Login to save palette
-                </Button>
-              }
-            />
+            <>
+              <SavePaletteDialog 
+                colors={colors} 
+                isOpen={isDialogOpen}
+                onOpenChange={setIsDialogOpen}
+                onSaveAttempt={() => setIsAuthDialogOpen(true)}
+                selectedPalette={selectedPalette}
+                onSaveSuccess={handlePaletteSave}
+              />
+              <AuthDialog
+                isOpen={isAuthDialogOpen}
+                onOpenChange={setIsAuthDialogOpen}
+                customTitle="You are almost there"
+                onSuccess={(palette) => {
+                  handlePaletteSave(palette);
+                  setIsAuthDialogOpen(false);
+                }}
+              />
+            </>
           ) : (
             <SavePaletteDialog 
               colors={colors} 

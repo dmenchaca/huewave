@@ -21,9 +21,11 @@ interface AuthDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   triggerContent?: React.ReactNode;
+  customTitle?: string;
+  onSuccess?: (palette: Palette) => void;
 }
 
-export default function AuthDialog({ isOpen, onOpenChange, triggerContent }: AuthDialogProps) {
+export default function AuthDialog({ isOpen, onOpenChange, triggerContent, customTitle, onSuccess }: AuthDialogProps) {
   const [isLogin, setIsLogin] = useState(true);
   const { login, register } = useUser();
   const { toast } = useToast();
@@ -77,7 +79,7 @@ export default function AuthDialog({ isOpen, onOpenChange, triggerContent }: Aut
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{isLogin ? "Log in" : "Register"}</DialogTitle>
+          <DialogTitle>{customTitle || (isLogin ? "Log in" : "Register")}</DialogTitle>
           <DialogDescription>
             {isLogin 
               ? "Welcome back! Please log in to continue."

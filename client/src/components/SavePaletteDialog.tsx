@@ -26,6 +26,7 @@ interface SavePaletteDialogProps {
   onOpenChange: (open: boolean) => void;
   selectedPalette?: Palette | null;
   onSaveSuccess: (palette: Palette) => void;
+  onSaveAttempt?: () => void;
 }
 
 export default function SavePaletteDialog({ 
@@ -90,6 +91,11 @@ export default function SavePaletteDialog({
         title: "Error",
         description: "Please enter a name for your palette",
       });
+      return;
+    }
+
+    if (!user) {
+      onSaveAttempt?.();
       return;
     }
 
