@@ -60,10 +60,16 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
     });
 
     setColors(prev => {
-      const newColors = prev.length === 0 ? adjustedColors : prev.map((color, index) => 
+      // Handle initial state and locked colors
+      const newColors = prev.length === 0 ? [...adjustedColors] : prev.map((color, index) => 
         lockedColors[index] ? color : adjustedColors[index]
       );
-      addToHistory(newColors);
+      
+      // Only add to history if colors actually changed
+      if (JSON.stringify(prev) !== JSON.stringify(newColors)) {
+        addToHistory(newColors);
+      }
+      
       return newColors;
     });
   }, [lockedColors]);
@@ -100,33 +106,43 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
 
   const addToHistory = useCallback((newColors: string[]) => {
     setColorHistory(prev => {
+      // Create a copy of the new colors array to prevent reference issues
+      const colorsCopy = [...newColors];
       // Remove any future states if we're not at the end
       const newHistory = prev.slice(0, historyIndex + 1);
-      return [...newHistory, newColors];
+      return [...newHistory, colorsCopy];
     });
     setHistoryIndex(prev => prev + 1);
   }, [historyIndex]);
 
   const handleColorChange = useCallback((index: number, newColor: string) => {
     setColors(prev => {
+      // Create a new array with the updated color
       const next = [...prev];
       next[index] = newColor;
-      addToHistory(next);
+      // Add to history after ensuring we have a valid color array
+      if (next.length === 5) {
+        addToHistory(next);
+      }
       return next;
     });
   }, [addToHistory]);
 
   const undo = useCallback(() => {
     if (historyIndex > 0) {
-      setHistoryIndex(prev => prev - 1);
-      setColors(colorHistory[historyIndex - 1]);
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      // Ensure we're accessing the correct history state
+      setColors([...colorHistory[newIndex]]);
     }
   }, [historyIndex, colorHistory]);
 
   const redo = useCallback(() => {
     if (historyIndex < colorHistory.length - 1) {
-      setHistoryIndex(prev => prev + 1);
-      setColors(colorHistory[historyIndex + 1]);
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
+      // Ensure we're accessing the correct history state
+      setColors([...colorHistory[newIndex]]);
     }
   }, [historyIndex, colorHistory]);
 
