@@ -93,6 +93,14 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
     document.documentElement.style.colorScheme = darkMode ? 'dark' : 'light';
   }, [darkMode]);
 
+  const handleColorChange = useCallback((index: number, newColor: string) => {
+    setColors(prev => {
+      const next = [...prev];
+      next[index] = newColor;
+      return next;
+    });
+  }, []);
+
   return {
     colors,
     setColors,
@@ -101,5 +109,6 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
     generateNewPalette,
     toggleLock,
     toggleDarkMode,
+    handleColorChange,
   };
 }

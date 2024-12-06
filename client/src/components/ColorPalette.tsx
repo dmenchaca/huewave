@@ -7,15 +7,18 @@ interface ColorPaletteProps {
   colors: string[];
   lockedColors: boolean[];
   onToggleLock: (index: number) => void;
+  onColorChange?: (index: number, color: string) => void;
 }
 
 export default function ColorPalette({ 
   colors, 
   lockedColors, 
-  onToggleLock 
+  onToggleLock,
+  onColorChange 
 }: ColorPaletteProps) {
   const { toast } = useToast();
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
   const copyToClipboard = async (color: string, index: number) => {
     try {
@@ -32,6 +35,25 @@ export default function ColorPalette({
         title: "Failed to copy",
         description: "Could not copy color to clipboard",
       });
+    }
+  };
+
+  const getContrastColor = (hexColor: string): string => {
+    const rgb = parseInt(hexColor.slice(1), 16);
+    const r = (rgb >> 16) & 0xff;
+    const g = (rgb >> 8) & 0xff;
+    const b = (rgb >> 0) & 0xff;
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.5 ? '#000000' : '#ffffff';
+  };
+
+  const handleColorChange = (index: number, value: string) => {
+    if (!value.startsWith('#')) {
+      value = '#' + value;
+    }
+    // Validate hex color
+    if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
+      onColorChange?.(index, value);
     }
   };
 
@@ -73,9 +95,23 @@ export default function ColorPalette({
             </Button>
           </div>
 
-          <span className="text-white text-lg font-mono shadow-sm uppercase">
-            {color}
-          </span>
+          <div 
+            className="flex flex-col items-center gap-2"
+            style={{ color: getContrastColor(color) }}
+          >
+            <input
+              type="text"
+              value={color.toUpperCase()}
+              onChange={(e) => handleColorChange(index, e.target.value)}
+              onFocus={() => setEditingIndex(index)}
+              onBlur={() => setEditingIndex(null)}
+              className="bg-transparent text-lg font-mono text-center uppercase w-24 focus:outline-none"
+              style={{
+                color: getContrastColor(color),
+                caretColor: getContrastColor(color)
+              }}
+            />
+          </div>
         </div>
       ))}
     </div>

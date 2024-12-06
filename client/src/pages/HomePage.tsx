@@ -26,7 +26,8 @@ export default function HomePage() {
     toggleLock,
     darkMode,
     toggleDarkMode,
-    generateNewPalette
+    generateNewPalette,
+    handleColorChange
   } = useColorPalette({ isDialogOpen });
 
   const handlePaletteSave = (palette: Palette) => {
@@ -105,6 +106,7 @@ export default function HomePage() {
             colors={colors}
             lockedColors={lockedColors}
             onToggleLock={toggleLock}
+            onColorChange={handleColorChange}
           />
           <PaletteControls />
         </div>
