@@ -1,30 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { RefreshCwIcon } from "lucide-react";
-import SavePaletteDialog from "./SavePaletteDialog";
 import { useUser } from "../hooks/use-user";
 
-interface Palette {
-  id: number;
-  name: string;
-  colors: string[];
-  created_at: string;
-}
-
-interface PaletteControlsProps {
-  colors: string[];
-  isDialogOpen: boolean;
-  onDialogOpenChange: (open: boolean) => void;
-  selectedPalette?: Palette | null;
-  onSavePalette: (palette: Palette) => void;
-}
-
-export default function PaletteControls({ 
-  colors, 
-  isDialogOpen, 
-  onDialogOpenChange,
-  selectedPalette,
-  onSavePalette
-}: PaletteControlsProps) {
+export default function PaletteControls() {
   const { user } = useUser();
 
   return (

@@ -4,6 +4,7 @@ import { MoonIcon, SunIcon } from "lucide-react";
 import ColorPalette from "../components/ColorPalette";
 import PaletteControls from "../components/PaletteControls";
 import SavedPalettesDropdown from "../components/SavedPalettesDropdown";
+import SavePaletteDialog from "../components/SavePaletteDialog";
 import { useColorPalette } from "../hooks/use-color-palette";
 import { useUser } from "../hooks/use-user";
 
@@ -21,11 +22,11 @@ export default function HomePage() {
   const { 
     colors,
     setColors,
-    generateNewPalette,
     lockedColors,
     toggleLock,
     darkMode,
-    toggleDarkMode 
+    toggleDarkMode,
+    generateNewPalette
   } = useColorPalette({ isDialogOpen });
 
   const handlePaletteSave = (palette: Palette) => {
@@ -108,14 +109,7 @@ export default function HomePage() {
             onToggleLock={toggleLock}
           />
           
-          <PaletteControls 
-            onGenerate={generateNewPalette}
-            colors={colors}
-            isDialogOpen={isDialogOpen}
-            onDialogOpenChange={setIsDialogOpen}
-            selectedPalette={selectedPalette}
-            onSavePalette={handlePaletteSave}
-          />
+          <PaletteControls />
         </div>
       </main>
     </div>

@@ -25,7 +25,7 @@ interface SavePaletteDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   selectedPalette?: Palette | null;
-  onSaveSuccess: (palette: Palette) => void; // Required prop
+  onSaveSuccess: (palette: Palette) => void;
 }
 
 export default function SavePaletteDialog({ 
@@ -37,12 +37,12 @@ export default function SavePaletteDialog({
 }: SavePaletteDialogProps) {
   const [name, setName] = useState(selectedPalette?.name || "");
   
-  // Update name when selectedPalette changes
   useEffect(() => {
     if (selectedPalette) {
       setName(selectedPalette.name);
     }
   }, [selectedPalette]);
+
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -99,7 +99,7 @@ export default function SavePaletteDialog({
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="primary" className="flex items-center gap-2">
+        <Button variant="default" className="flex items-center gap-2">
           <SaveIcon className="h-4 w-4" />
           {selectedPalette ? 'Update Palette' : 'Save Palette'}
         </Button>
