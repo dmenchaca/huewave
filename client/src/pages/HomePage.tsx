@@ -83,20 +83,12 @@ export default function HomePage() {
             onClick={toggleDarkMode}
             aria-label="Toggle theme"
           >
-            {darkMode ? (
-              <SunIcon className="h-5 w-5" />
-            ) : (
-              <MoonIcon className="h-5 w-5" />
-            )}
+            {darkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
           </Button>
           {user ? (
-            <Button variant="outline" onClick={() => logout()}>
-              Logout
-            </Button>
+            <Button variant="outline" onClick={() => logout()}>Logout</Button>
           ) : (
-            <Button variant="outline" asChild>
-              <a href="/auth">Login</a>
-            </Button>
+            <Button variant="outline" asChild><a href="/auth">Login</a></Button>
           )}
         </div>
       </header>
@@ -108,7 +100,6 @@ export default function HomePage() {
             lockedColors={lockedColors}
             onToggleLock={toggleLock}
           />
-          
           <PaletteControls />
         </div>
       </main>
