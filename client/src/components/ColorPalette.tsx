@@ -53,22 +53,28 @@ export default function ColorPalette({
   };
 
   const handleColorChange = (index: number, value: string) => {
-    // Remove # if present
-    let hex = value.replace('#', '');
+    // Allow any input while editing
+    onColorChange?.(index, value);
     
-    // Handle 3 character hex
-    if (hex.length === 3) {
-      hex = hex.split('').map(char => char + char).join('');
-    }
-    
-    // Add # if needed
-    if (!value.startsWith('#')) {
-      value = '#' + hex;
-    }
-    
-    // Validate hex color format
-    if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
-      onColorChange?.(index, value);
+    // Only validate when the input is complete
+    if (value.length >= 7) {
+      // Remove # if present
+      let hex = value.replace('#', '');
+      
+      // Handle 3 character hex
+      if (hex.length === 3) {
+        hex = hex.split('').map(char => char + char).join('');
+      }
+      
+      // Add # if needed
+      if (!value.startsWith('#')) {
+        value = '#' + hex;
+      }
+      
+      // Validate hex color format
+      if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
+        onColorChange?.(index, value);
+      }
     }
   };
 
@@ -124,7 +130,13 @@ export default function ColorPalette({
                   setEditingIndex(index);
                 }
               }}
-              onBlur={() => setEditingIndex(null)}
+              onBlur={() => {
+                setEditingIndex(null);
+                // Revert to valid hex if invalid
+                if (!/^#[0-9A-Fa-f]{6}$/.test(color)) {
+                  onColorChange?.(index, '#000000');
+                }
+              }}
               className="bg-transparent text-lg font-mono text-center uppercase w-24 focus:outline-none cursor-text relative"
               style={{
                 color: getContrastColor(color),
