@@ -134,13 +134,18 @@ export function setupAuth(app: Express) {
         })
         .returning();
 
+      // Get the palette data from the session if it exists
+      const palette = req.session.palette;
+
       req.login(newUser, (err) => {
         if (err) {
           return next(err);
         }
         return res.json({
+          ok: true,
           message: "Registration successful",
           user: { id: newUser.id, email: newUser.email },
+          palette: palette // Include the palette in the response
         });
       });
     } catch (error) {

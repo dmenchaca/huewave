@@ -118,3 +118,13 @@ export function registerRoutes(app: Express) {
     }
   });
 }
+
+export function registerStorePaletteRoute(app: Express) {
+  // Store palette in session
+  app.post("/api/store-palette", (req, res) => {
+    const { name, colors } = req.body;
+    req.session.palette = { name, colors };
+    res.json({ message: "Palette stored in session" });
+  });
+}
+

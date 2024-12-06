@@ -98,6 +98,12 @@ export default function SavePaletteDialog({
     }
 
     if (!user) {
+      // Store palette data in session
+      fetch('/api/store-palette', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, colors })
+      });
       onSaveAttempt?.();
       onOpenChange(false); // Close the save dialog
       return;
