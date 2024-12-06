@@ -68,7 +68,15 @@ export default function HomePage() {
           )}
         </div>
         <div className="flex items-center gap-4">
-          {user && (
+          {!user ? (
+            <Button 
+              variant="outline" 
+              asChild 
+              className="flex items-center gap-2"
+            >
+              <a href="/auth">Login to Save Palette</a>
+            </Button>
+          ) : (
             <SavePaletteDialog 
               colors={colors} 
               isOpen={isDialogOpen}
@@ -85,10 +93,8 @@ export default function HomePage() {
           >
             {darkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
           </Button>
-          {user ? (
+          {user && (
             <Button variant="outline" onClick={() => logout()}>Logout</Button>
-          ) : (
-            <Button variant="outline" asChild><a href="/auth">Login</a></Button>
           )}
         </div>
       </header>
