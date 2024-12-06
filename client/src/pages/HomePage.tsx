@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import AuthDialog from "../components/AuthDialog";
 import { Button } from "@/components/ui/button";
 import { MoonIcon, SunIcon } from "lucide-react";
 import ColorPalette from "../components/ColorPalette";
@@ -73,13 +74,18 @@ export default function HomePage() {
         </div>
         <div className="flex items-center gap-4">
           {!user ? (
-            <Button 
-              variant="outline" 
-              asChild 
-              className="flex items-center gap-2"
-            >
-              <a href="/auth">Login to save palette</a>
-            </Button>
+            <AuthDialog
+              isOpen={false}
+              onOpenChange={() => {}}
+              triggerContent={
+                <Button 
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  Login to save palette
+                </Button>
+              }
+            />
           ) : (
             <SavePaletteDialog 
               colors={colors} 
