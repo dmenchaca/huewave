@@ -36,6 +36,13 @@ export default function SavePaletteDialog({
   onSaveSuccess
 }: SavePaletteDialogProps) {
   const [name, setName] = useState(selectedPalette?.name || "");
+  
+  // Update name when selectedPalette changes
+  useEffect(() => {
+    if (selectedPalette) {
+      setName(selectedPalette.name);
+    }
+  }, [selectedPalette]);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
