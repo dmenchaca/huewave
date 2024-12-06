@@ -89,11 +89,12 @@ export default function HomePage() {
                 onOpenChange={setIsAuthDialogOpen}
                 customTitle="You are almost there"
                 onSuccess={(palette) => {
-                  // First close the dialog
-                  setIsAuthDialogOpen(false);
-                  // Then update both states synchronously
+                  // Update palette selection first
                   setSelectedPalette(palette);
+                  // Then update colors
                   setColors(palette.colors);
+                  // Finally close dialog
+                  setIsAuthDialogOpen(false);
                 }}
               />
             </>
