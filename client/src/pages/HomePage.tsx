@@ -92,12 +92,13 @@ export default function HomePage() {
                   // Close dialog first to trigger re-render
                   setIsAuthDialogOpen(false);
                   
-                  // Use setTimeout to ensure dropdown is rendered
+                  // Use setTimeout with a slightly longer delay
                   setTimeout(() => {
-                    // Then update palette and colors
-                    setSelectedPalette(palette);
+                    // Update colors first
                     setColors(palette.colors);
-                  }, 0);
+                    // Then set selected palette
+                    setSelectedPalette(palette);
+                  }, 100); // Increase timeout to ensure components are mounted
                 }}
               />
             </>
