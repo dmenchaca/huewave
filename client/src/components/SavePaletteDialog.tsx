@@ -12,6 +12,7 @@ import {
 import { SaveIcon } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { useUser } from "../hooks/use-user";
 
 interface Palette {
   id: number;
@@ -34,8 +35,10 @@ export default function SavePaletteDialog({
   isOpen, 
   onOpenChange,
   selectedPalette,
-  onSaveSuccess
+  onSaveSuccess,
+  onSaveAttempt
 }: SavePaletteDialogProps) {
+  const { user } = useUser();
   const [name, setName] = useState(selectedPalette?.name || "");
   
   useEffect(() => {
