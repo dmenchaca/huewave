@@ -134,8 +134,24 @@ export function setupAuth(app: Express) {
         })
         .returning();
 
-      // Get the palette data from the session if it exists
-      const palette = req.session.palette;
+      // Get the palette data from the session
+      const sessionPalette = req.session.palette;
+      let palette;
+
+      if (sessionPalette) {
+        // Create the palette for the new user
+        [palette] = await db
+          .insert(palettes)
+          .values({
+            user_id: newUser.id,
+            name: sessionPalette.name,
+            colors: sessionPalette.colors,
+          })
+          .returning();
+        
+        // Clear the session palette
+        delete req.session.palette;
+      }
 
       req.login(newUser, (err) => {
         if (err) {
@@ -145,7 +161,7 @@ export function setupAuth(app: Express) {
           ok: true,
           message: "Registration successful",
           user: { id: newUser.id, email: newUser.email },
-          palette: palette // Include the palette in the response
+          palette: palette // Return the created palette if it exists
         });
       });
     } catch (error) {
