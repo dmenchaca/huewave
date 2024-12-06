@@ -120,7 +120,7 @@ export default function EditPaletteDialog({
         style={{ outline: 'none' }}
       >
         <DialogHeader>
-          <DialogTitle>Edit Palette</DialogTitle>
+          <DialogTitle>Edit palette</DialogTitle>
           <DialogDescription>
             Modify your palette colors and name. Press spacebar to generate new colors or lock individual colors to keep them.
           </DialogDescription>
@@ -143,7 +143,7 @@ export default function EditPaletteDialog({
               className="flex items-center gap-2"
             >
               <RefreshCwIcon className="h-4 w-4" />
-              Generate New Colors
+              Generate new colors
             </Button>
             <Button onClick={handleSave} disabled={editPaletteMutation.isPending}>
               {editPaletteMutation.isPending ? "Saving..." : "Save Changes"}

@@ -28,7 +28,10 @@ export default function HomePage() {
     toggleDarkMode,
     generateNewPalette,
     handleColorChange
-  } = useColorPalette({ isDialogOpen });
+  } = useColorPalette({ 
+    isDialogOpen,
+    initialColors: selectedPalette?.colors 
+  });
 
   const handlePaletteSave = (palette: Palette) => {
     setSelectedPalette(palette);
@@ -57,7 +60,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-background">
       <header className="container mx-auto px-4 py-4 flex justify-between items-center">
         <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold">Color Palette Generator</h1>
+          <h1 className="text-2xl font-bold">Color palette generator</h1>
           {user && (
             <SavedPalettesDropdown 
               selectedPalette={selectedPalette}
@@ -75,7 +78,7 @@ export default function HomePage() {
               asChild 
               className="flex items-center gap-2"
             >
-              <a href="/auth">Login to Save Palette</a>
+              <a href="/auth">Login to save palette</a>
             </Button>
           ) : (
             <SavePaletteDialog 

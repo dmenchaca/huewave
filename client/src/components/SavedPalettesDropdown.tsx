@@ -52,11 +52,11 @@ export default function SavedPalettesDropdown({
       <DropdownMenuTrigger asChild>
         <Button variant="outline" className="flex items-center gap-2">
           <FolderIcon className="h-4 w-4" />
-          {selectedPalette ? selectedPalette.name : "Saved Palettes"}
+          {selectedPalette ? selectedPalette.name : "Saved palettes"}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-64">
-        <DropdownMenuLabel>Saved Palettes</DropdownMenuLabel>
+        <DropdownMenuLabel>Saved palettes</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <div className="px-2 py-2">
           <div className="relative">
@@ -86,7 +86,7 @@ export default function SavedPalettesDropdown({
               >
                 <span className="font-medium">
                   {palette.name}
-                  {selectedPalette?.id === palette.id && " (Selected)"}
+                  {selectedPalette?.id === palette.id && " (selected)"}
                 </span>
                 <div className="flex w-full gap-1 h-4 mt-1 rounded-sm overflow-hidden">
                   {palette.colors.map((color, index) => (

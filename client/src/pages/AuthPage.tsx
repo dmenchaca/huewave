@@ -49,7 +49,7 @@ export default function AuthPage() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>{isLogin ? "Login" : "Register"}</CardTitle>
+          <CardTitle>{isLogin ? "Log in" : "Register"}</CardTitle>
           <CardDescription>
             {isLogin 
               ? "Welcome back! Please log in to continue."
@@ -90,7 +90,7 @@ export default function AuthPage() {
 
               <div className="space-y-2">
                 <Button type="submit" className="w-full">
-                  {isLogin ? "Login" : "Register"}
+                  {isLogin ? "Log in" : "Register"}
                 </Button>
                 <Button
                   type="button"

@@ -101,12 +101,12 @@ export default function SavePaletteDialog({
       <DialogTrigger asChild>
         <Button variant="default" className="flex items-center gap-2">
           <SaveIcon className="h-4 w-4" />
-          {selectedPalette ? 'Update Palette' : 'Save Palette'}
+          {selectedPalette ? 'Update palette' : 'Save palette'}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{selectedPalette ? 'Update Palette' : 'Save Palette'}</DialogTitle>
+          <DialogTitle>{selectedPalette ? 'Update palette' : 'Save palette'}</DialogTitle>
           <DialogDescription>
             {selectedPalette 
               ? 'Update the name or colors of your existing palette'
