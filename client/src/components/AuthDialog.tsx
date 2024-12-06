@@ -59,19 +59,20 @@ export default function AuthDialog({ isOpen, onOpenChange, triggerContent, custo
     try {
       const result: AuthResponse = await (isLogin ? login(values) : register(values));
       if (result.ok) {
-        // Call onSuccess callback with palette data before closing dialog
+        // First update palette and colors
         if (!isLogin && onSuccess && result.palette) {
           onSuccess(result.palette);
         }
-
-        // Close dialog and show success message
-        onOpenChange(false);
-        form.reset();
         
+        // Then reset form and show success message
+        form.reset();
         toast({
           title: isLogin ? "Welcome back!" : "Account created",
           description: isLogin ? "Successfully logged in" : "Your account has been created",
         });
+        
+        // Finally close dialog
+        onOpenChange(false);
         
         if (!isLogin) {
           confetti({
