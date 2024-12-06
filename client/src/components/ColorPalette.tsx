@@ -39,12 +39,17 @@ export default function ColorPalette({
   };
 
   const getContrastColor = (hexColor: string): string => {
-    const rgb = parseInt(hexColor.slice(1), 16);
-    const r = (rgb >> 16) & 0xff;
-    const g = (rgb >> 8) & 0xff;
-    const b = (rgb >> 0) & 0xff;
+    // Remove # if present
+    const hex = hexColor.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    
+    // Calculate relative luminance
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    return luminance > 0.5 ? '#000000' : '#ffffff';
+    
+    // Return black for light colors, white for dark colors
+    return luminance > 0.6 ? '#000000' : '#ffffff';
   };
 
   const handleColorChange = (index: number, value: string) => {
@@ -103,12 +108,14 @@ export default function ColorPalette({
               type="text"
               value={color.toUpperCase()}
               onChange={(e) => handleColorChange(index, e.target.value)}
+              onDoubleClick={(e) => e.target.select()}
               onFocus={() => setEditingIndex(index)}
               onBlur={() => setEditingIndex(null)}
-              className="bg-transparent text-lg font-mono text-center uppercase w-24 focus:outline-none"
+              className="bg-transparent text-lg font-mono text-center uppercase w-24 focus:outline-none cursor-pointer"
               style={{
                 color: getContrastColor(color),
-                caretColor: getContrastColor(color)
+                caretColor: getContrastColor(color),
+                backgroundColor: editingIndex === index ? 'rgba(0,0,0,0.1)' : 'transparent'
               }}
             />
           </div>
