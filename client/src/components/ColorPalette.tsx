@@ -118,14 +118,14 @@ export default function ColorPalette({
               type="text"
               value={color.toUpperCase()}
               onChange={(e) => handleColorChange(index, e.target.value)}
-              onDoubleClick={(e) => {
+              onClick={(e) => {
                 if (e.target instanceof HTMLInputElement) {
                   e.target.select();
+                  setEditingIndex(index);
                 }
               }}
-              onFocus={() => setEditingIndex(index)}
               onBlur={() => setEditingIndex(null)}
-              className="bg-transparent text-lg font-mono text-center uppercase w-24 focus:outline-none cursor-pointer"
+              className="bg-transparent text-lg font-mono text-center uppercase w-24 focus:outline-none cursor-text"
               style={{
                 color: getContrastColor(color),
                 caretColor: getContrastColor(color),
