@@ -53,10 +53,20 @@ export default function ColorPalette({
   };
 
   const handleColorChange = (index: number, value: string) => {
-    if (!value.startsWith('#')) {
-      value = '#' + value;
+    // Remove # if present
+    let hex = value.replace('#', '');
+    
+    // Handle 3 character hex
+    if (hex.length === 3) {
+      hex = hex.split('').map(char => char + char).join('');
     }
-    // Validate hex color
+    
+    // Add # if needed
+    if (!value.startsWith('#')) {
+      value = '#' + hex;
+    }
+    
+    // Validate hex color format
     if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
       onColorChange?.(index, value);
     }
@@ -108,7 +118,11 @@ export default function ColorPalette({
               type="text"
               value={color.toUpperCase()}
               onChange={(e) => handleColorChange(index, e.target.value)}
-              onDoubleClick={(e) => e.target.select()}
+              onDoubleClick={(e) => {
+                if (e.target instanceof HTMLInputElement) {
+                  e.target.select();
+                }
+              }}
               onFocus={() => setEditingIndex(index)}
               onBlur={() => setEditingIndex(null)}
               className="bg-transparent text-lg font-mono text-center uppercase w-24 focus:outline-none cursor-pointer"
