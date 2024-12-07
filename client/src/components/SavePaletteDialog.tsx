@@ -13,6 +13,7 @@ import { SaveIcon } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "../hooks/use-user";
+import { generatePaletteName } from "@/lib/color-utils";
 
 interface Palette {
   id: number;
@@ -39,13 +40,15 @@ export default function SavePaletteDialog({
   onSaveAttempt
 }: SavePaletteDialogProps) {
   const { user } = useUser();
-  const [name, setName] = useState(selectedPalette?.name || "");
+  const [name, setName] = useState(selectedPalette?.name || generatePaletteName(colors));
   
   useEffect(() => {
     if (selectedPalette) {
       setName(selectedPalette.name);
+    } else {
+      setName(generatePaletteName(colors));
     }
-  }, [selectedPalette]);
+  }, [selectedPalette, colors]);
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
