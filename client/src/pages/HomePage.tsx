@@ -89,8 +89,8 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="container mx-auto px-4 py-4 md:py-0 md:h-16 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-0">
-        <div className="flex flex-col md:flex-row items-start md:items-center gap-4 w-full md:w-auto">
+      <header className="container mx-auto px-4 py-2 md:py-0 md:h-16 flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-0">
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4 w-full md:w-auto">
           <h1 className="text-2xl font-bold">Color palette generator</h1>
           <div className="w-full md:w-48 h-10">
             {isFetching ? (
