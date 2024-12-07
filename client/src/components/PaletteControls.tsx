@@ -16,7 +16,7 @@ export default function PaletteControls() {
         Generate New Palette
       </Button>
       <div className="text-center text-sm text-muted-foreground">
-        Press spacebar or click the button above to generate a new palette
+        Click the button above to generate a new palette
       </div>
     </div>
   );
