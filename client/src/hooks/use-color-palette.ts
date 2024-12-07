@@ -19,6 +19,10 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
   });
 
   const addToHistory = useCallback((newColors: string[]) => {
+    if (!Array.isArray(newColors) || newColors.length === 0) {
+      return; // Don't add invalid colors to history
+    }
+
     setColorHistory(prev => {
       const lastColors = prev[prev.length - 1];
       // Only add to history if colors have changed
@@ -28,33 +32,40 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
       
       // Remove any future states if we're not at the end
       const newHistory = prev.slice(0, historyIndex + 1);
-      // Add new state and update history index
+      // Add new state
       const updatedHistory = [...newHistory, [...newColors]];
-      // Update history index in next tick to avoid race condition
-      setTimeout(() => setHistoryIndex(updatedHistory.length - 1), 0);
+      
+      // Update history index synchronously to avoid race conditions
+      setHistoryIndex(updatedHistory.length - 1);
       return updatedHistory;
     });
   }, [historyIndex]);
 
   const undo = useCallback(() => {
-    if (historyIndex > 0) {
-      setHistoryIndex(prev => {
-        const newIndex = prev - 1;
-        setColors([...colorHistory[newIndex]]);
-        return newIndex;
-      });
+    if (historyIndex > 0 && colorHistory[historyIndex - 1]) {
+      const newIndex = historyIndex - 1;
+      try {
+        const newColors = [...colorHistory[newIndex]];
+        setHistoryIndex(newIndex);
+        setColors(newColors);
+      } catch (error) {
+        console.error('Error during undo operation:', error);
+      }
     }
-  }, [colorHistory]);
+  }, [historyIndex, colorHistory]);
 
   const redo = useCallback(() => {
-    if (historyIndex < colorHistory.length - 1) {
-      setHistoryIndex(prev => {
-        const newIndex = prev + 1;
-        setColors([...colorHistory[newIndex]]);
-        return newIndex;
-      });
+    if (historyIndex < colorHistory.length - 1 && colorHistory[historyIndex + 1]) {
+      const newIndex = historyIndex + 1;
+      try {
+        const newColors = [...colorHistory[newIndex]];
+        setHistoryIndex(newIndex);
+        setColors(newColors);
+      } catch (error) {
+        console.error('Error during redo operation:', error);
+      }
     }
-  }, [colorHistory]);
+  }, [historyIndex, colorHistory]);
 
   // Add keyboard event listeners for undo/redo
   useEffect(() => {
