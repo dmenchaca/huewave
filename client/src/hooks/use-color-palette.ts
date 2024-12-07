@@ -9,16 +9,39 @@ interface UseColorPaletteProps {
 export function useColorPalette({ isDialogOpen = false, initialColors }: UseColorPaletteProps = {}) {
   const [isInitializing, setIsInitializing] = useState(true);
   
-  // Initialize colors and history state
-  const [colors, setColors] = useState<string[]>(() => 
-    initialColors?.length ? [...initialColors] : new Array(5).fill('#FFFFFF')
-  );
+  // Initialize colors with generated palette immediately
+  const [colors, setColors] = useState<string[]>(() => {
+    if (initialColors?.length) {
+      return [...initialColors];
+    }
+    // Generate random colors immediately instead of white
+    const baseColor = chroma.random()
+      .set('hsl.s', 0.6 + Math.random() * 0.2)
+      .set('hsl.l', 0.4 + Math.random() * 0.2);
+    
+    return [
+      baseColor.hex(),
+      chroma.mix(baseColor, baseColor.set('hsl.h', '+30'), 0.5)
+        .set('hsl.s', 0.7)
+        .set('hsl.l', 0.5)
+        .hex(),
+      chroma.mix(baseColor, baseColor.set('hsl.h', '+60'), 0.3)
+        .saturate(1)
+        .set('hsl.l', 0.6)
+        .hex(),
+      baseColor.set('hsl.h', '+180')
+        .set('hsl.s', 0.8)
+        .set('hsl.l', 0.5)
+        .hex(),
+      chroma.mix(baseColor.set('hsl.h', '+180'), baseColor, 0.3)
+        .set('hsl.s', 0.7)
+        .set('hsl.l', 0.45)
+        .hex(),
+    ];
+  });
   
   const [lockedColors, setLockedColors] = useState<boolean[]>(new Array(5).fill(false));
-  const [colorHistory, setColorHistory] = useState<string[][]>(() => {
-    const initial = initialColors?.length ? [...initialColors] : new Array(5).fill('#FFFFFF');
-    return [[...initial]];
-  });
+  const [colorHistory, setColorHistory] = useState<string[][]>(() => [[...colors]]);
   const [historyIndex, setHistoryIndex] = useState<number>(0);
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     const saved = localStorage.getItem("darkMode");
@@ -186,13 +209,10 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
     });
   }, []);
 
-  // Generate initial palette only once when component mounts if no initial colors
+  // Set initialization state to false since we're initializing in useState
   useEffect(() => {
-    if (isInitializing && !initialColors?.length) {
-      generateNewPalette();
-      setIsInitializing(false);
-    }
-  }, [isInitializing, initialColors, generateNewPalette]);
+    setIsInitializing(false);
+  }, []);
 
   // Apply dark mode
   useEffect(() => {
