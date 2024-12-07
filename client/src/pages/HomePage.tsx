@@ -89,12 +89,14 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="container mx-auto px-4 py-4 flex justify-between items-center">
+      <header className="container mx-auto px-4 h-16 flex justify-between items-center">
         <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold">Color palette generator</h1>
-          <div className="w-48"> {/* Fixed width container for dropdown */}
+          <h1 className="text-2xl font-bold min-w-[240px]">Color palette generator</h1>
+          <div className="w-48 h-10"> {/* Fixed dimensions for dropdown container */}
             {isFetching ? (
-              <LoadingOverlay />
+              <div className="h-full">
+                <LoadingOverlay />
+              </div>
             ) : user && (
               <SavedPalettesDropdown 
                 selectedPalette={selectedPalette}

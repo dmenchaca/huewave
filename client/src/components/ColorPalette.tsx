@@ -79,7 +79,7 @@ export default function ColorPalette({
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-5 h-[50vh] rounded-lg overflow-hidden">
+    <div className="grid grid-cols-1 md:grid-cols-5 h-[50vh] min-h-[400px] rounded-lg overflow-hidden">
       {colors.map((color, index) => (
         <div
           key={index}
@@ -117,7 +117,7 @@ export default function ColorPalette({
           </div>
 
           <div 
-            className="flex flex-col items-center gap-2 relative z-10"
+            className="flex flex-col items-center gap-2 relative z-10 min-h-[80px]"
             style={{ color: getContrastColor(color) }}
           >
             <input
