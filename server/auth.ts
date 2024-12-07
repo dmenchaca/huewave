@@ -52,16 +52,17 @@ export function setupAuth(app: Express) {
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
-        sameSite: 'lax',
+        sameSite: 'strict',
         path: '/'
       },
       secret: process.env.SESSION_SECRET || process.env.REPL_ID || "color-palette-secret",
-      resave: true, // Changed to true to ensure session updates
-      saveUninitialized: false,
-      rolling: true, // Refresh session with each request
+      resave: false,
+      saveUninitialized: true,
+      rolling: true,
       store: new MemoryStore({
-        checkPeriod: 86400000, // 24 hours
-        stale: false // Don't delete stale sessions
+        checkPeriod: 86400000,
+        max: 100000,
+        ttl: 30 * 24 * 60 * 60 * 1000 // 30 days
       }),
       name: 'sessionId'
     })
@@ -102,11 +103,12 @@ export function setupAuth(app: Express) {
   );
 
   passport.serializeUser((user, done) => {
-    done(null, { id: user.id, email: user.email });
+    done(null, { id: user.id, email: user.email, timestamp: Date.now() });
   });
 
-  passport.deserializeUser((user: Express.User, done) => {
-    done(null, user);
+  passport.deserializeUser((serializedUser: { id: number; email: string; timestamp: number }, done) => {
+    // We could add additional validation here if needed
+    done(null, { id: serializedUser.id, email: serializedUser.email });
   });
 
   app.post("/api/register", async (req, res, next) => {
