@@ -85,34 +85,7 @@ export default function HomePage() {
 
   const handlePaletteSave = (palette: Palette) => {
     setSelectedPalette(palette);
-    // Update URL with palette ID
-    const url = new URL(window.location.href);
-    url.searchParams.set('palette', palette.id.toString());
-    window.history.pushState({}, '', url.toString());
   };
-
-  // Handle initial URL params
-  useEffect(() => {
-    const loadPaletteFromURL = async () => {
-      const params = new URLSearchParams(window.location.search);
-      const paletteId = params.get('palette');
-      
-      if (paletteId && user) {
-        try {
-          const response = await fetch(`/api/palettes/${paletteId}`);
-          if (response.ok) {
-            const palette = await response.json();
-            setSelectedPalette(palette);
-            setColors(palette.colors);
-          }
-        } catch (error) {
-          console.error('Error loading palette from URL:', error);
-        }
-      }
-    };
-
-    loadPaletteFromURL();
-  }, [user]); // Only run when user changes
 
   return (
     <div className="min-h-screen bg-background">

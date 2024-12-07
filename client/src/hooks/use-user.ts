@@ -67,8 +67,9 @@ export function useUser() {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
-    cacheTime: 1000 * 60 * 60 * 24, // 24 hours
-    suspense: false
+    gcTime: 1000 * 60 * 60 * 24, // 24 hours
+    initialData: null,
+    enabled: true
   });
 
   const loginMutation = useMutation<RequestResult, Error, InsertUser>({
