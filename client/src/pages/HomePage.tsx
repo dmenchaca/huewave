@@ -52,8 +52,9 @@ export default function HomePage() {
           console.error('Error fetching latest palette:', error);
         }
       } else {
-        // Only reset selected palette, don't generate new colors
+        // Reset state when user logs out
         setSelectedPalette(null);
+        generateNewPalette();
       }
     };
 
