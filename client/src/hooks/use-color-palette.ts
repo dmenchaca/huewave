@@ -13,13 +13,35 @@ interface UseColorPaletteProps {
 
 export function useColorPalette({ isDialogOpen = false, initialColors }: UseColorPaletteProps = {}) {
   const [colors, setColors] = useState<string[]>(() => {
-    const savedColors = Cookies.get(PALETTE_COOKIE_NAME);
-    return savedColors ? JSON.parse(savedColors) : initialColors || [];
+    try {
+      const savedColors = Cookies.get(PALETTE_COOKIE_NAME);
+      if (savedColors) {
+        const parsed = JSON.parse(savedColors);
+        // Validate the parsed data
+        if (Array.isArray(parsed) && parsed.every(color => typeof color === 'string')) {
+          return parsed;
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load colors from cookie:', error);
+    }
+    return initialColors || [];
   });
   
   const [lockedColors, setLockedColors] = useState<boolean[]>(() => {
-    const savedLocked = Cookies.get(LOCKED_COLORS_COOKIE_NAME);
-    return savedLocked ? JSON.parse(savedLocked) : [false, false, false, false, false];
+    try {
+      const savedLocked = Cookies.get(LOCKED_COLORS_COOKIE_NAME);
+      if (savedLocked) {
+        const parsed = JSON.parse(savedLocked);
+        // Validate the parsed data
+        if (Array.isArray(parsed) && parsed.every(lock => typeof lock === 'boolean')) {
+          return parsed;
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load locked colors from cookie:', error);
+    }
+    return [false, false, false, false, false];
   });
   
   const [darkMode, setDarkMode] = useState(() => {
@@ -91,26 +113,35 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
       localStorage.setItem("darkMode", JSON.stringify(next));
       return next;
     });
+  }, []);
+
   // Save colors to cookies whenever they change
   useEffect(() => {
     if (colors.length > 0) {
-      Cookies.set(PALETTE_COOKIE_NAME, JSON.stringify(colors), { expires: COOKIE_EXPIRY });
+      try {
+        Cookies.set(PALETTE_COOKIE_NAME, JSON.stringify(colors), { expires: COOKIE_EXPIRY });
+      } catch (error) {
+        console.error('Failed to save colors to cookie:', error);
+      }
     }
   }, [colors]);
 
   // Save locked colors state to cookies whenever they change
   useEffect(() => {
-    Cookies.set(LOCKED_COLORS_COOKIE_NAME, JSON.stringify(lockedColors), { expires: COOKIE_EXPIRY });
+    try {
+      Cookies.set(LOCKED_COLORS_COOKIE_NAME, JSON.stringify(lockedColors), { expires: COOKIE_EXPIRY });
+    } catch (error) {
+      console.error('Failed to save locked colors to cookie:', error);
+    }
   }, [lockedColors]);
 
-  }, []);
-
-  // Generate initial palette only if there are no colors
+  // Initialize palette on mount if needed
   useEffect(() => {
-    if (colors.length === 0) {
+    // Only generate new palette if no colors exist (neither in cookies nor initialColors)
+    if (colors.length === 0 && !initialColors?.length) {
       generateNewPalette();
     }
-  }, []); // Run only once on mount
+  }, [generateNewPalette, initialColors]); // Include dependencies
 
   // Apply dark mode
   useEffect(() => {
