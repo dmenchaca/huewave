@@ -28,11 +28,53 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
       
       // Remove any future states if we're not at the end
       const newHistory = prev.slice(0, historyIndex + 1);
-      // Add new state
-      return [...newHistory, [...newColors]];
+      // Add new state and update history index
+      const updatedHistory = [...newHistory, [...newColors]];
+      // Update history index in next tick to avoid race condition
+      setTimeout(() => setHistoryIndex(updatedHistory.length - 1), 0);
+      return updatedHistory;
     });
-    setHistoryIndex(prev => prev + 1);
   }, [historyIndex]);
+
+  const undo = useCallback(() => {
+    if (historyIndex > 0) {
+      setHistoryIndex(prev => {
+        const newIndex = prev - 1;
+        setColors([...colorHistory[newIndex]]);
+        return newIndex;
+      });
+    }
+  }, [colorHistory]);
+
+  const redo = useCallback(() => {
+    if (historyIndex < colorHistory.length - 1) {
+      setHistoryIndex(prev => {
+        const newIndex = prev + 1;
+        setColors([...colorHistory[newIndex]]);
+        return newIndex;
+      });
+    }
+  }, [colorHistory]);
+
+  // Add keyboard event listeners for undo/redo
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check for Ctrl/Cmd + Z/Y
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        undo();
+      } else if (
+        ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'z') ||
+        ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y')
+      ) {
+        e.preventDefault();
+        redo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [undo, redo]);
 
   // Handle color updates with history tracking
   const handleColorWithHistory = useCallback((index: number, newColor: string) => {
@@ -115,22 +157,6 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
       return next;
     });
   }, []);
-
-  const undo = useCallback(() => {
-    if (historyIndex > 0) {
-      const newIndex = historyIndex - 1;
-      setHistoryIndex(newIndex);
-      setColors([...colorHistory[newIndex]]);
-    }
-  }, [historyIndex, colorHistory]);
-
-  const redo = useCallback(() => {
-    if (historyIndex < colorHistory.length - 1) {
-      const newIndex = historyIndex + 1;
-      setHistoryIndex(newIndex);
-      setColors([...colorHistory[newIndex]]);
-    }
-  }, [historyIndex, colorHistory]);
 
   // Generate initial palette only once when component mounts
   useEffect(() => {
