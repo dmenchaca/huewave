@@ -109,25 +109,36 @@ export default function HomePage() {
         <div className="flex items-center gap-4">
           {!isLoading && (
             <>
-              <SavePaletteDialog 
-                colors={colors} 
-                isOpen={isDialogOpen}
-                onOpenChange={setIsDialogOpen}
-                onSaveAttempt={!user ? () => setIsAuthDialogOpen(true) : undefined}
-                selectedPalette={selectedPalette}
-                onSaveSuccess={handlePaletteSave}
-              />
-              {!user && (
-                <AuthDialog
-                  isOpen={isAuthDialogOpen}
-                  onOpenChange={setIsAuthDialogOpen}
-                  customTitle="You are almost there"
-                  onSuccess={(palette) => {
-                    setSelectedPalette(palette);
-                    setIsAuthDialogOpen(false);
-                  }}
+              <div className="flex items-center gap-2">
+                <SavePaletteDialog 
+                  colors={colors} 
+                  isOpen={isDialogOpen}
+                  onOpenChange={setIsDialogOpen}
+                  onSaveAttempt={!user ? () => setIsAuthDialogOpen(true) : undefined}
+                  selectedPalette={selectedPalette}
+                  onSaveSuccess={handlePaletteSave}
                 />
-              )}
+                {!user && (
+                  <>
+                    <Button 
+                      variant="outline"
+                      onClick={() => setIsAuthDialogOpen(true)}
+                      className="flex items-center gap-2"
+                    >
+                      Login
+                    </Button>
+                    <AuthDialog
+                      isOpen={isAuthDialogOpen}
+                      onOpenChange={setIsAuthDialogOpen}
+                      customTitle="You are almost there"
+                      onSuccess={(palette) => {
+                        setSelectedPalette(palette);
+                        setIsAuthDialogOpen(false);
+                      }}
+                    />
+                  </>
+                )}
+              </div>
             </>
           )}
           <Button
