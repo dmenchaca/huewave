@@ -62,19 +62,20 @@ export function useUser() {
   const { data: user, error, isLoading, isFetching } = useQuery<User | null, Error>({
     queryKey: ['user'],
     queryFn: fetchUser,
-    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
-    cacheTime: 30 * 60 * 1000, // Cache for 30 minutes
+    staleTime: 2 * 60 * 1000, // Consider data fresh for 2 minutes
+    gcTime: 24 * 60 * 60 * 1000, // Keep unused data in cache for 24 hours
     retry: (failureCount, error) => {
-      // Only retry if it's not an auth error (401)
+      // Don't retry on auth errors (401)
       if (error instanceof Error && error.message.includes('401')) {
         return false;
       }
+      // Retry up to 3 times for other errors
       return failureCount < 3;
     },
-    refetchOnWindowFocus: true, // Refetch when window regains focus
-    refetchOnMount: true, // Refetch when component mounts
+    refetchOnWindowFocus: 'always', // Always refetch when window regains focus
+    refetchOnMount: 'always', // Always refetch when component mounts
     refetchOnReconnect: true, // Refetch on reconnection
-    refetchInterval: 30 * 60 * 1000, // Refetch every 30 minutes
+    refetchInterval: (data) => data ? 5 * 60 * 1000 : false, // Refetch every 5 minutes if user is logged in
     initialData: null,
     enabled: true
   });
