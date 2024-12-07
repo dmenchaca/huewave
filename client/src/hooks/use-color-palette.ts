@@ -20,14 +20,15 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
 
   const addToHistory = useCallback((newColors: string[]) => {
     setColorHistory(prev => {
-      // Check if the new colors are different from the last entry
       const lastColors = prev[prev.length - 1];
+      // Only add to history if colors have changed
       if (lastColors && JSON.stringify(lastColors) === JSON.stringify(newColors)) {
         return prev;
       }
       
       // Remove any future states if we're not at the end
       const newHistory = prev.slice(0, historyIndex + 1);
+      // Add new state
       return [...newHistory, [...newColors]];
     });
     setHistoryIndex(prev => prev + 1);
@@ -35,23 +36,23 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
 
   // Handle color updates with history tracking
   const handleColorWithHistory = useCallback((index: number, newColor: string) => {
+    if (lockedColors[index]) {
+      return; // Don't update locked colors
+    }
+
     setColors(prev => {
-      // Early return if color hasn't changed
       if (prev[index] === newColor) {
-        return prev;
+        return prev; // No change needed
       }
       
       const next = [...prev];
       next[index] = newColor;
       
-      // Use requestAnimationFrame to batch state updates
-      requestAnimationFrame(() => {
-        addToHistory(next);
-      });
-      
+      // Immediately add to history instead of using requestAnimationFrame
+      addToHistory(next);
       return next;
     });
-  }, [addToHistory]);
+  }, [addToHistory, lockedColors]);
 
   const handleColorChange = useCallback((index: number, newColor: string) => {
     handleColorWithHistory(index, newColor);
@@ -83,21 +84,21 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
     ];
 
     setColors(prevColors => {
-      // Apply locked colors
-      const newColors = prevColors.length === 0 
-        ? [...adjustedColors] 
-        : adjustedColors.map((color, index) => lockedColors[index] ? prevColors[index] : color);
-      
-      // Only add to history if not the initial generation
-      if (prevColors.length > 0) {
-        requestAnimationFrame(() => {
-          addToHistory(newColors);
-        });
+      // Handle initial state
+      if (prevColors.length === 0) {
+        return adjustedColors;
       }
+
+      // Apply locked colors and create new palette
+      const newColors = adjustedColors.map((color, index) => 
+        lockedColors[index] ? prevColors[index] : color
+      );
       
+      // Add to history immediately
+      addToHistory(newColors);
       return newColors;
     });
-  }, [lockedColors, addToHistory]); // Remove colors dependency
+  }, [lockedColors, addToHistory]);
 
   const toggleLock = useCallback((index: number) => {
     setLockedColors(prev => {
