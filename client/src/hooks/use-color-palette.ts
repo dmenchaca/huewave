@@ -28,19 +28,40 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
       
       // Remove any future states if we're not at the end
       const newHistory = prev.slice(0, historyIndex + 1);
-      // Add new state
       return [...newHistory, [...newColors]];
     });
     setHistoryIndex(prev => prev + 1);
   }, [historyIndex]);
 
+  // Handle color updates with history tracking
+  const handleColorWithHistory = useCallback((index: number, newColor: string) => {
+    setColors(prev => {
+      // Early return if color hasn't changed
+      if (prev[index] === newColor) {
+        return prev;
+      }
+      
+      const next = [...prev];
+      next[index] = newColor;
+      
+      // Use requestAnimationFrame to batch state updates
+      requestAnimationFrame(() => {
+        addToHistory(next);
+      });
+      
+      return next;
+    });
+  }, [addToHistory]);
+
+  const handleColorChange = useCallback((index: number, newColor: string) => {
+    handleColorWithHistory(index, newColor);
+  }, [handleColorWithHistory]);
+
   const generateNewPalette = useCallback(() => {
-    // Generate a random base color with controlled saturation and brightness
     const baseColor: Color = chroma.random()
       .set('hsl.s', 0.6 + Math.random() * 0.2)
       .set('hsl.l', 0.4 + Math.random() * 0.2);
     
-    // Generate harmonious colors using color theory
     const adjustedColors = [
       baseColor.hex(),
       chroma.mix(baseColor, baseColor.set('hsl.h', '+30'), 0.5)
@@ -69,39 +90,14 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
       
       // Only add to history if not the initial generation
       if (prevColors.length > 0) {
-        // Batch history update
-        setTimeout(() => {
+        requestAnimationFrame(() => {
           addToHistory(newColors);
-        }, 0);
+        });
       }
       
       return newColors;
     });
-  }, [lockedColors, addToHistory]);
-
-  // Handle history updates when colors change
-  const handleColorWithHistory = useCallback((index: number, newColor: string) => {
-    setColors(prev => {
-      // Early return if color hasn't changed
-      if (prev[index] === newColor) {
-        return prev;
-      }
-      
-      const next = [...prev];
-      next[index] = newColor;
-      
-      // Batch state updates by using a timeout
-      setTimeout(() => {
-        addToHistory(next);
-      }, 0);
-      
-      return next;
-    });
-  }, [addToHistory]);
-
-  const handleColorChange = useCallback((index: number, newColor: string) => {
-    handleColorWithHistory(index, newColor);
-  }, [handleColorWithHistory]);
+  }, [lockedColors, addToHistory]); // Remove colors dependency
 
   const toggleLock = useCallback((index: number) => {
     setLockedColors(prev => {
@@ -112,25 +108,12 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
   }, []);
 
   const toggleDarkMode = useCallback(() => {
-    setDarkMode((prev: boolean) => {
+    setDarkMode(prev => {
       const next = !prev;
       localStorage.setItem("darkMode", JSON.stringify(next));
       return next;
     });
   }, []);
-
-  // Generate initial palette only once
-  useEffect(() => {
-    if (!initialColors || initialColors.length === 0) {
-      generateNewPalette();
-    }
-  }, []); // Empty dependency array since we only want this to run once
-
-  // Apply dark mode
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', darkMode);
-    document.documentElement.style.colorScheme = darkMode ? 'dark' : 'light';
-  }, [darkMode]);
 
   const undo = useCallback(() => {
     if (historyIndex > 0) {
@@ -147,6 +130,19 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
       setColors([...colorHistory[newIndex]]);
     }
   }, [historyIndex, colorHistory]);
+
+  // Generate initial palette only once when component mounts
+  useEffect(() => {
+    if (!initialColors || initialColors.length === 0) {
+      generateNewPalette();
+    }
+  }, []); // Empty dependency array
+
+  // Apply dark mode
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', darkMode);
+    document.documentElement.style.colorScheme = darkMode ? 'dark' : 'light';
+  }, [darkMode]);
 
   return {
     colors,
