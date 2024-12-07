@@ -93,45 +93,41 @@ export default function HomePage() {
       <header className="container mx-auto px-4 py-4 flex justify-between items-center">
         <div className="flex items-center gap-4">
           <h1 className="text-2xl font-bold">Color palette generator</h1>
-          {user && (
-            <SavedPalettesDropdown 
-              selectedPalette={selectedPalette}
-              onPaletteSelect={(palette) => {
-                setSelectedPalette(palette);
-                setColors(palette.colors);
-              }}
-            />
-          )}
+          <div className="w-48"> {/* Fixed width container for dropdown */}
+            {!isLoading && user && (
+              <SavedPalettesDropdown 
+                selectedPalette={selectedPalette}
+                onPaletteSelect={(palette) => {
+                  setSelectedPalette(palette);
+                  setColors(palette.colors);
+                }}
+              />
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-4">
-          {!user ? (
+          {!isLoading && (
             <>
               <SavePaletteDialog 
                 colors={colors} 
                 isOpen={isDialogOpen}
                 onOpenChange={setIsDialogOpen}
-                onSaveAttempt={() => setIsAuthDialogOpen(true)}
+                onSaveAttempt={!user ? () => setIsAuthDialogOpen(true) : undefined}
                 selectedPalette={selectedPalette}
                 onSaveSuccess={handlePaletteSave}
               />
-              <AuthDialog
-                isOpen={isAuthDialogOpen}
-                onOpenChange={setIsAuthDialogOpen}
-                customTitle="You are almost there"
-                onSuccess={(palette) => {
-                  setSelectedPalette(palette);
-                  setIsAuthDialogOpen(false);
-                }}
-              />
+              {!user && (
+                <AuthDialog
+                  isOpen={isAuthDialogOpen}
+                  onOpenChange={setIsAuthDialogOpen}
+                  customTitle="You are almost there"
+                  onSuccess={(palette) => {
+                    setSelectedPalette(palette);
+                    setIsAuthDialogOpen(false);
+                  }}
+                />
+              )}
             </>
-          ) : (
-            <SavePaletteDialog 
-              colors={colors} 
-              isOpen={isDialogOpen}
-              onOpenChange={setIsDialogOpen}
-              selectedPalette={selectedPalette}
-              onSaveSuccess={handlePaletteSave}
-            />
           )}
           <Button
             variant="ghost"
@@ -141,9 +137,13 @@ export default function HomePage() {
           >
             {darkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
           </Button>
-          {user && (
-            <Button variant="outline" onClick={() => logout()}>Logout</Button>
-          )}
+          <div className="w-24"> {/* Fixed width container for logout button */}
+            {!isLoading && user && (
+              <Button variant="outline" onClick={() => logout()} className="w-full">
+                Logout
+              </Button>
+            )}
+          </div>
         </div>
       </header>
 

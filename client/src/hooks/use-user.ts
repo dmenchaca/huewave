@@ -59,10 +59,12 @@ async function fetchUser(): Promise<User | null> {
 export function useUser() {
   const queryClient = useQueryClient();
 
-  const { data: user, error } = useQuery<User | null, Error>({
+  const { data: user, error, isLoading } = useQuery<User | null, Error>({
     queryKey: ['user'],
     queryFn: fetchUser,
-    retry: false
+    staleTime: Infinity,
+    retry: false,
+    refetchOnWindowFocus: false
   });
 
   const loginMutation = useMutation<RequestResult, Error, InsertUser>({
