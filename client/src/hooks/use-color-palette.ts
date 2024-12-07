@@ -9,35 +9,12 @@ interface UseColorPaletteProps {
 export function useColorPalette({ isDialogOpen = false, initialColors }: UseColorPaletteProps = {}) {
   const [isInitializing, setIsInitializing] = useState(true);
   
-  // Initialize colors with generated palette immediately
+  // Initialize colors with white or initial colors
   const [colors, setColors] = useState<string[]>(() => {
     if (initialColors?.length) {
       return [...initialColors];
     }
-    // Generate random colors immediately instead of white
-    const baseColor = chroma.random()
-      .set('hsl.s', 0.6 + Math.random() * 0.2)
-      .set('hsl.l', 0.4 + Math.random() * 0.2);
-    
-    return [
-      baseColor.hex(),
-      chroma.mix(baseColor, baseColor.set('hsl.h', '+30'), 0.5)
-        .set('hsl.s', 0.7)
-        .set('hsl.l', 0.5)
-        .hex(),
-      chroma.mix(baseColor, baseColor.set('hsl.h', '+60'), 0.3)
-        .saturate(1)
-        .set('hsl.l', 0.6)
-        .hex(),
-      baseColor.set('hsl.h', '+180')
-        .set('hsl.s', 0.8)
-        .set('hsl.l', 0.5)
-        .hex(),
-      chroma.mix(baseColor.set('hsl.h', '+180'), baseColor, 0.3)
-        .set('hsl.s', 0.7)
-        .set('hsl.l', 0.45)
-        .hex(),
-    ];
+    return new Array(5).fill('#FFFFFF'); // Start with white, will be replaced on mount
   });
   
   const [lockedColors, setLockedColors] = useState<boolean[]>(new Array(5).fill(false));
@@ -209,10 +186,13 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
     });
   }, []);
 
-  // Set initialization state to false since we're initializing in useState
+  // Handle initial palette generation
   useEffect(() => {
+    if (isInitializing && !initialColors?.length) {
+      generateNewPalette();
+    }
     setIsInitializing(false);
-  }, []);
+  }, [isInitializing, initialColors, generateNewPalette]);
 
   // Apply dark mode
   useEffect(() => {
