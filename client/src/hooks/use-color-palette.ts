@@ -9,11 +9,12 @@ interface UseColorPaletteProps {
 export function useColorPalette({ isDialogOpen = false, initialColors }: UseColorPaletteProps = {}) {
   // Initialize with default colors if no initial colors provided
   const defaultColors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF'];
-  const [colors, setColors] = useState<string[]>(() => initialColors ?? defaultColors);
+  const startingColors = initialColors?.length ? [...initialColors] : [...defaultColors];
+  
+  // Initialize state with proper history tracking
+  const [colors, setColors] = useState<string[]>(startingColors);
   const [lockedColors, setLockedColors] = useState<boolean[]>([false, false, false, false, false]);
-  const [colorHistory, setColorHistory] = useState<string[][]>(() => 
-    initialColors ? [[...initialColors]] : [[...defaultColors]]
-  );
+  const [colorHistory, setColorHistory] = useState<string[][]>([[...startingColors]]);
   const [historyIndex, setHistoryIndex] = useState<number>(0);
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem("darkMode");
@@ -21,59 +22,69 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
   });
 
   const addToHistory = useCallback((newColors: string[]) => {
-    if (!Array.isArray(newColors) || newColors.length === 0) {
-      return; // Don't add invalid colors to history
+    // Validate new colors
+    if (!Array.isArray(newColors) || newColors.length === 0 || newColors.some(c => !c)) {
+      console.warn('Invalid color array provided');
+      return;
     }
 
     setColorHistory(prev => {
-      const lastColors = prev[prev.length - 1];
+      const lastColors = prev[historyIndex];
       // Only add to history if colors have changed
       if (lastColors && JSON.stringify(lastColors) === JSON.stringify(newColors)) {
         return prev;
       }
       
-      // Remove any future states if we're not at the end
-      const newHistory = prev.slice(0, historyIndex + 1);
-      return [...newHistory, [...newColors]];
+      // Remove any future states if we're not at the end and add new state
+      const newHistory = [...prev.slice(0, historyIndex + 1), [...newColors]];
+      
+      // Update colors and history index in one render cycle
+      setColors([...newColors]);
+      setHistoryIndex(historyIndex + 1);
+      
+      return newHistory;
     });
-    
-    // Update history index in a separate operation
-    setHistoryIndex(prev => prev + 1);
   }, [historyIndex]);
 
   const undo = useCallback(() => {
+    if (historyIndex <= 0 || !colorHistory[0]) {
+      return; // Already at the beginning or invalid history
+    }
+
     setHistoryIndex(prev => {
-      // Don't go below 0
-      if (prev <= 0) return 0;
+      const newIndex = Math.max(0, prev - 1);
+      const targetColors = colorHistory[newIndex];
       
-      const newIndex = prev - 1;
-      const prevColors = colorHistory[newIndex];
-      
-      if (prevColors && prevColors.length > 0) {
-        setColors([...prevColors]);
+      // Ensure we have valid colors to revert to
+      if (Array.isArray(targetColors) && targetColors.length > 0) {
+        setColors([...targetColors]);
         return newIndex;
       }
       
-      return prev; // Keep current index if no valid previous state
+      // If somehow we don't have valid colors, stay at current state
+      return prev;
     });
-  }, [colorHistory]);
+  }, [colorHistory, historyIndex]);
 
   const redo = useCallback(() => {
+    if (historyIndex >= colorHistory.length - 1) {
+      return; // Already at the latest state
+    }
+
     setHistoryIndex(prev => {
-      // Don't go beyond the last item
-      if (prev >= colorHistory.length - 1) return prev;
+      const newIndex = Math.min(colorHistory.length - 1, prev + 1);
+      const targetColors = colorHistory[newIndex];
       
-      const newIndex = prev + 1;
-      const nextColors = colorHistory[newIndex];
-      
-      if (nextColors && nextColors.length > 0) {
-        setColors([...nextColors]);
+      // Ensure we have valid colors to move forward to
+      if (Array.isArray(targetColors) && targetColors.length > 0) {
+        setColors([...targetColors]);
         return newIndex;
       }
       
-      return prev; // Keep current index if no valid next state
+      // If somehow we don't have valid colors, stay at current state
+      return prev;
     });
-  }, [colorHistory]);
+  }, [colorHistory, historyIndex]);
 
   // Add keyboard event listeners for undo/redo
   useEffect(() => {
