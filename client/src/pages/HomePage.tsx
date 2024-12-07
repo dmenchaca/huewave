@@ -89,10 +89,10 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="container mx-auto px-2 sm:px-4 py-4 sm:h-16 flex flex-wrap justify-between items-center gap-4">
-        <div className="flex flex-wrap items-center gap-4">
-          <h1 className="text-xl sm:text-2xl font-bold">Color palette generator</h1>
-          <div className="h-10 flex-grow sm:flex-grow-0"> {/* Responsive container */}
+      <header className="container mx-auto px-4 h-16 flex justify-between items-center">
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-bold min-w-[240px]">Color palette generator</h1>
+          <div className="w-48 h-10"> {/* Fixed dimensions for dropdown container */}
             {isFetching ? (
               <div className="h-full">
                 <LoadingOverlay />
@@ -151,9 +151,9 @@ export default function HomePage() {
           >
             {darkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
           </Button>
-          <div className="flex-shrink-0"> {/* Responsive container for logout button */}
+          <div className="w-24"> {/* Fixed width container for logout button */}
             {!isLoading && user && (
-              <Button variant="outline" onClick={() => logout()}>
+              <Button variant="outline" onClick={() => logout()} className="w-full">
                 Logout
               </Button>
             )}
