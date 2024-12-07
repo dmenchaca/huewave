@@ -7,33 +7,27 @@ interface UseColorPaletteProps {
 }
 
 export function useColorPalette({ isDialogOpen = false, initialColors }: UseColorPaletteProps = {}) {
-  // Initialize state with loading indicator
-  const [isLoading, setIsLoading] = useState(true);
+  const [isInitializing, setIsInitializing] = useState(true);
   
-  // Initialize colors state
-  const [colors, setColors] = useState<string[]>(() => {
-    if (initialColors?.length) {
-      return [...initialColors];
-    }
-    return ['#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF']; // Neutral initial state
-  });
+  // Initialize colors and history state
+  const [colors, setColors] = useState<string[]>(() => 
+    initialColors?.length ? [...initialColors] : new Array(5).fill('#FFFFFF')
+  );
   
-  const [lockedColors, setLockedColors] = useState<boolean[]>([false, false, false, false, false]);
+  const [lockedColors, setLockedColors] = useState<boolean[]>(new Array(5).fill(false));
   const [colorHistory, setColorHistory] = useState<string[][]>(() => {
-    if (initialColors?.length) {
-      return [[...initialColors]];
-    }
-    return [['#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF']];
+    const initial = initialColors?.length ? [...initialColors] : new Array(5).fill('#FFFFFF');
+    return [[...initial]];
   });
   const [historyIndex, setHistoryIndex] = useState<number>(0);
-  const [darkMode, setDarkMode] = useState(() => {
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
     const saved = localStorage.getItem("darkMode");
     return saved ? JSON.parse(saved) : false;
   });
 
   const addToHistory = useCallback((newColors: string[]) => {
     // Validate new colors
-    if (!Array.isArray(newColors) || newColors.length === 0 || newColors.some(c => !c)) {
+    if (!Array.isArray(newColors) || newColors.length !== 5 || newColors.some(c => !c)) {
       console.warn('Invalid color array provided');
       return;
     }
@@ -45,11 +39,11 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
         return prev;
       }
       
-      // Remove any future states if we're not at the end and add new state
+      // Remove any future states if we're not at the end
       const newHistory = [...prev.slice(0, historyIndex + 1), [...newColors]];
       
-      // Update colors and history index in one render cycle
-      setColors([...newColors]);
+      // Update colors in a batch with history
+      setColors(newColors);
       setHistoryIndex(historyIndex + 1);
       
       return newHistory;
@@ -165,22 +159,14 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
         .hex(),
     ];
 
-    setColors(prevColors => {
-      // Handle initial state
-      if (prevColors.length === 0) {
-        return adjustedColors;
-      }
-
-      // Apply locked colors and create new palette
-      const newColors = adjustedColors.map((color, index) => 
-        lockedColors[index] ? prevColors[index] : color
-      );
-      
-      // Add to history immediately
-      addToHistory(newColors);
-      return newColors;
-    });
-  }, [lockedColors, addToHistory]);
+    // Apply locked colors and create new palette
+    const newColors = adjustedColors.map((color, index) => 
+      lockedColors[index] ? colors[index] : color
+    );
+    
+    // Add to history immediately
+    addToHistory(newColors);
+  }, [colors, lockedColors, addToHistory]);
 
   const toggleLock = useCallback((index: number) => {
     setLockedColors(prev => {
@@ -191,7 +177,7 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
   }, []);
 
   const toggleDarkMode = useCallback(() => {
-    setDarkMode(prev => {
+    setDarkMode((prev: boolean) => {
       const next = !prev;
       localStorage.setItem("darkMode", JSON.stringify(next));
       return next;
@@ -200,11 +186,11 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
 
   // Generate initial palette only once when component mounts if no initial colors
   useEffect(() => {
-    if (!initialColors?.length && isLoading) {
+    if (!initialColors?.length && colorHistory.length === 0) {
       generateNewPalette();
-      setIsLoading(false);
+      setIsInitializing(false);
     }
-  }, [initialColors, isLoading, generateNewPalette]);
+  }, [initialColors, colorHistory.length, generateNewPalette]);
 
   // Apply dark mode
   useEffect(() => {
@@ -225,6 +211,6 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
     redo,
     canUndo: historyIndex > 0,
     canRedo: historyIndex < colorHistory.length - 1,
-    isLoading,
+    isLoading: isInitializing,
   };
 }
