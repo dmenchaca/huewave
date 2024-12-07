@@ -50,16 +50,18 @@ export function setupAuth(app: Express) {
     session({
       cookie: {
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-        secure: false,
+        secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
         sameSite: 'lax',
         path: '/'
       },
-      secret: process.env.REPL_ID || "color-palette-secret",
-      resave: false,
+      secret: process.env.SESSION_SECRET || process.env.REPL_ID || "color-palette-secret",
+      resave: true, // Changed to true to ensure session updates
       saveUninitialized: false,
+      rolling: true, // Refresh session with each request
       store: new MemoryStore({
-        checkPeriod: 86400000
+        checkPeriod: 86400000, // 24 hours
+        stale: false // Don't delete stale sessions
       }),
       name: 'sessionId'
     })
@@ -173,6 +175,7 @@ export function setupAuth(app: Express) {
     const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
     const now = Date.now();
     const attempts = loginAttempts.get(clientIp) || { count: 0, lastAttempt: 0 };
+    const rememberMe = req.body.rememberMe === true;
 
     // Check if user is locked out
     if (attempts.count >= MAX_ATTEMPTS && now - attempts.lastAttempt < LOCKOUT_TIME) {
@@ -212,9 +215,24 @@ export function setupAuth(app: Express) {
 
       loginPromise
         .then((user: any) => {
-          return res.json({
-            message: "Login successful",
-            user: { id: user.id, email: user.email },
+          if (rememberMe) {
+            // Extend session expiry for remember me
+            if (req.session.cookie) {
+              req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 days
+            }
+          }
+
+          // Save session explicitly
+          req.session.save((err) => {
+            if (err) {
+              return next(err);
+            }
+            
+            return res.json({
+              message: "Login successful",
+              user: { id: user.id, email: user.email },
+              sessionExpiry: req.session.cookie?.maxAge
+            });
           });
         })
         .catch(next);
