@@ -20,6 +20,12 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
 
   const addToHistory = useCallback((newColors: string[]) => {
     setColorHistory(prev => {
+      // Check if the new colors are different from the last entry
+      const lastColors = prev[prev.length - 1];
+      if (lastColors && JSON.stringify(lastColors) === JSON.stringify(newColors)) {
+        return prev;
+      }
+      
       // Remove any future states if we're not at the end
       const newHistory = prev.slice(0, historyIndex + 1);
       // Add new state
@@ -60,10 +66,13 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
       const newColors = prevColors.length === 0 
         ? [...adjustedColors] 
         : adjustedColors.map((color, index) => lockedColors[index] ? prevColors[index] : color);
-
-      // Add to history if colors changed
-      if (JSON.stringify(prevColors) !== JSON.stringify(newColors)) {
-        addToHistory(newColors);
+      
+      // Only add to history if not the initial generation
+      if (prevColors.length > 0) {
+        // Batch history update
+        setTimeout(() => {
+          addToHistory(newColors);
+        }, 0);
       }
       
       return newColors;
@@ -73,11 +82,19 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
   // Handle history updates when colors change
   const handleColorWithHistory = useCallback((index: number, newColor: string) => {
     setColors(prev => {
+      // Early return if color hasn't changed
+      if (prev[index] === newColor) {
+        return prev;
+      }
+      
       const next = [...prev];
       next[index] = newColor;
-      if (prev[index] !== newColor) {
+      
+      // Batch state updates by using a timeout
+      setTimeout(() => {
         addToHistory(next);
-      }
+      }, 0);
+      
       return next;
     });
   }, [addToHistory]);
@@ -102,12 +119,12 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
     });
   }, []);
 
-  // Generate initial palette only if there are no colors
+  // Generate initial palette only once
   useEffect(() => {
     if (!initialColors || initialColors.length === 0) {
       generateNewPalette();
     }
-  }, [generateNewPalette, initialColors]);
+  }, []); // Empty dependency array since we only want this to run once
 
   // Apply dark mode
   useEffect(() => {
