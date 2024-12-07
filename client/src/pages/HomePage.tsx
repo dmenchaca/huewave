@@ -17,10 +17,13 @@ interface Palette {
 }
 
 export default function HomePage() {
-  const { user, logout } = useUser();
+  // Core state management
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
   const [selectedPalette, setSelectedPalette] = useState<Palette | null>(null);
+  
+  // Authentication and color palette hooks
+  const { user, logout, isLoading } = useUser();
   const { 
     colors,
     setColors,
@@ -58,12 +61,9 @@ export default function HomePage() {
     };
 
     syncPalette();
-  }, [user]); // This will run when user auth state changes
+  }, [user, setColors]); // Include setColors in dependencies
 
-  const handlePaletteSave = (palette: Palette) => {
-    setSelectedPalette(palette);
-  };
-
+  // Space key handler for generating new palettes
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       // Don't trigger if any input element is focused
@@ -81,6 +81,19 @@ export default function HomePage() {
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
   }, [generateNewPalette, isDialogOpen]);
+
+  const handlePaletteSave = (palette: Palette) => {
+    setSelectedPalette(palette);
+  };
+
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
