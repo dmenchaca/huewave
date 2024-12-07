@@ -4,7 +4,7 @@ import { UndoIcon, RedoIcon } from "lucide-react";
 import { useColorPalette } from "@/hooks/use-color-palette";
 
 export default function PaletteControls() {
-  const { undo, redo, canUndo, canRedo } = useColorPalette();
+  const { undo, redo, canUndo, canRedo, isLoading } = useColorPalette();
   
   const handleUndo = useCallback(() => {
     if (canUndo) undo();
@@ -13,6 +13,10 @@ export default function PaletteControls() {
   const handleRedo = useCallback(() => {
     if (canRedo) redo();
   }, [canRedo, redo]);
+
+  if (isLoading) {
+    return null;
+  }
 
   return (
     <div className="flex items-center justify-center gap-4">

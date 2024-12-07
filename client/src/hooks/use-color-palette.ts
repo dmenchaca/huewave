@@ -42,9 +42,11 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
       // Remove any future states if we're not at the end
       const newHistory = [...prev.slice(0, historyIndex + 1), [...newColors]];
       
-      // Update colors in a batch with history
-      setColors(newColors);
-      setHistoryIndex(historyIndex + 1);
+      // Update colors and history index in the next tick to prevent immediate re-renders
+      requestAnimationFrame(() => {
+        setColors(newColors);
+        setHistoryIndex(prev => prev + 1);
+      });
       
       return newHistory;
     });
@@ -186,11 +188,11 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
 
   // Generate initial palette only once when component mounts if no initial colors
   useEffect(() => {
-    if (!initialColors?.length && colorHistory.length === 0) {
+    if (isInitializing && !initialColors?.length) {
       generateNewPalette();
       setIsInitializing(false);
     }
-  }, [initialColors, colorHistory.length, generateNewPalette]);
+  }, [isInitializing, initialColors, generateNewPalette]);
 
   // Apply dark mode
   useEffect(() => {
