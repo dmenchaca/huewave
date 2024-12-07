@@ -6,6 +6,7 @@ import ColorPalette from "../components/ColorPalette";
 import PaletteControls from "../components/PaletteControls";
 import SavedPalettesDropdown from "../components/SavedPalettesDropdown";
 import SavePaletteDialog from "../components/SavePaletteDialog";
+import LoadingOverlay from "../components/LoadingOverlay";
 import { useColorPalette } from "../hooks/use-color-palette";
 import { useUser } from "../hooks/use-user";
 
@@ -23,7 +24,7 @@ export default function HomePage() {
   const [selectedPalette, setSelectedPalette] = useState<Palette | null>(null);
   
   // Authentication and color palette hooks
-  const { user, logout, isLoading } = useUser();
+  const { user, logout, isLoading, isFetching } = useUser();
   const { 
     colors,
     setColors,
@@ -84,9 +85,34 @@ export default function HomePage() {
 
   const handlePaletteSave = (palette: Palette) => {
     setSelectedPalette(palette);
+    // Update URL with palette ID
+    const url = new URL(window.location.href);
+    url.searchParams.set('palette', palette.id.toString());
+    window.history.pushState({}, '', url.toString());
   };
 
-  
+  // Handle initial URL params
+  useEffect(() => {
+    const loadPaletteFromURL = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const paletteId = params.get('palette');
+      
+      if (paletteId && user) {
+        try {
+          const response = await fetch(`/api/palettes/${paletteId}`);
+          if (response.ok) {
+            const palette = await response.json();
+            setSelectedPalette(palette);
+            setColors(palette.colors);
+          }
+        } catch (error) {
+          console.error('Error loading palette from URL:', error);
+        }
+      }
+    };
+
+    loadPaletteFromURL();
+  }, [user]); // Only run when user changes
 
   return (
     <div className="min-h-screen bg-background">
@@ -94,7 +120,9 @@ export default function HomePage() {
         <div className="flex items-center gap-4">
           <h1 className="text-2xl font-bold">Color palette generator</h1>
           <div className="w-48"> {/* Fixed width container for dropdown */}
-            {!isLoading && user && (
+            {isFetching ? (
+              <LoadingOverlay />
+            ) : user && (
               <SavedPalettesDropdown 
                 selectedPalette={selectedPalette}
                 onPaletteSelect={(palette) => {
