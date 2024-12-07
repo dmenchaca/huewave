@@ -54,7 +54,7 @@ export default function HomePage() {
       } else {
         // Reset state when user logs out
         setSelectedPalette(null);
-        generateNewPalette();
+        setColors([]);  // This will trigger the useEffect in useColorPalette
       }
     };
 
