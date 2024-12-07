@@ -89,10 +89,10 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="container mx-auto px-4 h-16 flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold min-w-[240px]">Color palette generator</h1>
-          <div className="w-48 h-10"> {/* Fixed dimensions for dropdown container */}
+      <header className="container mx-auto px-4 py-4 md:py-0 md:h-16 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-0">
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-4 w-full md:w-auto">
+          <h1 className="text-2xl font-bold">Color palette generator</h1>
+          <div className="w-full md:w-48 h-10">
             {isFetching ? (
               <div className="h-full">
                 <LoadingOverlay />
@@ -108,10 +108,10 @@ export default function HomePage() {
             )}
           </div>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
           {!isLoading && (
             <>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 <SavePaletteDialog 
                   colors={colors} 
                   isOpen={isDialogOpen}
@@ -125,7 +125,7 @@ export default function HomePage() {
                     <Button 
                       variant="outline"
                       onClick={() => setIsAuthDialogOpen(true)}
-                      className="flex items-center gap-2"
+                      className="whitespace-nowrap"
                     >
                       Login
                     </Button>
@@ -148,12 +148,13 @@ export default function HomePage() {
             size="icon"
             onClick={toggleDarkMode}
             aria-label="Toggle theme"
+            className="flex-shrink-0"
           >
             {darkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
           </Button>
-          <div className="w-24"> {/* Fixed width container for logout button */}
+          <div className="flex-shrink-0">
             {!isLoading && user && (
-              <Button variant="outline" onClick={() => logout()} className="w-full">
+              <Button variant="outline" onClick={() => logout()} className="whitespace-nowrap">
                 Logout
               </Button>
             )}
