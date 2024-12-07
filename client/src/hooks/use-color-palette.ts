@@ -7,14 +7,24 @@ interface UseColorPaletteProps {
 }
 
 export function useColorPalette({ isDialogOpen = false, initialColors }: UseColorPaletteProps = {}) {
-  // Initialize with default colors if no initial colors provided
-  const defaultColors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF'];
-  const startingColors = initialColors?.length ? [...initialColors] : [...defaultColors];
+  // Initialize state with loading indicator
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Initialize state with proper history tracking
-  const [colors, setColors] = useState<string[]>(startingColors);
+  // Initialize colors state
+  const [colors, setColors] = useState<string[]>(() => {
+    if (initialColors?.length) {
+      return [...initialColors];
+    }
+    return ['#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF']; // Neutral initial state
+  });
+  
   const [lockedColors, setLockedColors] = useState<boolean[]>([false, false, false, false, false]);
-  const [colorHistory, setColorHistory] = useState<string[][]>([[...startingColors]]);
+  const [colorHistory, setColorHistory] = useState<string[][]>(() => {
+    if (initialColors?.length) {
+      return [[...initialColors]];
+    }
+    return [['#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#FFFFFF']];
+  });
   const [historyIndex, setHistoryIndex] = useState<number>(0);
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem("darkMode");
@@ -188,12 +198,13 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
     });
   }, []);
 
-  // Generate initial palette only once when component mounts
+  // Generate initial palette only once when component mounts if no initial colors
   useEffect(() => {
-    if (!initialColors || initialColors.length === 0) {
+    if (!initialColors?.length && isLoading) {
       generateNewPalette();
+      setIsLoading(false);
     }
-  }, []); // Empty dependency array
+  }, [initialColors, isLoading, generateNewPalette]);
 
   // Apply dark mode
   useEffect(() => {
@@ -214,5 +225,6 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
     redo,
     canUndo: historyIndex > 0,
     canRedo: historyIndex < colorHistory.length - 1,
+    isLoading,
   };
 }
