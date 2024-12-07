@@ -55,34 +55,36 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
         .hex(),
     ];
 
-    // Apply locked colors
-    const newColors = colors.length === 0 
-      ? [...adjustedColors] 
-      : adjustedColors.map((color, index) => lockedColors[index] ? colors[index] : color);
+    setColors(prevColors => {
+      // Apply locked colors
+      const newColors = prevColors.length === 0 
+        ? [...adjustedColors] 
+        : adjustedColors.map((color, index) => lockedColors[index] ? prevColors[index] : color);
 
-    // Update colors state
-    setColors(newColors);
-    
-    // Add to history if colors changed
-    if (JSON.stringify(colors) !== JSON.stringify(newColors)) {
-      addToHistory(newColors);
-    }
-  }, [colors, lockedColors, addToHistory]);
+      // Add to history if colors changed
+      if (JSON.stringify(prevColors) !== JSON.stringify(newColors)) {
+        addToHistory(newColors);
+      }
+      
+      return newColors;
+    });
+  }, [lockedColors, addToHistory]);
 
-  const handleColorChange = useCallback((index: number, newColor: string) => {
+  // Handle history updates when colors change
+  const handleColorWithHistory = useCallback((index: number, newColor: string) => {
     setColors(prev => {
       const next = [...prev];
       next[index] = newColor;
+      if (prev[index] !== newColor) {
+        addToHistory(next);
+      }
       return next;
     });
-  }, []);
+  }, [addToHistory]);
 
-  // Handle history updates when colors change
-  useEffect(() => {
-    if (colors.length === 5) {
-      addToHistory([...colors]);
-    }
-  }, [colors, addToHistory]);
+  const handleColorChange = useCallback((index: number, newColor: string) => {
+    handleColorWithHistory(index, newColor);
+  }, [handleColorWithHistory]);
 
   const toggleLock = useCallback((index: number) => {
     setLockedColors(prev => {
@@ -102,10 +104,10 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
 
   // Generate initial palette only if there are no colors
   useEffect(() => {
-    if (Array.isArray(colors) && colors.length === 0) {
+    if (!initialColors || initialColors.length === 0) {
       generateNewPalette();
     }
-  }, [generateNewPalette, colors]);
+  }, [generateNewPalette, initialColors]);
 
   // Apply dark mode
   useEffect(() => {
