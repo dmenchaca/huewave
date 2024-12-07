@@ -7,10 +7,12 @@ interface UseColorPaletteProps {
 }
 
 export function useColorPalette({ isDialogOpen = false, initialColors }: UseColorPaletteProps = {}) {
-  const [colors, setColors] = useState<string[]>(() => initialColors ?? []);
+  // Initialize with default colors if no initial colors provided
+  const defaultColors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF'];
+  const [colors, setColors] = useState<string[]>(() => initialColors ?? defaultColors);
   const [lockedColors, setLockedColors] = useState<boolean[]>([false, false, false, false, false]);
   const [colorHistory, setColorHistory] = useState<string[][]>(() => 
-    initialColors ? [[...initialColors]] : [[]]
+    initialColors ? [[...initialColors]] : [[...defaultColors]]
   );
   const [historyIndex, setHistoryIndex] = useState<number>(0);
   const [darkMode, setDarkMode] = useState(() => {
@@ -32,40 +34,46 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
       
       // Remove any future states if we're not at the end
       const newHistory = prev.slice(0, historyIndex + 1);
-      // Add new state
-      const updatedHistory = [...newHistory, [...newColors]];
-      
-      // Update history index synchronously to avoid race conditions
-      setHistoryIndex(updatedHistory.length - 1);
-      return updatedHistory;
+      return [...newHistory, [...newColors]];
     });
+    
+    // Update history index in a separate operation
+    setHistoryIndex(prev => prev + 1);
   }, [historyIndex]);
 
   const undo = useCallback(() => {
-    if (historyIndex > 0 && colorHistory[historyIndex - 1]) {
-      const newIndex = historyIndex - 1;
-      try {
-        const newColors = [...colorHistory[newIndex]];
-        setHistoryIndex(newIndex);
-        setColors(newColors);
-      } catch (error) {
-        console.error('Error during undo operation:', error);
+    setHistoryIndex(prev => {
+      // Don't go below 0
+      if (prev <= 0) return 0;
+      
+      const newIndex = prev - 1;
+      const prevColors = colorHistory[newIndex];
+      
+      if (prevColors && prevColors.length > 0) {
+        setColors([...prevColors]);
+        return newIndex;
       }
-    }
-  }, [historyIndex, colorHistory]);
+      
+      return prev; // Keep current index if no valid previous state
+    });
+  }, [colorHistory]);
 
   const redo = useCallback(() => {
-    if (historyIndex < colorHistory.length - 1 && colorHistory[historyIndex + 1]) {
-      const newIndex = historyIndex + 1;
-      try {
-        const newColors = [...colorHistory[newIndex]];
-        setHistoryIndex(newIndex);
-        setColors(newColors);
-      } catch (error) {
-        console.error('Error during redo operation:', error);
+    setHistoryIndex(prev => {
+      // Don't go beyond the last item
+      if (prev >= colorHistory.length - 1) return prev;
+      
+      const newIndex = prev + 1;
+      const nextColors = colorHistory[newIndex];
+      
+      if (nextColors && nextColors.length > 0) {
+        setColors([...nextColors]);
+        return newIndex;
       }
-    }
-  }, [historyIndex, colorHistory]);
+      
+      return prev; // Keep current index if no valid next state
+    });
+  }, [colorHistory]);
 
   // Add keyboard event listeners for undo/redo
   useEffect(() => {
