@@ -1,5 +1,10 @@
 import { useState, useCallback, useEffect } from "react";
 import chroma, { Color } from "chroma-js";
+import Cookies from 'js-cookie';
+
+const PALETTE_COOKIE_NAME = 'palette_colors';
+const LOCKED_COLORS_COOKIE_NAME = 'locked_colors';
+const COOKIE_EXPIRY = 7; // Days
 
 interface UseColorPaletteProps {
   isDialogOpen?: boolean;
@@ -7,8 +12,16 @@ interface UseColorPaletteProps {
 }
 
 export function useColorPalette({ isDialogOpen = false, initialColors }: UseColorPaletteProps = {}) {
-  const [colors, setColors] = useState<string[]>(() => initialColors || []);
-  const [lockedColors, setLockedColors] = useState<boolean[]>([false, false, false, false, false]);
+  const [colors, setColors] = useState<string[]>(() => {
+    const savedColors = Cookies.get(PALETTE_COOKIE_NAME);
+    return savedColors ? JSON.parse(savedColors) : initialColors || [];
+  });
+  
+  const [lockedColors, setLockedColors] = useState<boolean[]>(() => {
+    const savedLocked = Cookies.get(LOCKED_COLORS_COOKIE_NAME);
+    return savedLocked ? JSON.parse(savedLocked) : [false, false, false, false, false];
+  });
+  
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem("darkMode");
     return saved ? JSON.parse(saved) : false;
@@ -78,6 +91,18 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
       localStorage.setItem("darkMode", JSON.stringify(next));
       return next;
     });
+  // Save colors to cookies whenever they change
+  useEffect(() => {
+    if (colors.length > 0) {
+      Cookies.set(PALETTE_COOKIE_NAME, JSON.stringify(colors), { expires: COOKIE_EXPIRY });
+    }
+  }, [colors]);
+
+  // Save locked colors state to cookies whenever they change
+  useEffect(() => {
+    Cookies.set(LOCKED_COLORS_COOKIE_NAME, JSON.stringify(lockedColors), { expires: COOKIE_EXPIRY });
+  }, [lockedColors]);
+
   }, []);
 
   // Generate initial palette only if there are no colors
