@@ -59,12 +59,16 @@ async function fetchUser(): Promise<User | null> {
 export function useUser() {
   const queryClient = useQueryClient();
 
-  const { data: user, error, isLoading } = useQuery<User | null, Error>({
+  const { data: user, error, isLoading, isFetching } = useQuery<User | null, Error>({
     queryKey: ['user'],
     queryFn: fetchUser,
     staleTime: Infinity,
     retry: false,
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    cacheTime: 1000 * 60 * 60 * 24, // 24 hours
+    suspense: false
   });
 
   const loginMutation = useMutation<RequestResult, Error, InsertUser>({
@@ -91,6 +95,8 @@ export function useUser() {
   return {
     user,
     error,
+    isLoading,
+    isFetching: isFetching || loginMutation.isPending || logoutMutation.isPending || registerMutation.isPending,
     login: loginMutation.mutateAsync,
     logout: logoutMutation.mutateAsync,
     register: registerMutation.mutateAsync,
