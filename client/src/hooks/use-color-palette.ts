@@ -85,7 +85,7 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
     if (colors.length === 0) {
       generateNewPalette();
     }
-  }, [generateNewPalette, colors.length]);
+  }, []); // Run only once on mount
 
   // Apply dark mode
   useEffect(() => {

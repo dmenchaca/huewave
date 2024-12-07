@@ -52,9 +52,8 @@ export default function HomePage() {
           console.error('Error fetching latest palette:', error);
         }
       } else {
-        // Reset state when user logs out
+        // Only reset selected palette when user logs out, keep colors for guest mode
         setSelectedPalette(null);
-        setColors([]);  // This will trigger the useEffect in useColorPalette
       }
     };
 
