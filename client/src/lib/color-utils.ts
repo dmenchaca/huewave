@@ -88,6 +88,21 @@ function findClosestFlavor(color: string): string {
   return closestFlavor.name;
 }
 
+// Ice cream related adjectives and descriptions
+const iceCreamAdjectives = [
+  "Creamy", "Dreamy", "Frosty", "Smooth", "Sweet", "Delightful", "Indulgent",
+  "Luxurious", "Velvety", "Heavenly", "Whimsical", "Divine"
+];
+
+const toppings = [
+  "Sprinkles", "Drizzle", "Swirl", "Ripple", "Crunch", "Chips", "Chunks"
+];
+
+const specialNames = [
+  "Parlor Special", "Scoops Supreme", "Ice Cream Dream", "Frozen Fantasy",
+  "Sundae Sensation", "Creamy Creation", "Sweet Symphony"
+];
+
 export function generatePaletteName(colors: string[]): string {
   // Get ice cream flavors for each color
   const flavorNames = colors.map(findClosestFlavor);
@@ -101,11 +116,32 @@ export function generatePaletteName(colors: string[]): string {
   // Add time-based suffix for uniqueness
   const timestamp = new Date().getTime().toString().slice(-4);
 
+  // Get random elements
+  const getRandomElement = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
+  const adjective = getRandomElement(iceCreamAdjectives);
+  const topping = getRandomElement(toppings);
+  const special = getRandomElement(specialNames);
+
   if (selectedFlavors.length === 1) {
-    return `${selectedFlavors[0]} Swirl ${timestamp}`;
+    const patterns = [
+      `${adjective} ${selectedFlavors[0]} ${topping}`,
+      `Triple Scoop ${selectedFlavors[0]}`,
+      `${selectedFlavors[0]} ${special}`
+    ];
+    return `${getRandomElement(patterns)} ${timestamp}`;
   } else if (selectedFlavors.length === 2) {
-    return `${selectedFlavors[0]} & ${selectedFlavors[1]} Twist ${timestamp}`;
+    const patterns = [
+      `Double Scoop ${selectedFlavors[0]} & ${selectedFlavors[1]}`,
+      `${selectedFlavors[0]} ${topping} with ${selectedFlavors[1]} Drizzle`,
+      `${adjective} ${selectedFlavors[0]} Swirled with ${selectedFlavors[1]}`
+    ];
+    return `${getRandomElement(patterns)} ${timestamp}`;
   } else {
-    return `${selectedFlavors.join(', ')} Sundae ${timestamp}`;
+    const patterns = [
+      `Triple Delight: ${selectedFlavors.join(', ')}`,
+      `${special}: ${selectedFlavors.join(' & ')}`,
+      `${adjective} Trio of ${selectedFlavors.join(', ')}`
+    ];
+    return `${getRandomElement(patterns)} ${timestamp}`;
   }
 }
