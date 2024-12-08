@@ -1,5 +1,6 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { type Express } from "express";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -71,6 +72,43 @@ export function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  // Google OAuth Strategy
+  passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID!,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    callbackURL: "/auth/google/callback",
+    scope: ["profile", "email"]
+  }, async (accessToken, refreshToken, profile, done) => {
+    try {
+      // Check if user exists
+      const [existingUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, profile.emails?.[0]?.value || ''))
+        .limit(1);
+
+      if (existingUser) {
+        return done(null, existingUser);
+      }
+
+      // Create new user
+      const [newUser] = await db
+        .insert(users)
+        .values({
+          email: profile.emails?.[0]?.value || '',
+          password: '', // No password for Google auth
+          provider: 'google',
+          provider_id: profile.id,
+        })
+        .returning();
+
+      return done(null, newUser);
+    } catch (err) {
+      return done(err as Error);
+    }
+  }));
+
+  // Local Strategy
   passport.use(
     new LocalStrategy(
       {
@@ -249,6 +287,19 @@ export function setupAuth(app: Express) {
       res.json({ message: "Logout successful" });
     });
   });
+
+  // Google OAuth routes
+  app.get('/auth/google',
+    passport.authenticate('google', { scope: ['profile', 'email'] })
+  );
+
+  app.get('/auth/google/callback',
+    passport.authenticate('google', { failureRedirect: '/' }),
+    (req, res) => {
+      // Successful authentication, redirect home
+      res.redirect('/');
+    }
+  );
 
   app.get("/api/user", (req, res) => {
     if (req.isAuthenticated()) {

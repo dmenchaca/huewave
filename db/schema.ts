@@ -6,6 +6,8 @@ export const users = pgTable("users", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   email: text("email").unique().notNull(),
   password: text("password").notNull(),
+  provider: text("provider").default('local'),
+  provider_id: text("provider_id"),
 });
 
 export const palettes = pgTable("palettes", {
