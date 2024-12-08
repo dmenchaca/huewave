@@ -17,13 +17,25 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
       const savedColors = Cookies.get(PALETTE_COOKIE_NAME);
       if (savedColors) {
         const parsed = JSON.parse(savedColors);
-        // Validate the parsed data
-        if (Array.isArray(parsed) && parsed.every(color => typeof color === 'string')) {
+        // Validate the parsed data is an array of valid hex colors
+        if (Array.isArray(parsed) && 
+            parsed.length <= 5 && 
+            parsed.every(color => 
+              typeof color === 'string' && 
+              /^#[0-9A-Fa-f]{6}$/.test(color)
+            )
+        ) {
           return parsed;
+        } else {
+          // Clear invalid cookie
+          Cookies.remove(PALETTE_COOKIE_NAME);
+          console.warn('Invalid color data found in cookie, clearing...');
         }
       }
     } catch (error) {
-      console.error('Failed to load colors from cookie:', error);
+      // Clear malformed cookie
+      Cookies.remove(PALETTE_COOKIE_NAME);
+      console.error('Failed to parse colors from cookie:', error);
     }
     return initialColors || [];
   });
@@ -33,13 +45,22 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
       const savedLocked = Cookies.get(LOCKED_COLORS_COOKIE_NAME);
       if (savedLocked) {
         const parsed = JSON.parse(savedLocked);
-        // Validate the parsed data
-        if (Array.isArray(parsed) && parsed.every(lock => typeof lock === 'boolean')) {
+        // Validate the parsed data is an array of exactly 5 booleans
+        if (Array.isArray(parsed) && 
+            parsed.length === 5 && 
+            parsed.every(lock => typeof lock === 'boolean')
+        ) {
           return parsed;
+        } else {
+          // Clear invalid cookie
+          Cookies.remove(LOCKED_COLORS_COOKIE_NAME);
+          console.warn('Invalid locked colors data found in cookie, clearing...');
         }
       }
     } catch (error) {
-      console.error('Failed to load locked colors from cookie:', error);
+      // Clear malformed cookie
+      Cookies.remove(LOCKED_COLORS_COOKIE_NAME);
+      console.error('Failed to parse locked colors from cookie:', error);
     }
     return [false, false, false, false, false];
   });
@@ -109,21 +130,38 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
 
   // Save colors to cookies whenever they change
   useEffect(() => {
-    if (colors.length > 0) {
-      try {
-        Cookies.set(PALETTE_COOKIE_NAME, JSON.stringify(colors), { expires: COOKIE_EXPIRY });
-      } catch (error) {
-        console.error('Failed to save colors to cookie:', error);
+    if (colors.length > 0 && colors.length <= 5) {
+      // Validate all colors are valid hex values
+      if (colors.every(color => /^#[0-9A-Fa-f]{6}$/.test(color))) {
+        try {
+          Cookies.set(PALETTE_COOKIE_NAME, JSON.stringify(colors), { expires: COOKIE_EXPIRY });
+        } catch (error) {
+          console.error('Failed to save colors to cookie:', error);
+          // Clear potentially corrupted cookie
+          Cookies.remove(PALETTE_COOKIE_NAME);
+        }
+      } else {
+        console.warn('Invalid color values detected, not saving to cookie');
       }
     }
   }, [colors]);
 
   // Save locked colors state to cookies whenever they change
   useEffect(() => {
-    try {
-      Cookies.set(LOCKED_COLORS_COOKIE_NAME, JSON.stringify(lockedColors), { expires: COOKIE_EXPIRY });
-    } catch (error) {
-      console.error('Failed to save locked colors to cookie:', error);
+    // Validate locked colors array
+    if (Array.isArray(lockedColors) && 
+        lockedColors.length === 5 && 
+        lockedColors.every(lock => typeof lock === 'boolean')
+    ) {
+      try {
+        Cookies.set(LOCKED_COLORS_COOKIE_NAME, JSON.stringify(lockedColors), { expires: COOKIE_EXPIRY });
+      } catch (error) {
+        console.error('Failed to save locked colors to cookie:', error);
+        // Clear potentially corrupted cookie
+        Cookies.remove(LOCKED_COLORS_COOKIE_NAME);
+      }
+    } else {
+      console.warn('Invalid locked colors data detected, not saving to cookie');
     }
   }, [lockedColors]);
 
