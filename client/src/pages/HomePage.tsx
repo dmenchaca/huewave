@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import AuthDialog from "../components/AuthDialog";
-import { Button } from "../components/ui/button";
-import UserProfileDropdown from "../components/UserProfileDropdown";
+import AuthDialog from "@/components/AuthDialog";
+import { Button } from "@/components/ui/button";
+import { MoonIcon, SunIcon } from "lucide-react";
 import ColorPalette from "../components/ColorPalette";
 import PaletteControls from "../components/PaletteControls";
 import SavedPalettesDropdown from "../components/SavedPalettesDropdown";
@@ -144,9 +144,21 @@ export default function HomePage() {
               </div>
             </>
           )}
-          
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleDarkMode}
+            aria-label="Toggle theme"
+            className="flex-shrink-0"
+          >
+            {darkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
+          </Button>
           <div className="flex-shrink-0">
-            {!isLoading && user && <UserProfileDropdown />}
+            {!isLoading && user && (
+              <Button variant="outline" onClick={() => logout()} className="whitespace-nowrap">
+                Logout
+              </Button>
+            )}
           </div>
         </div>
       </header>

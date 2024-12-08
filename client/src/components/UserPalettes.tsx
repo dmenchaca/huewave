@@ -1,9 +1,8 @@
-import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button } from "../components/ui/button";
+import { Button } from "@/components/ui/button";
 import { TrashIcon, EditIcon } from "lucide-react";
-import { useToast } from "../hooks/use-toast";
-import { ScrollArea } from "../components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
 import EditPaletteDialog from "./EditPaletteDialog";
 

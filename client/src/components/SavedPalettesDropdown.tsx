@@ -7,11 +7,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../components/ui/dropdown-menu";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { FolderIcon, SearchIcon } from "lucide-react";
-import { useColorPalette } from "../hooks/use-color-palette";
+import { useColorPalette } from "@/hooks/use-color-palette";
 
 interface Palette {
   id: number;
