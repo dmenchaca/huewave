@@ -311,7 +311,7 @@ export function setupAuth(app: Express) {
   app.post("/api/request-password-reset", async (req, res) => {
     const { email } = req.body;
     if (!email) {
-      return res.status(400).send("Email is required");
+      return res.status(400).json({ error: "Email is required" });
     }
 
     try {
@@ -338,26 +338,46 @@ export function setupAuth(app: Express) {
       const resetUrl = `${req.protocol}://${req.get('host')}/reset-password?token=${token}`;
       const msg = {
         to: email,
-        from: 'noreply@huewave.com', // Replace with your verified sender
+        from: 'noreply@huewave.com',
         subject: 'Password Reset Request',
-        text: `To reset your password, click the following link: ${resetUrl}`,
+        text: `To reset your password, click the following link: ${resetUrl}\n\nThis link will expire in 1 hour.`,
         html: `
-          <p>To reset your password, click the following link:</p>
-          <p><a href="${resetUrl}">Reset Password</a></p>
-          <p>This link will expire in 1 hour.</p>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2>Password Reset Request</h2>
+            <p>You have requested to reset your password. Click the button below to set a new password:</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${resetUrl}" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">Reset Password</a>
+            </div>
+            <p>This link will expire in 1 hour for security reasons.</p>
+            <p>If you didn't request this password reset, please ignore this email.</p>
+          </div>
         `,
       };
 
-      if (process.env.SENDGRID_API_KEY) {
-        await sgMail.send(msg);
-      } else {
-        console.log('SendGrid API key not set. Would have sent email:', msg);
+      try {
+        if (process.env.SENDGRID_API_KEY) {
+          await sgMail.send(msg);
+        } else {
+          console.log('SendGrid API key not set. Would have sent email:', msg);
+        }
+      } catch (emailError: any) {
+        console.error('SendGrid error:', emailError);
+        if (emailError.response) {
+          console.error(emailError.response.body);
+        }
+        return res.status(500).json({ 
+          error: "Failed to send reset email. Please try again later.",
+          details: process.env.NODE_ENV === 'development' ? emailError.message : undefined
+        });
       }
 
       res.json({ message: "If an account exists with this email, you will receive a password reset link." });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Password reset error:', error);
-      res.status(500).send("Failed to process password reset request");
+      res.status(500).json({ 
+        error: "Failed to process password reset request",
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
     }
   });
 

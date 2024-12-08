@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { MoonIcon, SunIcon } from "lucide-react";
 
 export default function SharedPalette() {
-  const { colors: urlColors } = useParams();
+  const { colors: urlColors } = useParams<{ colors?: string }>();
   const { 
     setColors, 
     colors: currentColors,
@@ -17,20 +17,20 @@ export default function SharedPalette() {
     toggleDarkMode,
     handleColorChange 
   } = useColorPalette({
-    initialColors: urlColors?.split('-').map(c => `#${c}`)
+    initialColors: urlColors?.split('-').map((c: string) => `#${c}`)
   });
 
   useEffect(() => {
-    if (colors) {
+    if (urlColors) {
       // Split the colors string and validate each hex color
-      const colorArray = colors.split('-').map(c => `#${c}`);
-      if (colorArray.every(color => /^#[0-9A-Fa-f]{6}$/.test(color))) {
+      const colorArray = urlColors.split('-').map((c: string) => `#${c}`);
+      if (colorArray.every((color: string) => /^#[0-9A-Fa-f]{6}$/.test(color))) {
         setColors(colorArray);
       }
     }
-  }, [colors, setColors]);
+  }, [urlColors, setColors]);
 
-  if (!colors) {
+  if (!urlColors) {
     return <div>Invalid palette URL</div>;
   }
 
