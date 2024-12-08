@@ -6,6 +6,7 @@ import ColorPalette from "../components/ColorPalette";
 import PaletteControls from "../components/PaletteControls";
 import SavedPalettesDropdown from "../components/SavedPalettesDropdown";
 import SavePaletteDialog from "../components/SavePaletteDialog";
+import UserProfileDropdown from "../components/UserProfileDropdown";
 import LoadingOverlay from "../components/LoadingOverlay";
 import { useColorPalette } from "../hooks/use-color-palette";
 import { useUser } from "../hooks/use-user";
@@ -144,22 +145,22 @@ export default function HomePage() {
               </div>
             </>
           )}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleDarkMode}
-            aria-label="Toggle theme"
-            className="flex-shrink-0"
-          >
-            {darkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
-          </Button>
-          <div className="flex-shrink-0">
-            {!isLoading && user && (
-              <Button variant="outline" onClick={() => logout()} className="whitespace-nowrap">
-                Logout
-              </Button>
-            )}
-          </div>
+          {!isLoading && user ? (
+            <UserProfileDropdown
+              darkMode={darkMode}
+              toggleDarkMode={toggleDarkMode}
+            />
+          ) : (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleDarkMode}
+              aria-label="Toggle theme"
+              className="flex-shrink-0"
+            >
+              {darkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
+            </Button>
+          )}
         </div>
       </header>
 
