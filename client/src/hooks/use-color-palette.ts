@@ -50,55 +50,46 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
   });
 
   const generateNewPalette = useCallback(() => {
-    // Generate a random base color with controlled saturation and brightness
+    // Generate a base color with controlled saturation and brightness
     const baseColor: Color = chroma.random()
-      .set('hsl.s', 0.6 + Math.random() * 0.2) // Higher saturation for vibrant base
+      .set('hsl.s', 0.5 + Math.random() * 0.3) // Vibrant saturation
       .set('hsl.l', 0.4 + Math.random() * 0.2); // Controlled lightness
-    
-    // Generate harmonious colors using color theory
+
+    // Generate harmonious colors using patterns observed
     const newColors = [
       baseColor.hex(), // Base color
-      chroma.mix(baseColor, baseColor.set('hsl.h', '+30'), 0.5) // Analogous 1
-        .set('hsl.s', 0.7)
-        .set('hsl.l', 0.5)
-        .hex(),
-      chroma.mix(baseColor, baseColor.set('hsl.h', '+60'), 0.3) // Analogous 2
-        .saturate(1)
-        .set('hsl.l', 0.6)
-        .hex(),
-      baseColor.set('hsl.h', '+180') // Complementary
-        .set('hsl.s', 0.8)
-        .set('hsl.l', 0.5)
-        .hex(),
-      chroma.mix(baseColor.set('hsl.h', '+180'), baseColor, 0.3) // Split complementary
-        .set('hsl.s', 0.7)
-        .set('hsl.l', 0.45)
-        .hex(),
+      chroma(baseColor).set('hsl.h', baseColor.get('hsl.h') + 15).hex(), // Slightly shifted hue
+      chroma(baseColor).set('hsl.h', baseColor.get('hsl.h') + 60).brighten(1).hex(), // Lighter analogous
+      chroma(baseColor).set('hsl.h', (baseColor.get('hsl.h') + 180) % 360).darken(1).hex(), // Complementary darker
+      chroma(baseColor).set('hsl.h', (baseColor.get('hsl.h') + 150) % 360).hex(), // Split complementary
     ];
 
     // Ensure minimum contrast between adjacent colors
     const adjustedColors = newColors.map((color, i) => {
-      if (i === 0) return color;
+      if (i === 0) return color; // Skip base color
       const prevColor = chroma(newColors[i - 1]);
       const currentColor = chroma(color);
       const contrast = chroma.contrast(prevColor, currentColor);
-      
-      if (contrast < 1.5) {
+
+      // Adjust lightness to improve contrast if necessary
+      if (contrast < 2) {
         return currentColor
-          .set('hsl.l', currentColor.get('hsl.l') + 0.2)
-          .saturate(1)
+          .set('hsl.l', Math.min(currentColor.get('hsl.l') + 0.2, 1))
           .hex();
       }
       return color;
     });
 
-    setColors(prev => 
-      prev.length === 0 ? adjustedColors : prev.map((color, index) => 
-        lockedColors[index] ? color : adjustedColors[index]
-      )
+    // Update the state, respecting locked colors
+    setColors(prev =>
+      prev.length === 0
+        ? adjustedColors
+        : prev.map((color, index) =>
+            lockedColors[index] ? color : adjustedColors[index]
+          )
     );
   }, [lockedColors]);
-
+  
   const toggleLock = useCallback((index: number) => {
     setLockedColors(prev => {
       const next = [...prev];
