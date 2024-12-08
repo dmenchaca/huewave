@@ -107,41 +107,26 @@ export function generatePaletteName(colors: string[]): string {
   // Get ice cream flavors for each color
   const flavorNames = colors.map(findClosestFlavor);
   
-  // Remove duplicates while preserving order
-  const uniqueFlavors = Array.from(new Set(flavorNames));
-  
-  // Select up to 3 flavors for the name
-  const selectedFlavors = uniqueFlavors.slice(0, 3);
-  
-  // Add time-based suffix for uniqueness
-  const timestamp = new Date().getTime().toString().slice(-4);
+  // Count flavor occurrences to find dominant flavors
+  const flavorCounts = flavorNames.reduce((acc, flavor) => {
+    acc[flavor] = (acc[flavor] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
 
-  // Get random elements
-  const getRandomElement = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
-  const adjective = getRandomElement(iceCreamAdjectives);
-  const topping = getRandomElement(toppings);
-  const special = getRandomElement(specialNames);
+  // Sort flavors by count (descending) and then alphabetically
+  const sortedFlavors = Object.entries(flavorCounts)
+    .sort(([flavorA, countA], [flavorB, countB]) => {
+      if (countA !== countB) return countB - countA;
+      return flavorA.localeCompare(flavorB);
+    })
+    .map(([flavor]) => flavor);
 
-  if (selectedFlavors.length === 1) {
-    const patterns = [
-      `${adjective} ${selectedFlavors[0]} ${topping}`,
-      `Triple Scoop ${selectedFlavors[0]}`,
-      `${selectedFlavors[0]} ${special}`
-    ];
-    return `${getRandomElement(patterns)} ${timestamp}`;
-  } else if (selectedFlavors.length === 2) {
-    const patterns = [
-      `Double Scoop ${selectedFlavors[0]} & ${selectedFlavors[1]}`,
-      `${selectedFlavors[0]} ${topping} with ${selectedFlavors[1]} Drizzle`,
-      `${adjective} ${selectedFlavors[0]} Swirled with ${selectedFlavors[1]}`
-    ];
-    return `${getRandomElement(patterns)} ${timestamp}`;
+  // Select up to 2 dominant flavors
+  const dominantFlavors = sortedFlavors.slice(0, 2);
+
+  if (dominantFlavors.length === 1) {
+    return `${dominantFlavors[0]} Swirl`;
   } else {
-    const patterns = [
-      `Triple Delight: ${selectedFlavors.join(', ')}`,
-      `${special}: ${selectedFlavors.join(' & ')}`,
-      `${adjective} Trio of ${selectedFlavors.join(', ')}`
-    ];
-    return `${getRandomElement(patterns)} ${timestamp}`;
+    return `${dominantFlavors[0]} ${dominantFlavors[1]}`;
   }
 }
