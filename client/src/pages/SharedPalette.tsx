@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { MoonIcon, SunIcon } from "lucide-react";
 
 export default function SharedPalette() {
-  const { colors } = useParams();
+  const { colors: urlColors } = useParams();
   const { 
     setColors, 
     colors: currentColors,
@@ -16,7 +16,9 @@ export default function SharedPalette() {
     darkMode,
     toggleDarkMode,
     handleColorChange 
-  } = useColorPalette();
+  } = useColorPalette({
+    initialColors: urlColors?.split('-').map(c => `#${c}`)
+  });
 
   useEffect(() => {
     if (colors) {
