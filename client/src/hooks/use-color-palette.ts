@@ -89,6 +89,7 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
           )
     );
   }, [lockedColors]);
+
   
   const toggleLock = useCallback((index: number) => {
     setLockedColors(prev => {
