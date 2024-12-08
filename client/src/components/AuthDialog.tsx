@@ -43,7 +43,7 @@ interface AuthDialogProps {
 }
 
 export default function AuthDialog({ isOpen, onOpenChange, triggerContent, customTitle, onSuccess }: AuthDialogProps) {
-  const [isLogin, setIsLogin] = useState(false);
+  const [isLogin, setIsLogin] = useState(true);
   const { login, register, isFetching } = useUser();
   const { toast } = useToast();
 
