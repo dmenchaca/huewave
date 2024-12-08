@@ -34,6 +34,10 @@ interface AuthResponse {
   palette?: Palette;
 }
 
+interface ResetPasswordResponse {
+  message: string;
+}
+
 interface AuthDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -44,8 +48,43 @@ interface AuthDialogProps {
 
 export default function AuthDialog({ isOpen, onOpenChange, triggerContent, customTitle, onSuccess }: AuthDialogProps) {
   const [isLogin, setIsLogin] = useState(true);
+  const [isResetPassword, setIsResetPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetSubmitted, setResetSubmitted] = useState(false);
   const { login, register, isFetching } = useUser();
   const { toast } = useToast();
+
+  const handleResetPassword = async () => {
+    if (!resetEmail.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please enter your email",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/request-password-reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: resetEmail }),
+      });
+
+      const result: ResetPasswordResponse = await response.json();
+      setResetSubmitted(true);
+      toast({
+        title: "Password Reset",
+        description: result.message,
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message,
+      });
+    }
+  };
 
   const form = useForm({
     resolver: zodResolver(insertUserSchema),
@@ -189,17 +228,73 @@ export default function AuthDialog({ isOpen, onOpenChange, triggerContent, custo
                 </svg>
                 Continue with Google
               </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full"
-                onClick={() => setIsLogin(!isLogin)}
-              >
-                {isLogin 
-                  ? "Need an account? Register" 
-                  : "Already have an account? Login"
-                }
-              </Button>
+              {isResetPassword ? (
+                resetSubmitted ? (
+                  <div className="text-center space-y-4">
+                    <p className="text-sm text-muted-foreground">Check your email for reset instructions.</p>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="w-full"
+                      onClick={() => {
+                        setIsResetPassword(false);
+                        setResetSubmitted(false);
+                        setResetEmail("");
+                      }}
+                    >
+                      Back to login
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <Input
+                      type="email"
+                      placeholder="Enter your email"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                    />
+                    <Button
+                      type="button"
+                      className="w-full"
+                      onClick={handleResetPassword}
+                    >
+                      Send Reset Link
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="w-full"
+                      onClick={() => setIsResetPassword(false)}
+                    >
+                      Back to login
+                    </Button>
+                  </div>
+                )
+              ) : (
+                <>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full"
+                    onClick={() => setIsLogin(!isLogin)}
+                  >
+                    {isLogin 
+                      ? "Need an account? Register" 
+                      : "Already have an account? Login"
+                    }
+                  </Button>
+                  {isLogin && (
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="w-full"
+                      onClick={() => setIsResetPassword(true)}
+                    >
+                      Forgot password?
+                    </Button>
+                  )}
+                </>
+              )}
             </div>
           </form>
         </Form>

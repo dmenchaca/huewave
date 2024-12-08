@@ -6,12 +6,31 @@ import session from "express-session";
 import createMemoryStore from "memorystore";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
+import sgMail from '@sendgrid/mail';
 import { users, palettes, insertUserSchema } from "@db/schema";
 import { db } from "../db";
 import { eq } from "drizzle-orm";
 
 const scryptAsync = promisify(scrypt);
 
+// Initialize SendGrid
+if (process.env.SENDGRID_API_KEY) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+}
+
+// Token generation for password reset
+const generateResetToken = () => {
+  return randomBytes(32).toString('hex');
+};
+
+interface ResetToken {
+  token: string;
+  email: string;
+  expires: Date;
+}
+
+// In-memory storage for reset tokens (in production, use database)
+const resetTokens = new Map<string, ResetToken>();
 const crypto = {
   hash: async (password: string) => {
     const salt = randomBytes(16).toString("hex");
@@ -288,6 +307,93 @@ export function setupAuth(app: Express) {
     });
   });
 
+  // Password reset request endpoint
+  app.post("/api/request-password-reset", async (req, res) => {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).send("Email is required");
+    }
+
+    try {
+      // Check if user exists
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+
+      if (!user) {
+        // Don't reveal if user exists
+        return res.json({ message: "If an account exists with this email, you will receive a password reset link." });
+      }
+
+      // Generate reset token
+      const token = generateResetToken();
+      const expires = new Date(Date.now() + 3600000); // 1 hour expiry
+
+      // Store token (in production, store in database)
+      resetTokens.set(token, { token, email, expires });
+
+      // Send reset email
+      const resetUrl = `${req.protocol}://${req.get('host')}/reset-password?token=${token}`;
+      const msg = {
+        to: email,
+        from: 'noreply@huewave.com', // Replace with your verified sender
+        subject: 'Password Reset Request',
+        text: `To reset your password, click the following link: ${resetUrl}`,
+        html: `
+          <p>To reset your password, click the following link:</p>
+          <p><a href="${resetUrl}">Reset Password</a></p>
+          <p>This link will expire in 1 hour.</p>
+        `,
+      };
+
+      if (process.env.SENDGRID_API_KEY) {
+        await sgMail.send(msg);
+      } else {
+        console.log('SendGrid API key not set. Would have sent email:', msg);
+      }
+
+      res.json({ message: "If an account exists with this email, you will receive a password reset link." });
+    } catch (error) {
+      console.error('Password reset error:', error);
+      res.status(500).send("Failed to process password reset request");
+    }
+  });
+
+  // Reset password endpoint
+  app.post("/api/reset-password", async (req, res) => {
+    const { token, newPassword } = req.body;
+    
+    if (!token || !newPassword) {
+      return res.status(400).send("Token and new password are required");
+    }
+
+    try {
+      const resetData = resetTokens.get(token);
+      
+      if (!resetData || resetData.expires < new Date()) {
+        return res.status(400).send("Invalid or expired reset token");
+      }
+
+      // Hash the new password
+      const hashedPassword = await crypto.hash(newPassword);
+
+      // Update user's password
+      await db
+        .update(users)
+        .set({ password: hashedPassword })
+        .where(eq(users.email, resetData.email));
+
+      // Remove used token
+      resetTokens.delete(token);
+
+      res.json({ message: "Password has been reset successfully" });
+    } catch (error) {
+      console.error('Password reset error:', error);
+      res.status(500).send("Failed to reset password");
+    }
+  });
   // Google OAuth routes
   app.get('/auth/google',
     passport.authenticate('google', { scope: ['profile', 'email'] })
