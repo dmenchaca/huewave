@@ -112,6 +112,20 @@ export default function HomePage() {
           {!isLoading && (
             <>
               <div className="flex items-center gap-2 flex-shrink-0">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const colorString = colors.map(c => c.replace('#', '')).join('-');
+                    const url = `${window.location.origin}/palette/${colorString}`;
+                    navigator.clipboard.writeText(url);
+                    toast({
+                      title: "URL Copied!",
+                      description: "Share this URL to show others your palette.",
+                    });
+                  }}
+                >
+                  Share Palette
+                </Button>
                 <SavePaletteDialog 
                   colors={colors} 
                   isOpen={isDialogOpen}
