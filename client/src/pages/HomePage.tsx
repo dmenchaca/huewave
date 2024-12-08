@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import AuthDialog from "@/components/AuthDialog";
-import { Button } from "@/components/ui/button";
+import AuthDialog from "../components/AuthDialog";
+import { Button } from "../components/ui/button";
 import UserProfileDropdown from "../components/UserProfileDropdown";
 import ColorPalette from "../components/ColorPalette";
 import PaletteControls from "../components/PaletteControls";

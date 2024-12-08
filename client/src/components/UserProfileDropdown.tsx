@@ -6,11 +6,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
+} from "../components/ui/dropdown-menu";
+import { Button } from "../components/ui/button";
 import { UserIcon, Settings2Icon, LogOutIcon, SunIcon, MoonIcon } from "lucide-react";
-import { useUser } from "@/hooks/use-user";
-import { useColorPalette } from "@/hooks/use-color-palette";
+import { useUser } from "../hooks/use-user";
+import { useColorPalette } from "../hooks/use-color-palette";
 import ManageAccountDialog from "./ManageAccountDialog";
 
 export default function UserProfileDropdown() {

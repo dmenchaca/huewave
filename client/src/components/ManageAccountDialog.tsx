@@ -5,11 +5,11 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+} from "../components/ui/dialog";
+import { Button } from "../components/ui/button";
 import { useState } from "react";
-import { useUser } from "@/hooks/use-user";
-import { useToast } from "@/hooks/use-toast";
+import { useUser } from "../hooks/use-user";
+import { useToast } from "../hooks/use-toast";
 import { AlertTriangleIcon } from "lucide-react";
 import {
   AlertDialog,
@@ -20,7 +20,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from "../components/ui/alert-dialog";
 
 interface ManageAccountDialogProps {
   isOpen: boolean;

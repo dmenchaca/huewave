@@ -8,11 +8,15 @@ channel = "stable-24_05"
 [deployment]
 deploymentTarget = "cloudrun"
 build = ["npm", "run", "build"]
-run = ["npm", "run", "start"]
+run = ["sh", "-c", "cd client && vite dev --host 0.0.0.0"]
 
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 5173
+externalPort = 5173
 
 [workflows]
 runButton = "Project"
@@ -38,5 +42,5 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd client && NODE_ENV=development npm run dev -- --host 0.0.0.0"
+args = "cd client && vite dev --host 0.0.0.0"
 waitForPort = 5173
