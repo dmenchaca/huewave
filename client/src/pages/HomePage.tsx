@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import AuthDialog from "@/components/AuthDialog";
 import { Button } from "@/components/ui/button";
 import { MoonIcon, SunIcon } from "lucide-react";
@@ -10,7 +9,7 @@ import SavePaletteDialog from "../components/SavePaletteDialog";
 import LoadingOverlay from "../components/LoadingOverlay";
 import { useColorPalette } from "../hooks/use-color-palette";
 import { useUser } from "../hooks/use-user";
-import { useToast } from "@/hooks/use-toast";
+
 
 interface Palette {
   id: number;
@@ -24,8 +23,6 @@ export default function HomePage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
   const [selectedPalette, setSelectedPalette] = useState<Palette | null>(null);
-  const navigate = useNavigate();
-  const { toast } = useToast();
   
   // Authentication and color palette hooks
   const { user, logout, isLoading, isFetching } = useUser();
@@ -116,26 +113,6 @@ export default function HomePage() {
           {!isLoading && (
             <>
               <div className="flex items-center gap-2 flex-shrink-0">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    const colorString = colors.map(c => c.replace('#', '')).join('-');
-                    const url = `${window.location.origin}/palette/${colorString}`;
-                    const path = `/palette/${colorString}`;
-                    
-                    // Copy to clipboard
-                    navigator.clipboard.writeText(url);
-                    toast({
-                      title: "URL Copied!",
-                      description: "Share this URL to show others your palette.",
-                    });
-                    
-                    // Navigate to the palette URL
-                    navigate(path);
-                  }}
-                >
-                  Share Palette
-                </Button>
                 <SavePaletteDialog 
                   colors={colors} 
                   isOpen={isDialogOpen}
