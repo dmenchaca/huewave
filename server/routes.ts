@@ -54,22 +54,29 @@ export function registerRoutes(app: Express) {
       return res.status(401).send("Not authenticated");
     }
 
-    const { name, colors } = req.body;
-    if (!name || !colors || !Array.isArray(colors)) {
-      return res.status(400).send("Invalid palette data");
-    }
-
     try {
+      const result = insertPaletteSchema.safeParse({
+        ...req.body,
+        user_id: req.user.id
+      });
+
+      if (!result.success) {
+        return res.status(400).json({
+          error: "Invalid palette data",
+          details: result.error.errors.map(err => ({
+            path: err.path.join('.'),
+            message: err.message
+          }))
+        });
+      }
+
       const [palette] = await db
         .insert(palettes)
-        .values({
-          user_id: req.user.id,
-          name,
-          colors,
-        })
+        .values(result.data)
         .returning();
       res.json(palette);
     } catch (error) {
+      console.error('Error saving palette:', error);
       res.status(500).send("Failed to save palette");
     }
   });
@@ -100,13 +107,22 @@ export function registerRoutes(app: Express) {
     }
 
     const { id } = req.params;
-    const { name, colors } = req.body;
-    
-    if (!name || !colors || !Array.isArray(colors)) {
-      return res.status(400).send("Invalid palette data");
-    }
-
     try {
+      const result = insertPaletteSchema.safeParse({
+        ...req.body,
+        user_id: req.user.id
+      });
+
+      if (!result.success) {
+        return res.status(400).json({
+          error: "Invalid palette data",
+          details: result.error.errors.map(err => ({
+            path: err.path.join('.'),
+            message: err.message
+          }))
+        });
+      }
+
       // First verify the palette exists and belongs to the user
       const [existingPalette] = await db
         .select()
@@ -123,10 +139,13 @@ export function registerRoutes(app: Express) {
         return res.status(404).send("Palette not found");
       }
 
-      // Update the palette
+      // Update the palette with validated data
       const [updatedPalette] = await db
         .update(palettes)
-        .set({ name, colors })
+        .set({
+          name: result.data.name,
+          colors: result.data.colors
+        })
         .where(
           and(
             eq(palettes.id, parseInt(id)),

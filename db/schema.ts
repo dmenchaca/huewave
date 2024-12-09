@@ -18,6 +18,11 @@ export const passwordResetTokens = pgTable("password_reset_tokens", {
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Color validation schema
+export const colorSchema = z.string().regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, {
+  message: "Invalid hex color format. Must be a valid hex color (e.g., #FF0000 or #F00)",
+});
+
 export const palettes = pgTable("palettes", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   user_id: integer("user_id").references(() => users.id).notNull(),
@@ -33,7 +38,10 @@ export const selectUserSchema = createSelectSchema(users);
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = z.infer<typeof selectUserSchema>;
 
-export const insertPaletteSchema = createInsertSchema(palettes);
+export const insertPaletteSchema = createInsertSchema(palettes).extend({
+  name: z.string().min(1, "Name is required"),
+  colors: z.array(colorSchema).min(1, "At least one color is required").max(10, "Maximum 10 colors allowed"),
+});
 export const selectPaletteSchema = createSelectSchema(palettes);
 export type InsertPalette = z.infer<typeof insertPaletteSchema>;
 export type Palette = z.infer<typeof selectPaletteSchema>;
