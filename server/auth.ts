@@ -7,9 +7,9 @@ import createMemoryStore from "memorystore";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import sgMail from '@sendgrid/mail';
-import { users, palettes, insertUserSchema } from "@db/schema";
+import { users, palettes, passwordResetTokens, insertUserSchema } from "@db/schema";
 import { db } from "../db";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 const scryptAsync = promisify(scrypt);
 
@@ -29,8 +29,38 @@ interface ResetToken {
   expires: Date;
 }
 
-// In-memory storage for reset tokens (in production, use database)
-const resetTokens = new Map<string, ResetToken>();
+// Database functions for token management
+async function storeResetToken(token: string, userId: number, expires: Date) {
+  await db
+    .insert(passwordResetTokens)
+    .values({
+      token,
+      user_id: userId,
+      expires,
+    });
+}
+
+async function getResetToken(token: string) {
+  const [resetToken] = await db
+    .select()
+    .from(passwordResetTokens)
+    .where(eq(passwordResetTokens.token, token))
+    .limit(1);
+  return resetToken;
+}
+
+async function deleteResetToken(token: string) {
+  await db
+    .delete(passwordResetTokens)
+    .where(eq(passwordResetTokens.token, token));
+}
+
+// Cleanup expired tokens
+async function cleanupExpiredTokens() {
+  await db
+    .delete(passwordResetTokens)
+    .where(sql`${passwordResetTokens.expires} < NOW()`);
+}
 const crypto = {
   hash: async (password: string) => {
     const salt = randomBytes(16).toString("hex");
@@ -331,8 +361,8 @@ export function setupAuth(app: Express) {
       const token = generateResetToken();
       const expires = new Date(Date.now() + 3600000); // 1 hour expiry
 
-      // Store token (in production, store in database)
-      resetTokens.set(token, { token, email, expires });
+      // Store token in database
+      await storeResetToken(token, user.id, expires);
       console.log(`[Password Reset] Token stored for ${email}:`, {
         token: token.substring(0, 8) + '...',
         expires,
@@ -386,7 +416,7 @@ export function setupAuth(app: Express) {
     }
   });
   // Validate reset token endpoint
-  app.get("/api/validate-reset-token", (req, res) => {
+  app.get("/api/validate-reset-token", async (req, res) => {
     const { token } = req.query;
     
     if (!token || typeof token !== 'string') {
@@ -396,43 +426,54 @@ export function setupAuth(app: Express) {
       });
     }
 
-    const resetData = resetTokens.get(token);
-    console.log(`[Password Reset] Token lookup for ${token.substring(0, 8)}...`, {
-      found: !!resetData,
-      timestamp: new Date().toISOString()
-    });
-    
-    if (!resetData) {
-      console.log(`[Password Reset] Token not found: ${token.substring(0, 8)}...`);
-      return res.status(400).json({ 
+    try {
+      // Clean up expired tokens first
+      await cleanupExpiredTokens();
+
+      const resetToken = await getResetToken(token);
+      console.log(`[Password Reset] Token lookup for ${token.substring(0, 8)}...`, {
+        found: !!resetToken,
+        timestamp: new Date().toISOString()
+      });
+      
+      if (!resetToken) {
+        console.log(`[Password Reset] Token not found: ${token.substring(0, 8)}...`);
+        return res.status(400).json({ 
+          valid: false,
+          error: "Invalid token" 
+        });
+      }
+
+      const now = new Date();
+      const isExpired = resetToken.expires < now;
+      console.log(`[Password Reset] Token expiry check for ${token.substring(0, 8)}...`, {
+        expires: resetToken.expires,
+        currentTime: now,
+        isExpired,
+        timeRemaining: isExpired ? '0' : `${Math.floor((resetToken.expires.getTime() - now.getTime()) / 1000)}s`
+      });
+
+      if (isExpired) {
+        // Remove expired token
+        await deleteResetToken(token);
+        console.log(`[Password Reset] Expired token removed: ${token.substring(0, 8)}...`);
+        return res.status(400).json({ 
+          valid: false,
+          error: "Token has expired" 
+        });
+      }
+
+      res.json({ 
+        valid: true,
+        message: "Token is valid" 
+      });
+    } catch (error) {
+      console.error('[Password Reset] Token validation error:', error);
+      res.status(500).json({
         valid: false,
-        error: "Invalid token" 
+        error: "Failed to validate token"
       });
     }
-
-    const now = new Date();
-    const isExpired = resetData.expires < now;
-    console.log(`[Password Reset] Token expiry check for ${token.substring(0, 8)}...`, {
-      expires: resetData.expires,
-      currentTime: now,
-      isExpired,
-      timeRemaining: isExpired ? '0' : `${Math.floor((resetData.expires.getTime() - now.getTime()) / 1000)}s`
-    });
-
-    if (isExpired) {
-      // Remove expired token
-      resetTokens.delete(token);
-      console.log(`[Password Reset] Expired token removed: ${token.substring(0, 8)}...`);
-      return res.status(400).json({ 
-        valid: false,
-        error: "Token has expired" 
-      });
-    }
-
-    res.json({ 
-      valid: true,
-      message: "Token is valid" 
-    });
   });
 
 
@@ -445,23 +486,38 @@ export function setupAuth(app: Express) {
     }
 
     try {
-      const resetData = resetTokens.get(token);
+      // Clean up expired tokens first
+      await cleanupExpiredTokens();
+
+      // Get token data
+      const resetToken = await getResetToken(token);
       
-      if (!resetData || resetData.expires < new Date()) {
+      if (!resetToken || resetToken.expires < new Date()) {
         return res.status(400).send("Invalid or expired reset token");
       }
 
       // Hash the new password
       const hashedPassword = await crypto.hash(newPassword);
 
+      // Get user data
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, resetToken.user_id))
+        .limit(1);
+
+      if (!user) {
+        return res.status(400).send("User not found");
+      }
+
       // Update user's password
       await db
         .update(users)
         .set({ password: hashedPassword })
-        .where(eq(users.email, resetData.email));
+        .where(eq(users.id, user.id));
 
       // Remove used token
-      resetTokens.delete(token);
+      await deleteResetToken(token);
 
       res.json({ message: "Password has been reset successfully" });
     } catch (error) {

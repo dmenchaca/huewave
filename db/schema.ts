@@ -10,6 +10,14 @@ export const users = pgTable("users", {
   provider_id: text("provider_id"),
 });
 
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  token: text("token").unique().notNull(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  expires: timestamp("expires").notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const palettes = pgTable("palettes", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   user_id: integer("user_id").references(() => users.id).notNull(),
