@@ -23,6 +23,7 @@ interface Palette {
 export default function HomePage() {
   // Core state management
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSaveAsNewDialogOpen, setIsSaveAsNewDialogOpen] = useState(false);
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
   const [selectedPalette, setSelectedPalette] = useState<Palette | null>(null);
   
@@ -116,46 +117,28 @@ export default function HomePage() {
           {!isLoading && (
             <>
               <div className="flex items-center gap-2 flex-shrink-0">
-                  <SavePaletteDialog 
-                    colors={colors} 
-                    isOpen={isDialogOpen}
-                    onOpenChange={setIsDialogOpen}
-                    onSaveAttempt={!user ? () => setIsAuthDialogOpen(true) : undefined}
-                    selectedPalette={selectedPalette}
-                    onSaveSuccess={handlePaletteSave}
-                  />
+                  <>
+                    <SavePaletteDialog 
+                      colors={colors} 
+                      isOpen={isDialogOpen}
+                      onOpenChange={setIsDialogOpen}
+                      onSaveAttempt={!user ? () => setIsAuthDialogOpen(true) : undefined}
+                      selectedPalette={selectedPalette}
+                      onSaveSuccess={handlePaletteSave}
+                    />
+                    <SavePaletteDialog 
+                      colors={colors} 
+                      isOpen={isSaveAsNewDialogOpen}
+                      onOpenChange={setIsSaveAsNewDialogOpen}
+                      defaultName={selectedPalette ? `${selectedPalette.name} (Copy)` : undefined}
+                      onSaveSuccess={handlePaletteSave}
+                    />
+                  </>
                   {user && selectedPalette && (
                     <Button
                       variant="outline"
                       className="flex-shrink-0"
-                      onClick={() => {
-                        fetch('/api/palettes', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ 
-                            name: `${selectedPalette.name} (Copy)`,
-                            colors: colors 
-                          }),
-                        })
-                          .then(response => {
-                            if (!response.ok) throw new Error('Failed to save palette');
-                            return response.json();
-                          })
-                          .then(newPalette => {
-                            setSelectedPalette(newPalette);
-                            toast({
-                              title: "Success",
-                              description: "Palette saved as new copy",
-                            });
-                          })
-                          .catch(error => {
-                            toast({
-                              variant: "destructive",
-                              title: "Error",
-                              description: error.message,
-                            });
-                          });
-                      }}
+                      onClick={() => setIsSaveAsNewDialogOpen(true)}
                     >
                       Save as new
                     </Button>
