@@ -28,40 +28,46 @@ export default function ResetPasswordPage() {
   const [isValidating, setIsValidating] = useState(true);
   const [isValidToken, setIsValidToken] = useState(false);
   
-  // Get token from URL query parameters
+  // Get token from URL query parameters and decode it
   const token = new URLSearchParams(location.split('?')[1]).get('token');
-
+  
   // Validate token when component mounts
   useEffect(() => {
     async function validateToken() {
       if (!token) {
-        setIsValidating(false);
-        return;
-      }
-
-      // Validate token format before making request
-      if (!/^[a-f0-9]{64}$/i.test(token)) {
-        console.error('[Password Reset] Invalid token format:', token);
-        setIsValidToken(false);
+        console.error('[Password Reset] No token found in URL');
         setIsValidating(false);
         toast({
           variant: "destructive",
           title: "Invalid Reset Link",
-          description: "The password reset link is malformed. Please request a new one.",
+          description: "No reset token found in the URL. Please request a new password reset.",
         });
         return;
       }
 
+      console.log('[Password Reset] Validating token:', {
+        token: token.substring(0, 8) + '...',
+        tokenLength: token.length,
+        url: window.location.href.split('?')[0],
+        timestamp: new Date().toISOString()
+      });
+
       try {
-        console.log('[Password Reset] Validating token...');
-        const response = await fetch(`/api/validate-reset-token?token=${encodeURIComponent(token)}`);
+        console.log('[Password Reset] Validating token...', {
+          token: token.substring(0, 8) + '...',
+          tokenLength: token.length
+        });
+        
+        const encodedToken = encodeURIComponent(token);
+        const response = await fetch(`/api/validate-reset-token?token=${encodedToken}`);
         const data = await response.json();
         
         console.log('[Password Reset] Token validation response:', {
           status: response.status,
           valid: data.valid,
           error: data.error,
-          expiryWarning: data.expiryWarning
+          expiryWarning: data.expiryWarning,
+          timestamp: new Date().toISOString()
         });
         
         setIsValidToken(data.valid);
