@@ -20,7 +20,9 @@ declare module 'express-session' {
       domain?: string;
       sameSite?: boolean | 'lax' | 'strict' | 'none';
     };
-    palette?: Pick<Palette, 'name' | 'colors'> & {
+    palette?: {
+      name: string;
+      colors: string[];
       created_at?: string;
       id?: number;
       user_id?: number;
