@@ -465,11 +465,24 @@ export function setupAuth(app: Express) {
       const isExpired = resetToken.expires < now;
       const timeRemaining = Math.floor((resetToken.expires.getTime() - now.getTime()) / 1000);
       
+      // Get timezone information
+      const tzOffset = -now.getTimezoneOffset();
+      const tzHours = Math.floor(Math.abs(tzOffset) / 60);
+      const tzMinutes = Math.abs(tzOffset) % 60;
+      const tzString = `${tzOffset >= 0 ? '+' : '-'}${String(tzHours).padStart(2, '0')}:${String(tzMinutes).padStart(2, '0')}`;
+      
       console.log(`[Password Reset] Token expiry check for ${sanitizedToken.substring(0, 8)}...`, {
-        expires: resetToken.expires,
-        currentTime: now,
+        tokenCreationTime: resetToken.created_at?.toISOString(),
+        tokenCreationTimeLocal: resetToken.created_at?.toLocaleString(),
+        expiryTime: resetToken.expires.toISOString(),
+        expiryTimeLocal: resetToken.expires.toLocaleString(),
+        currentServerTime: now.toISOString(),
+        currentLocalTime: now.toLocaleString(),
+        serverTimezone: tzString,
+        utcOffset: `UTC${tzString}`,
         isExpired,
-        timeRemaining: isExpired ? '0' : `${timeRemaining}s`
+        timeRemaining: isExpired ? '0' : `${timeRemaining}s`,
+        timeRemainingMinutes: Math.ceil(timeRemaining / 60)
       });
 
       if (isExpired) {
