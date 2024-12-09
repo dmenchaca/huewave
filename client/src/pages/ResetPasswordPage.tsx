@@ -29,7 +29,17 @@ export default function ResetPasswordPage() {
   const [isValidToken, setIsValidToken] = useState(false);
   
   // Get token from URL query parameters and decode it
-  const token = new URLSearchParams(location.split('?')[1]).get('token');
+  // Parse the full URL to get query parameters
+  const url = new URL(window.location.href);
+  const token = url.searchParams.get('token');
+  
+  console.log('[Password Reset] URL parsing:', {
+    fullUrl: window.location.href,
+    pathname: url.pathname,
+    searchParams: Object.fromEntries(url.searchParams),
+    token: token ? `${token.substring(0, 8)}...` : null,
+    timestamp: new Date().toISOString()
+  });
   
   // Validate token when component mounts
   useEffect(() => {

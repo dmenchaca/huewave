@@ -663,7 +663,7 @@ export function setupAuth(app: Express) {
       }
 
       if (resetToken.expires < now) {
-        await deleteResetToken(sanitizedToken);
+        await deleteResetToken(decodedToken);
         console.log('[Password Reset] Expired token in reset request');
         return res.status(400).json({
           error: "Reset token has expired",
