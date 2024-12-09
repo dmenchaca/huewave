@@ -98,7 +98,7 @@ declare global {
 
 export function setupAuth(app: Express) {
   const MemoryStore = createMemoryStore(session);
-  
+
   // Add rate limiting with proper typing
   const loginAttempts = new Map<string, { count: number; lastAttempt: number }>();
   const MAX_ATTEMPTS = 5;
@@ -247,7 +247,7 @@ export function setupAuth(app: Express) {
             colors: sessionPalette.colors,
           })
           .returning();
-        
+
         // Clear the session palette
         delete req.session.palette;
       }
@@ -289,13 +289,13 @@ export function setupAuth(app: Express) {
       if (err) {
         return next(err);
       }
-      
+
       if (!user) {
         // Update login attempts
         attempts.count += 1;
         attempts.lastAttempt = now;
         loginAttempts.set(clientIp, attempts);
-        
+
         return res.status(400).send(info?.message ?? "Login failed");
       }
 
@@ -324,7 +324,7 @@ export function setupAuth(app: Express) {
             if (err) {
               return next(err);
             }
-            
+
             return res.json({
               message: "Login successful",
               user: { id: user.id, email: user.email },
@@ -443,9 +443,9 @@ export function setupAuth(app: Express) {
           resetUrlLength: resetUrl.length,
           timestamp: new Date().toISOString()
         });
-          
+
         const response = await sgMail.send(msg);
-        
+
         if (!response || !response[0]) {
           throw new Error('No response received from SendGrid');
         }
@@ -464,7 +464,7 @@ export function setupAuth(app: Express) {
           name: emailError.name,
           timestamp: new Date().toISOString()
         });
-        
+
         if (emailError.response) {
           console.error('[Password Reset] SendGrid API response:', {
             statusCode: emailError.response.statusCode,
@@ -485,7 +485,7 @@ export function setupAuth(app: Express) {
             code: 'PERMISSION_ERROR'
           });
         }
-        
+
         return res.status(500).json({ 
           error: "Failed to send reset email. Please try again later.",
           code: 'SEND_ERROR',
@@ -505,7 +505,7 @@ export function setupAuth(app: Express) {
   // Validate reset token endpoint
   app.get("/api/validate-reset-token", async (req, res) => {
     const { token } = req.query;
-    
+
     if (!token || typeof token !== 'string') {
       console.log('[Password Reset] Missing or invalid token:', { token });
       return res.status(400).json({ 
@@ -545,7 +545,7 @@ export function setupAuth(app: Express) {
         found: !!resetToken,
         timestamp: new Date().toISOString()
       });
-      
+
       if (!resetToken) {
         console.log('[Password Reset] Token not found:', {
           token: decodedToken.substring(0, 8) + '...',
@@ -560,7 +560,7 @@ export function setupAuth(app: Express) {
       const now = new Date();
       const isExpired = resetToken.expires < now;
       const timeRemaining = Math.floor((resetToken.expires.getTime() - now.getTime()) / 1000);
-      
+
       console.log('[Password Reset] Token expiry check:', {
         token: decodedToken.substring(0, 8) + '...',
         expiryTime: resetToken.expires.toISOString(),
@@ -611,7 +611,7 @@ export function setupAuth(app: Express) {
   // Reset password endpoint
   app.post("/api/reset-password", async (req, res) => {
     const { token, newPassword } = req.body;
-    
+
     // Validate input
     if (!token || typeof token !== 'string') {
       console.log('[Password Reset] Missing or invalid token in reset request');
@@ -622,7 +622,7 @@ export function setupAuth(app: Express) {
 
     // URL decode the token
     const decodedToken = decodeURIComponent(token);
-    
+
     // Validate token format after decoding
     if (!/^[a-f0-9]{64}$/i.test(decodedToken)) {
       console.log('[Password Reset] Invalid token format after decoding:', {
@@ -647,14 +647,14 @@ export function setupAuth(app: Express) {
 
       // Get token data using decoded token
       const resetToken = await getResetToken(decodedToken);
-      
+
       console.log('[Password Reset] Token lookup result:', {
         token: decodedToken.substring(0, 8) + '...',
         found: !!resetToken,
         timestamp: new Date().toISOString()
       });
       const now = new Date();
-      
+
       if (!resetToken) {
         console.log('[Password Reset] Token not found in reset request');
         return res.status(400).json({
