@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import AuthDialog from "@/components/AuthDialog";
 import { Button } from "@/components/ui/button";
 import { MoonIcon, SunIcon } from "lucide-react";
@@ -22,6 +23,7 @@ interface Palette {
 
 export default function HomePage() {
   // Core state management
+  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSaveAsNewDialogOpen, setIsSaveAsNewDialogOpen] = useState(false);
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
@@ -150,8 +152,9 @@ export default function HomePage() {
                           if (window.confirm('Are you sure you want to delete this palette? This action cannot be undone.')) {
                             fetch(`/api/palettes/${selectedPalette.id}`, {
                               method: "DELETE",
-                            }).then((response) => {
+                            }).then(async (response) => {
                               if (response.ok) {
+                                await queryClient.invalidateQueries({ queryKey: ["palettes"] });
                                 toast({
                                   title: "Success",
                                   description: "Palette deleted successfully",
