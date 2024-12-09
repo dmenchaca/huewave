@@ -682,7 +682,7 @@ export function setupAuth(app: Express) {
         .limit(1);
 
       if (!user) {
-        console.log('[Password Reset] User not found for token:', sanitizedToken.substring(0, 8));
+        console.log('[Password Reset] User not found for token:', decodedToken.substring(0, 8));
         return res.status(400).json({
           error: "User not found"
         });
@@ -695,7 +695,7 @@ export function setupAuth(app: Express) {
         .where(eq(users.id, user.id));
 
       // Remove used token
-      await deleteResetToken(sanitizedToken);
+      await deleteResetToken(decodedToken);
 
       console.log('[Password Reset] Password reset successful for user:', user.id);
       res.json({ 
