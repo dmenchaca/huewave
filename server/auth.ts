@@ -394,15 +394,39 @@ export function setupAuth(app: Express) {
 
       try {
         if (process.env.SENDGRID_API_KEY) {
-          await sgMail.send(msg);
+          console.log('[Password Reset] Attempting to send email to:', email, {
+            timestamp: new Date().toISOString(),
+            resetUrl: resetUrl.substring(0, 50) + '...'
+          });
+          
+          const response = await sgMail.send(msg);
+          console.log('[Password Reset] Email sent successfully:', {
+            email,
+            messageId: response[0]?.headers['x-message-id'],
+            timestamp: new Date().toISOString()
+          });
         } else {
-          console.log('SendGrid API key not set. Would have sent email:', msg);
+          console.log('[Password Reset] SendGrid API key not set. Would have sent email:', {
+            to: email,
+            resetUrl: resetUrl.substring(0, 50) + '...',
+            timestamp: new Date().toISOString()
+          });
         }
       } catch (emailError: any) {
-        console.error('SendGrid error:', emailError);
+        console.error('[Password Reset] SendGrid error:', {
+          error: emailError.message,
+          code: emailError.code,
+          timestamp: new Date().toISOString()
+        });
+        
         if (emailError.response) {
-          console.error(emailError.response.body);
+          console.error('[Password Reset] SendGrid API response:', {
+            statusCode: emailError.response.statusCode,
+            body: emailError.response.body,
+            headers: emailError.response.headers
+          });
         }
+        
         return res.status(500).json({ 
           error: "Failed to send reset email. Please try again later.",
           details: process.env.NODE_ENV === 'development' ? emailError.message : undefined
