@@ -171,20 +171,27 @@ export function registerRoutes(app: Express) {
 export function registerStorePaletteRoute(app: Express) {
   // Store palette in session
   app.post("/api/store-palette", (req, res) => {
+    console.log('Storing palette in session:', req.body);
     const { name, colors } = req.body;
     req.session.palette = { name, colors };
+    console.log('Current session palette:', req.session.palette);
     res.json({ message: "Palette stored in session" });
   });
 
   // Get stored palette from session
   app.get("/api/palettes/stored", (req, res) => {
+    console.log('Retrieving palette from session:', req.session.palette);
     const palette = req.session.palette;
     res.json(palette || null);
   });
 
   // Clear stored palette from session
   app.post("/api/clear-stored-palette", (req, res) => {
+    console.log('Clearing palette from session');
+    const oldPalette = req.session.palette;
     delete req.session.palette;
+    console.log('Previous palette:', oldPalette);
+    console.log('Session palette after clearing:', req.session.palette);
     res.json({ message: "Stored palette cleared" });
   });
 }

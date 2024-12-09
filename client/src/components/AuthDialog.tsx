@@ -106,10 +106,14 @@ export default function AuthDialog({ isOpen, onOpenChange, triggerContent, custo
         // If logging in, check for stored palette
         if (isLogin) {
           try {
+            console.log('Checking for stored palette after login');
             const response = await fetch('/api/palettes/stored');
             if (response.ok) {
               const storedPalette = await response.json();
+              console.log('Retrieved stored palette:', storedPalette);
+              
               if (storedPalette && storedPalette.colors) {
+                console.log('Found valid stored palette, attempting to save');
                 // Save the stored palette
                 const savePaletteResponse = await fetch('/api/palettes', {
                   method: 'POST',
@@ -122,10 +126,14 @@ export default function AuthDialog({ isOpen, onOpenChange, triggerContent, custo
                 
                 if (savePaletteResponse.ok) {
                   const savedPalette = await savePaletteResponse.json();
+                  console.log('Successfully saved palette:', savedPalette);
+                  
+                  console.log('Clearing stored palette');
                   // Clear the stored palette first
                   await fetch('/api/clear-stored-palette', { method: 'POST' });
                   
                   if (onSuccess) {
+                    console.log('Calling onSuccess with saved palette');
                     onSuccess(savedPalette);
                   }
                   
@@ -133,8 +141,14 @@ export default function AuthDialog({ isOpen, onOpenChange, triggerContent, custo
                     title: "Palette saved",
                     description: "Your palette has been saved to your account",
                   });
+                } else {
+                  console.error('Failed to save palette:', await savePaletteResponse.text());
                 }
+              } else {
+                console.log('No valid stored palette found');
               }
+            } else {
+              console.error('Failed to retrieve stored palette:', await response.text());
             }
           } catch (error) {
             console.error('Error handling stored palette:', error);
