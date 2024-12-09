@@ -25,9 +25,47 @@ export default function ResetPasswordPage() {
   const [location] = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [isValidating, setIsValidating] = useState(true);
+  const [isValidToken, setIsValidToken] = useState(false);
   
   // Get token from URL query parameters
   const token = new URLSearchParams(location.split('?')[1]).get('token');
+
+  // Validate token when component mounts
+  useEffect(() => {
+    async function validateToken() {
+      if (!token) {
+        setIsValidating(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/validate-reset-token?token=${token}`);
+        const data = await response.json();
+        
+        setIsValidToken(data.valid);
+        
+        if (!data.valid) {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: data.error || "Invalid or expired reset token",
+          });
+        }
+      } catch (error) {
+        setIsValidToken(false);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to validate reset token",
+        });
+      } finally {
+        setIsValidating(false);
+      }
+    }
+
+    validateToken();
+  }, [token, toast]);
   
   const form = useForm<ResetPasswordForm>({
     resolver: zodResolver(resetPasswordSchema),
@@ -37,7 +75,18 @@ export default function ResetPasswordPage() {
     },
   });
 
-  if (!token) {
+  if (isValidating) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="mx-auto max-w-sm space-y-4 p-4 text-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-background border-t-foreground mx-auto"></div>
+          <p className="text-muted-foreground">Validating reset token...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!token || !isValidToken) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="mx-auto max-w-sm space-y-4 p-4">

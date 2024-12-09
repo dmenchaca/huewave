@@ -380,6 +380,41 @@ export function setupAuth(app: Express) {
       });
     }
   });
+  // Validate reset token endpoint
+  app.get("/api/validate-reset-token", (req, res) => {
+    const { token } = req.query;
+    
+    if (!token || typeof token !== 'string') {
+      return res.status(400).json({ 
+        valid: false,
+        error: "Token is required" 
+      });
+    }
+
+    const resetData = resetTokens.get(token);
+    
+    if (!resetData) {
+      return res.status(400).json({ 
+        valid: false,
+        error: "Invalid token" 
+      });
+    }
+
+    if (resetData.expires < new Date()) {
+      // Remove expired token
+      resetTokens.delete(token);
+      return res.status(400).json({ 
+        valid: false,
+        error: "Token has expired" 
+      });
+    }
+
+    res.json({ 
+      valid: true,
+      message: "Token is valid" 
+    });
+  });
+
 
   // Reset password endpoint
   app.post("/api/reset-password", async (req, res) => {
