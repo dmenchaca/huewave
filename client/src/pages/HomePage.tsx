@@ -155,22 +155,24 @@ export default function HomePage() {
                               method: "DELETE",
                             }).then(async (response) => {
                               if (response.ok) {
+                                // Only invalidate the queries after successful deletion
                                 await queryClient.invalidateQueries({ queryKey: ["palettes"] });
                                 toast({
                                   title: "Success",
                                   description: "Palette deleted successfully",
                                 });
                                 setSelectedPalette(null);
-                                // Force refresh the palettes list
-                                queryClient.refetchQueries({ queryKey: ["palettes"] });
+                                generateNewPalette(); // Generate a new palette after deletion
                               } else {
+                                const errorData = await response.json().catch(() => ({}));
                                 toast({
                                   variant: "destructive",
                                   title: "Error",
-                                  description: "Failed to delete palette",
+                                  description: errorData.message || "Failed to delete palette",
                                 });
                               }
                             }).catch((error) => {
+                              console.error('Delete palette error:', error);
                               toast({
                                 variant: "destructive",
                                 title: "Error",
