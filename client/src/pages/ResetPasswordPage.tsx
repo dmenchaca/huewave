@@ -29,18 +29,29 @@ export default function ResetPasswordPage() {
   
   // Get token from URL query parameters and decode it
   const url = new URL(window.location.href);
-  const rawToken = url.searchParams.get('token');
-  const token = rawToken ? decodeURIComponent(rawToken) : null;
   
-  console.log('[Password Reset] Initial URL parsing:', {
+  console.log('[Password Reset] URL parsing started:', {
     fullUrl: window.location.href,
     pathname: url.pathname,
-    searchParams: Object.fromEntries(url.searchParams),
+    search: url.search,
+    timestamp: new Date().toISOString()
+  });
+  
+  const rawToken = url.searchParams.get('token');
+  console.log('[Password Reset] Raw token extraction:', {
+    hasRawToken: !!rawToken,
+    rawTokenLength: rawToken?.length,
+    searchParamsKeys: Array.from(url.searchParams.keys()),
+    timestamp: new Date().toISOString()
+  });
+  
+  const token = rawToken ? decodeURIComponent(rawToken) : null;
+  console.log('[Password Reset] Token processing complete:', {
     rawToken: rawToken ? `${rawToken.substring(0, 8)}...` : null,
     decodedToken: token ? `${token.substring(0, 8)}...` : null,
-    searchParamsKeys: Array.from(url.searchParams.keys()),
     hasToken: !!token,
     tokenLength: token?.length,
+    isDecoded: rawToken !== token,
     timestamp: new Date().toISOString()
   });
   
