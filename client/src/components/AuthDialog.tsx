@@ -103,6 +103,38 @@ export default function AuthDialog({ isOpen, onOpenChange, triggerContent, custo
           onSuccess(result.palette);
         }
         
+        // If logging in, check for stored palette
+        if (isLogin) {
+          try {
+            const response = await fetch('/api/palettes/stored');
+            if (response.ok) {
+              const storedPalette = await response.json();
+              if (storedPalette && storedPalette.colors) {
+                // Save the stored palette
+                const savePaletteResponse = await fetch('/api/palettes', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    name: storedPalette.name,
+                    colors: storedPalette.colors
+                  })
+                });
+                
+                if (savePaletteResponse.ok) {
+                  const savedPalette = await savePaletteResponse.json();
+                  if (onSuccess) {
+                    onSuccess(savedPalette);
+                  }
+                  // Clear the stored palette
+                  await fetch('/api/clear-stored-palette', { method: 'POST' });
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Error handling stored palette:', error);
+          }
+        }
+        
         // Then reset form and show success message
         form.reset();
         toast({

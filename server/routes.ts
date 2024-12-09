@@ -175,4 +175,16 @@ export function registerStorePaletteRoute(app: Express) {
     req.session.palette = { name, colors };
     res.json({ message: "Palette stored in session" });
   });
+
+  // Get stored palette from session
+  app.get("/api/palettes/stored", (req, res) => {
+    const palette = req.session.palette;
+    res.json(palette || null);
+  });
+
+  // Clear stored palette from session
+  app.post("/api/clear-stored-palette", (req, res) => {
+    delete req.session.palette;
+    res.json({ message: "Stored palette cleared" });
+  });
 }
