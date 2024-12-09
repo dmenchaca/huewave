@@ -391,7 +391,7 @@ export function setupAuth(app: Express) {
       const msg = {
         to: email,
         from: {
-          email: 'hi@diego.bio',
+          email: process.env.SENDGRID_FROM_EMAIL || 'noreply@colorpalette.app',
           name: 'Color Palette App'
         },
         subject: 'Password Reset Request',
@@ -442,18 +442,38 @@ export function setupAuth(app: Express) {
           });
         }
 
+        if (!process.env.SENDGRID_FROM_EMAIL) {
+          console.error('[Password Reset] SendGrid sender email is missing');
+          return res.status(500).json({ 
+            error: "Email service is not properly configured. Please contact support.",
+            code: 'CONFIG_ERROR'
+          });
+        }
+
         console.log('[Password Reset] Attempting to send email:', {
           to: email,
-          from: msg.from,
+          from: msg.from.email,
+          fromName: msg.from.name,
           subject: msg.subject,
           resetUrlLength: resetUrl.length,
+          sandboxMode: msg.mailSettings?.sandboxMode?.enable,
           timestamp: new Date().toISOString()
         });
 
         const response = await sgMail.send(msg);
 
         if (!response || !response[0]) {
+          console.error('[Password Reset] No response received from SendGrid');
           throw new Error('No response received from SendGrid');
+        }
+
+        if (response[0].statusCode !== 202) {
+          console.error('[Password Reset] Unexpected status code from SendGrid:', {
+            statusCode: response[0].statusCode,
+            headers: response[0].headers,
+            timestamp: new Date().toISOString()
+          });
+          throw new Error('Failed to send email - unexpected status code');
         }
 
         console.log('[Password Reset] Email sent successfully:', {
@@ -468,6 +488,7 @@ export function setupAuth(app: Express) {
           error: emailError.message,
           code: emailError.code,
           name: emailError.name,
+          stack: emailError.stack,
           timestamp: new Date().toISOString()
         });
 
@@ -479,7 +500,7 @@ export function setupAuth(app: Express) {
           });
         }
 
-        // Check specific error cases
+        // Handle specific SendGrid error cases
         if (emailError.code === 401) {
           return res.status(500).json({ 
             error: "Email service authentication failed. Please contact support.",
@@ -490,13 +511,22 @@ export function setupAuth(app: Express) {
             error: "Email service permissions error. Please contact support.",
             code: 'PERMISSION_ERROR'
           });
+        } else if (emailError.code === 'EENVELOPE') {
+          return res.status(500).json({ 
+            error: "Invalid sender email configuration. Please contact support.",
+            code: 'SENDER_ERROR'
+          });
+        } else if (emailError.code === 'ESOCKET') {
+          return res.status(500).json({ 
+            error: "Network error while sending email. Please try again.",
+            code: 'NETWORK_ERROR'
+          });
         }
 
         return res.status(500).json({ 
           error: "We're having trouble sending the reset email at the moment. Please try again in a few minutes.",
           code: 'SEND_ERROR',
-          details: process.env.NODE_ENV === 'development' ? emailError.message : undefined,
-          message: "Email service temporarily unavailable"
+          details: process.env.NODE_ENV === 'development' ? emailError.message : undefined
         });
       }
 
