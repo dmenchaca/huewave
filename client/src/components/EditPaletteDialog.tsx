@@ -145,9 +145,51 @@ export default function EditPaletteDialog({
               <RefreshCwIcon className="h-4 w-4" />
               Generate new colors
             </Button>
-            <Button onClick={handleSave} disabled={editPaletteMutation.isPending}>
-              {editPaletteMutation.isPending ? "Saving..." : "Save Changes"}
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={handleSave} disabled={editPaletteMutation.isPending}>
+                {editPaletteMutation.isPending ? "Saving..." : "Save Changes"}
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  if (!name.trim()) {
+                    toast({
+                      variant: "destructive",
+                      title: "Error",
+                      description: "Please enter a name for your palette",
+                    });
+                    return;
+                  }
+                  
+                  fetch('/api/palettes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, colors }),
+                  })
+                    .then(response => {
+                      if (!response.ok) throw new Error('Failed to save palette');
+                      return response.json();
+                    })
+                    .then(newPalette => {
+                      queryClient.invalidateQueries({ queryKey: ["palettes"] });
+                      toast({
+                        title: "Success",
+                        description: "Palette saved as new copy",
+                      });
+                      onOpenChange(false);
+                    })
+                    .catch(error => {
+                      toast({
+                        variant: "destructive",
+                        title: "Error",
+                        description: error.message,
+                      });
+                    });
+                }}
+              >
+                Save as new
+              </Button>
+            </div>
           </div>
           <div className="text-sm text-muted-foreground text-center">
             Press spacebar to generate new colors
