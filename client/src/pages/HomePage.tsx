@@ -150,7 +150,8 @@ export default function HomePage() {
                         className="flex-shrink-0"
                         onClick={() => {
                           if (window.confirm('Are you sure you want to delete this palette? This action cannot be undone.')) {
-                            fetch(`/api/palettes/${selectedPalette.id}`, {
+                            const paletteId = selectedPalette.id;
+                            fetch(`/api/palettes/${paletteId}`, {
                               method: "DELETE",
                             }).then(async (response) => {
                               if (response.ok) {
@@ -160,6 +161,8 @@ export default function HomePage() {
                                   description: "Palette deleted successfully",
                                 });
                                 setSelectedPalette(null);
+                                // Force refresh the palettes list
+                                queryClient.refetchQueries({ queryKey: ["palettes"] });
                               } else {
                                 toast({
                                   variant: "destructive",
@@ -167,6 +170,12 @@ export default function HomePage() {
                                   description: "Failed to delete palette",
                                 });
                               }
+                            }).catch((error) => {
+                              toast({
+                                variant: "destructive",
+                                title: "Error",
+                                description: "An error occurred while deleting the palette",
+                              });
                             });
                           }
                         }}
