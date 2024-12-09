@@ -21,7 +21,6 @@ const resetPasswordSchema = z.object({
 type ResetPasswordForm = z.infer<typeof resetPasswordSchema>;
 
 export default function ResetPasswordPage() {
-  // navigate is imported directly from wouter
   const [location] = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -29,15 +28,19 @@ export default function ResetPasswordPage() {
   const [isValidToken, setIsValidToken] = useState(false);
   
   // Get token from URL query parameters and decode it
-  // Parse the full URL to get query parameters
   const url = new URL(window.location.href);
-  const token = url.searchParams.get('token');
+  const rawToken = url.searchParams.get('token');
+  const token = rawToken ? decodeURIComponent(rawToken) : null;
   
-  console.log('[Password Reset] URL parsing:', {
+  console.log('[Password Reset] Initial URL parsing:', {
     fullUrl: window.location.href,
     pathname: url.pathname,
     searchParams: Object.fromEntries(url.searchParams),
-    token: token ? `${token.substring(0, 8)}...` : null,
+    rawToken: rawToken ? `${rawToken.substring(0, 8)}...` : null,
+    decodedToken: token ? `${token.substring(0, 8)}...` : null,
+    searchParamsKeys: Array.from(url.searchParams.keys()),
+    hasToken: !!token,
+    tokenLength: token?.length,
     timestamp: new Date().toISOString()
   });
   
@@ -45,7 +48,11 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     async function validateToken() {
       if (!token) {
-        console.error('[Password Reset] No token found in URL');
+        console.error('[Password Reset] Token validation failed - no token:', {
+          url: window.location.href,
+          searchParams: Object.fromEntries(url.searchParams),
+          timestamp: new Date().toISOString()
+        });
         setIsValidating(false);
         toast({
           variant: "destructive",
@@ -55,24 +62,27 @@ export default function ResetPasswordPage() {
         return;
       }
 
-      console.log('[Password Reset] Validating token:', {
-        token: token.substring(0, 8) + '...',
-        tokenLength: token.length,
-        url: window.location.href.split('?')[0],
-        timestamp: new Date().toISOString()
-      });
-
       try {
-        console.log('[Password Reset] Validating token...', {
+        // Log validation attempt
+        console.log('[Password Reset] Starting token validation:', {
           token: token.substring(0, 8) + '...',
-          tokenLength: token.length
+          tokenLength: token.length,
+          url: window.location.href,
+          timestamp: new Date().toISOString()
         });
         
+        // Ensure token is properly encoded for the API request
         const encodedToken = encodeURIComponent(token);
+        console.log('[Password Reset] Sending validation request:', {
+          encodedToken: encodedToken.substring(0, 8) + '...',
+          encodedTokenLength: encodedToken.length,
+          timestamp: new Date().toISOString()
+        });
+
         const response = await fetch(`/api/validate-reset-token?token=${encodedToken}`);
         const data = await response.json();
         
-        console.log('[Password Reset] Token validation response:', {
+        console.log('[Password Reset] Validation response received:', {
           status: response.status,
           valid: data.valid,
           error: data.error,
@@ -91,7 +101,11 @@ export default function ResetPasswordPage() {
             ? 'This password reset link is invalid. Please request a new one.'
             : data.error || 'Invalid or expired reset token';
 
-          console.error('[Password Reset] Token validation failed:', errorMessage);
+          console.error('[Password Reset] Token validation failed:', {
+            error: errorMessage,
+            response: data,
+            timestamp: new Date().toISOString()
+          });
           
           toast({
             variant: "destructive",
@@ -101,7 +115,6 @@ export default function ResetPasswordPage() {
         } else {
           console.log('[Password Reset] Token validation successful');
           
-          // Show expiry warning if present
           if (data.expiryWarning) {
             toast({
               variant: "warning",
@@ -111,10 +124,10 @@ export default function ResetPasswordPage() {
           }
         }
       } catch (error: any) {
-        const errorMessage = error.message || 'Failed to validate reset token';
         console.error('[Password Reset] Token validation error:', {
-          error: errorMessage,
-          stack: error.stack
+          error: error.message,
+          stack: error.stack,
+          timestamp: new Date().toISOString()
         });
         
         setIsValidToken(false);
@@ -129,7 +142,7 @@ export default function ResetPasswordPage() {
     }
 
     validateToken();
-  }, [token, toast]);
+  }, [token, toast, url.searchParams]);
   
   const form = useForm<ResetPasswordForm>({
     resolver: zodResolver(resetPasswordSchema),
@@ -169,6 +182,12 @@ export default function ResetPasswordPage() {
   const onSubmit = async (values: ResetPasswordForm) => {
     setIsLoading(true);
     try {
+      console.log('[Password Reset] Submitting password reset:', {
+        token: token.substring(0, 8) + '...',
+        tokenLength: token.length,
+        timestamp: new Date().toISOString()
+      });
+
       const response = await fetch("/api/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -176,9 +195,20 @@ export default function ResetPasswordPage() {
       });
 
       const result = await response.json();
+      
+      console.log('[Password Reset] Reset response received:', {
+        status: response.status,
+        success: result.success,
+        timestamp: new Date().toISOString()
+      });
 
       if (!response.ok) {
-        throw new Error(result.message || "Failed to reset password");
+        console.error('[Password Reset] Reset failed:', {
+          status: response.status,
+          error: result.error,
+          timestamp: new Date().toISOString()
+        });
+        throw new Error(result.error || "Failed to reset password");
       }
 
       toast({
@@ -191,6 +221,12 @@ export default function ResetPasswordPage() {
         window.location.href = "/";
       }, 2000);
     } catch (error: any) {
+      console.error('[Password Reset] Reset error:', {
+        error: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString()
+      });
+      
       toast({
         variant: "destructive",
         title: "Error",
