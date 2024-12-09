@@ -419,10 +419,11 @@ export function setupAuth(app: Express) {
   app.get("/api/validate-reset-token", async (req, res) => {
     const { token } = req.query;
     
-    if (!token || typeof token !== 'string') {
+    if (!token || typeof token !== 'string' || token.length !== 64) {
+      console.log('[Password Reset] Invalid token format:', { token });
       return res.status(400).json({ 
         valid: false,
-        error: "Token is required" 
+        error: "Invalid token format" 
       });
     }
 
@@ -430,14 +431,27 @@ export function setupAuth(app: Express) {
       // Clean up expired tokens first
       await cleanupExpiredTokens();
 
-      const resetToken = await getResetToken(token);
-      console.log(`[Password Reset] Token lookup for ${token.substring(0, 8)}...`, {
+      // Sanitize token to prevent SQL injection (although we use prepared statements)
+      const sanitizedToken = token.replace(/[^a-f0-9]/gi, '');
+      if (sanitizedToken !== token) {
+        console.log('[Password Reset] Token sanitization failed:', { 
+          original: token.substring(0, 8), 
+          sanitized: sanitizedToken.substring(0, 8) 
+        });
+        return res.status(400).json({ 
+          valid: false,
+          error: "Invalid token format" 
+        });
+      }
+
+      const resetToken = await getResetToken(sanitizedToken);
+      console.log(`[Password Reset] Token lookup for ${sanitizedToken.substring(0, 8)}...`, {
         found: !!resetToken,
         timestamp: new Date().toISOString()
       });
       
       if (!resetToken) {
-        console.log(`[Password Reset] Token not found: ${token.substring(0, 8)}...`);
+        console.log(`[Password Reset] Token not found: ${sanitizedToken.substring(0, 8)}...`);
         return res.status(400).json({ 
           valid: false,
           error: "Invalid token" 
@@ -446,26 +460,35 @@ export function setupAuth(app: Express) {
 
       const now = new Date();
       const isExpired = resetToken.expires < now;
-      console.log(`[Password Reset] Token expiry check for ${token.substring(0, 8)}...`, {
+      const timeRemaining = Math.floor((resetToken.expires.getTime() - now.getTime()) / 1000);
+      
+      console.log(`[Password Reset] Token expiry check for ${sanitizedToken.substring(0, 8)}...`, {
         expires: resetToken.expires,
         currentTime: now,
         isExpired,
-        timeRemaining: isExpired ? '0' : `${Math.floor((resetToken.expires.getTime() - now.getTime()) / 1000)}s`
+        timeRemaining: isExpired ? '0' : `${timeRemaining}s`
       });
 
       if (isExpired) {
         // Remove expired token
-        await deleteResetToken(token);
-        console.log(`[Password Reset] Expired token removed: ${token.substring(0, 8)}...`);
+        await deleteResetToken(sanitizedToken);
+        console.log(`[Password Reset] Expired token removed: ${sanitizedToken.substring(0, 8)}...`);
         return res.status(400).json({ 
           valid: false,
-          error: "Token has expired" 
+          error: "Token has expired",
+          expired: true
         });
       }
 
+      // Add warning if token is close to expiration
+      const warningThreshold = 5 * 60; // 5 minutes in seconds
+      const expiryWarning = timeRemaining < warningThreshold ? 
+        `Token will expire in ${Math.ceil(timeRemaining / 60)} minutes` : null;
+
       res.json({ 
         valid: true,
-        message: "Token is valid" 
+        message: "Token is valid",
+        expiryWarning
       });
     } catch (error) {
       console.error('[Password Reset] Token validation error:', error);
@@ -481,19 +504,52 @@ export function setupAuth(app: Express) {
   app.post("/api/reset-password", async (req, res) => {
     const { token, newPassword } = req.body;
     
-    if (!token || !newPassword) {
-      return res.status(400).send("Token and new password are required");
+    // Validate input
+    if (!token || typeof token !== 'string' || token.length !== 64) {
+      console.log('[Password Reset] Invalid token format in reset request');
+      return res.status(400).json({
+        error: "Invalid token format"
+      });
+    }
+
+    if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 8) {
+      console.log('[Password Reset] Invalid password format in reset request');
+      return res.status(400).json({
+        error: "Password must be at least 8 characters long"
+      });
     }
 
     try {
       // Clean up expired tokens first
       await cleanupExpiredTokens();
 
+      // Sanitize token
+      const sanitizedToken = token.replace(/[^a-f0-9]/gi, '');
+      if (sanitizedToken !== token) {
+        console.log('[Password Reset] Token sanitization failed in reset request');
+        return res.status(400).json({
+          error: "Invalid token format"
+        });
+      }
+
       // Get token data
-      const resetToken = await getResetToken(token);
+      const resetToken = await getResetToken(sanitizedToken);
+      const now = new Date();
       
-      if (!resetToken || resetToken.expires < new Date()) {
-        return res.status(400).send("Invalid or expired reset token");
+      if (!resetToken) {
+        console.log('[Password Reset] Token not found in reset request');
+        return res.status(400).json({
+          error: "Invalid reset token"
+        });
+      }
+
+      if (resetToken.expires < now) {
+        await deleteResetToken(sanitizedToken);
+        console.log('[Password Reset] Expired token in reset request');
+        return res.status(400).json({
+          error: "Reset token has expired",
+          expired: true
+        });
       }
 
       // Hash the new password
@@ -507,7 +563,10 @@ export function setupAuth(app: Express) {
         .limit(1);
 
       if (!user) {
-        return res.status(400).send("User not found");
+        console.log('[Password Reset] User not found for token:', sanitizedToken.substring(0, 8));
+        return res.status(400).json({
+          error: "User not found"
+        });
       }
 
       // Update user's password
@@ -517,12 +576,18 @@ export function setupAuth(app: Express) {
         .where(eq(users.id, user.id));
 
       // Remove used token
-      await deleteResetToken(token);
+      await deleteResetToken(sanitizedToken);
 
-      res.json({ message: "Password has been reset successfully" });
+      console.log('[Password Reset] Password reset successful for user:', user.id);
+      res.json({ 
+        message: "Password has been reset successfully",
+        success: true
+      });
     } catch (error) {
-      console.error('Password reset error:', error);
-      res.status(500).send("Failed to reset password");
+      console.error('[Password Reset] Reset error:', error);
+      res.status(500).json({
+        error: "Failed to reset password. Please try again later."
+      });
     }
   });
   // Google OAuth routes

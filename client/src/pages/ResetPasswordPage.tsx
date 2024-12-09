@@ -39,22 +39,38 @@ export default function ResetPasswordPage() {
         return;
       }
 
+      // Validate token format before making request
+      if (!/^[a-f0-9]{64}$/i.test(token)) {
+        console.error('[Password Reset] Invalid token format:', token);
+        setIsValidToken(false);
+        setIsValidating(false);
+        toast({
+          variant: "destructive",
+          title: "Invalid Reset Link",
+          description: "The password reset link is malformed. Please request a new one.",
+        });
+        return;
+      }
+
       try {
         console.log('[Password Reset] Validating token...');
-        const response = await fetch(`/api/validate-reset-token?token=${token}`);
+        const response = await fetch(`/api/validate-reset-token?token=${encodeURIComponent(token)}`);
         const data = await response.json();
         
         console.log('[Password Reset] Token validation response:', {
           status: response.status,
           valid: data.valid,
-          error: data.error
+          error: data.error,
+          expiryWarning: data.expiryWarning
         });
         
         setIsValidToken(data.valid);
         
         if (!data.valid) {
-          const errorMessage = data.error === 'Token has expired' 
+          const errorMessage = data.expired 
             ? 'Your password reset link has expired. Please request a new one.'
+            : data.error === 'Invalid token format'
+            ? 'The password reset link is malformed. Please request a new one.'
             : data.error === 'Invalid token'
             ? 'This password reset link is invalid. Please request a new one.'
             : data.error || 'Invalid or expired reset token';
@@ -68,6 +84,15 @@ export default function ResetPasswordPage() {
           });
         } else {
           console.log('[Password Reset] Token validation successful');
+          
+          // Show expiry warning if present
+          if (data.expiryWarning) {
+            toast({
+              variant: "warning",
+              title: "Warning",
+              description: data.expiryWarning,
+            });
+          }
         }
       } catch (error: any) {
         const errorMessage = error.message || 'Failed to validate reset token';
