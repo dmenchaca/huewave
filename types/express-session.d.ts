@@ -1,5 +1,4 @@
 import 'express-session';
-import type { Palette } from '@db/schema';
 
 declare module 'express-session' {
   interface SessionData {
@@ -7,34 +6,12 @@ declare module 'express-session' {
       user?: {
         id: number;
         email: string;
-        name?: string;
+        timestamp?: number;
       };
-    };
-    cookie?: {
-      maxAge?: number;
-      originalMaxAge?: number;
-      expires?: Date;
-      secure?: boolean;
-      httpOnly?: boolean;
-      path?: string;
-      domain?: string;
-      sameSite?: boolean | 'lax' | 'strict' | 'none';
     };
     palette?: {
       name: string;
       colors: string[];
-      created_at?: string;
-      id?: number;
-      user_id?: number;
-      description?: string;
-      is_public?: boolean;
-    };
-    user?: {
-      id: number;
-      email: string;
-      name?: string;
-      created_at?: string;
-      updated_at?: string;
-    };
+    } | null;
   }
 }
