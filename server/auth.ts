@@ -14,8 +14,16 @@ import { eq, sql } from "drizzle-orm";
 const scryptAsync = promisify(scrypt);
 
 // Initialize SendGrid
-if (process.env.SENDGRID_API_KEY) {
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
+if (!SENDGRID_API_KEY) {
+  console.error('[SendGrid] API key is missing. Email functionality will not work.');
+} else {
+  try {
+    sgMail.setApiKey(SENDGRID_API_KEY);
+    console.log('[SendGrid] API key successfully configured');
+  } catch (error) {
+    console.error('[SendGrid] Failed to initialize:', error);
+  }
 }
 
 // Token generation for password reset
@@ -373,49 +381,87 @@ export function setupAuth(app: Express) {
       const resetUrl = `${req.protocol}://${req.get('host')}/reset-password?token=${token}`;
       const msg = {
         to: email,
-        from: 'hi@diego.bio',
+        from: {
+          email: 'hi@diego.bio',
+          name: 'Color Palette App'
+        },
         subject: 'Password Reset Request',
-        text: `To reset your password, click the following link: ${resetUrl}\n\nThis link will expire in 1 hour.`,
+        text: `To reset your password, click the following link: ${resetUrl}\n\nThis link will expire in 1 hour.\n\nIf you didn't request this password reset, please ignore this email.`,
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2>Password Reset Request</h2>
-            <p>You have requested to reset your password. Click the button below to set a new password:</p>
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${resetUrl}" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">Reset Password</a>
-            </div>
-            <p>This link will expire in 1 hour for security reasons.</p>
-            <p>If you didn't request this password reset, please ignore this email.</p>
-          </div>
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Reset Your Password</title>
+            </head>
+            <body>
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #111827; margin-bottom: 20px;">Reset Your Password</h2>
+                <p style="color: #374151; line-height: 1.5;">You have requested to reset your password. Click the button below to set a new password:</p>
+                <div style="text-align: center; margin: 30px 0;">
+                  <a href="${resetUrl}" 
+                     style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: 500;">
+                    Reset Password
+                  </a>
+                </div>
+                <p style="color: #374151; line-height: 1.5;">This link will expire in 1 hour for security reasons.</p>
+                <p style="color: #374151; line-height: 1.5;">If you didn't request this password reset, please ignore this email.</p>
+                <hr style="border: none; border-top: 1px solid #E5E7EB; margin: 20px 0;">
+                <p style="color: #6B7280; font-size: 14px;">This is an automated message, please do not reply to this email.</p>
+              </div>
+            </body>
+          </html>
         `,
         trackingSettings: {
-          clickTracking: { enable: false }
+          clickTracking: { enable: false },
+          openTracking: { enable: true }
+        },
+        mailSettings: {
+          sandboxMode: {
+            enable: false // Disable sandbox mode for testing
+          }
         }
       };
 
       try {
-        if (process.env.SENDGRID_API_KEY) {
-          console.log('[Password Reset] Attempting to send email to:', email, {
-            timestamp: new Date().toISOString(),
-            resetUrl: resetUrl.substring(0, 50) + '...'
-          });
-          
-          const response = await sgMail.send(msg);
-          console.log('[Password Reset] Email sent successfully:', {
-            email,
-            messageId: response[0]?.headers['x-message-id'],
-            timestamp: new Date().toISOString()
-          });
-        } else {
-          console.log('[Password Reset] SendGrid API key not set. Would have sent email:', {
-            to: email,
-            resetUrl: resetUrl.substring(0, 50) + '...',
-            timestamp: new Date().toISOString()
-          });
+        if (!process.env.SENDGRID_API_KEY) {
+          console.error('[Password Reset] SendGrid API key not configured');
+          throw new Error('SendGrid API key not configured');
         }
+
+        // Verify API key is loaded correctly
+        if (!sgMail.getApiKey()) {
+          console.error('[Password Reset] SendGrid API key not initialized properly');
+          sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+        }
+
+        console.log('[Password Reset] Attempting to send email:', {
+          to: email,
+          from: msg.from,
+          subject: msg.subject,
+          resetUrlLength: resetUrl.length,
+          timestamp: new Date().toISOString()
+        });
+          
+        const response = await sgMail.send(msg);
+        
+        if (!response || !response[0]) {
+          throw new Error('No response received from SendGrid');
+        }
+
+        console.log('[Password Reset] Email sent successfully:', {
+          email,
+          messageId: response[0].headers['x-message-id'],
+          statusCode: response[0].statusCode,
+          timestamp: new Date().toISOString()
+        });
+
       } catch (emailError: any) {
-        console.error('[Password Reset] SendGrid error:', {
+        console.error('[Password Reset] Failed to send email:', {
           error: emailError.message,
           code: emailError.code,
+          name: emailError.name,
           timestamp: new Date().toISOString()
         });
         
@@ -426,9 +472,23 @@ export function setupAuth(app: Express) {
             headers: emailError.response.headers
           });
         }
+
+        // Check specific error cases
+        if (emailError.code === 401) {
+          return res.status(500).json({ 
+            error: "Email service authentication failed. Please contact support.",
+            code: 'AUTH_ERROR'
+          });
+        } else if (emailError.code === 403) {
+          return res.status(500).json({ 
+            error: "Email service permissions error. Please contact support.",
+            code: 'PERMISSION_ERROR'
+          });
+        }
         
         return res.status(500).json({ 
           error: "Failed to send reset email. Please try again later.",
+          code: 'SEND_ERROR',
           details: process.env.NODE_ENV === 'development' ? emailError.message : undefined
         });
       }
