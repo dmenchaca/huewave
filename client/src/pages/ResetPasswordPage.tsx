@@ -40,24 +40,47 @@ export default function ResetPasswordPage() {
       }
 
       try {
+        console.log('[Password Reset] Validating token...');
         const response = await fetch(`/api/validate-reset-token?token=${token}`);
         const data = await response.json();
+        
+        console.log('[Password Reset] Token validation response:', {
+          status: response.status,
+          valid: data.valid,
+          error: data.error
+        });
         
         setIsValidToken(data.valid);
         
         if (!data.valid) {
+          const errorMessage = data.error === 'Token has expired' 
+            ? 'Your password reset link has expired. Please request a new one.'
+            : data.error === 'Invalid token'
+            ? 'This password reset link is invalid. Please request a new one.'
+            : data.error || 'Invalid or expired reset token';
+
+          console.error('[Password Reset] Token validation failed:', errorMessage);
+          
           toast({
             variant: "destructive",
-            title: "Error",
-            description: data.error || "Invalid or expired reset token",
+            title: "Invalid Reset Link",
+            description: errorMessage,
           });
+        } else {
+          console.log('[Password Reset] Token validation successful');
         }
-      } catch (error) {
+      } catch (error: any) {
+        const errorMessage = error.message || 'Failed to validate reset token';
+        console.error('[Password Reset] Token validation error:', {
+          error: errorMessage,
+          stack: error.stack
+        });
+        
         setIsValidToken(false);
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Failed to validate reset token",
+          description: "An error occurred while validating your reset link. Please try again.",
         });
       } finally {
         setIsValidating(false);

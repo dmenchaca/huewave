@@ -333,6 +333,11 @@ export function setupAuth(app: Express) {
 
       // Store token (in production, store in database)
       resetTokens.set(token, { token, email, expires });
+      console.log(`[Password Reset] Token stored for ${email}:`, {
+        token: token.substring(0, 8) + '...',
+        expires,
+        timestamp: new Date().toISOString()
+      });
 
       // Send reset email
       const resetUrl = `${req.protocol}://${req.get('host')}/reset-password?token=${token}`;
@@ -392,17 +397,32 @@ export function setupAuth(app: Express) {
     }
 
     const resetData = resetTokens.get(token);
+    console.log(`[Password Reset] Token lookup for ${token.substring(0, 8)}...`, {
+      found: !!resetData,
+      timestamp: new Date().toISOString()
+    });
     
     if (!resetData) {
+      console.log(`[Password Reset] Token not found: ${token.substring(0, 8)}...`);
       return res.status(400).json({ 
         valid: false,
         error: "Invalid token" 
       });
     }
 
-    if (resetData.expires < new Date()) {
+    const now = new Date();
+    const isExpired = resetData.expires < now;
+    console.log(`[Password Reset] Token expiry check for ${token.substring(0, 8)}...`, {
+      expires: resetData.expires,
+      currentTime: now,
+      isExpired,
+      timeRemaining: isExpired ? '0' : `${Math.floor((resetData.expires.getTime() - now.getTime()) / 1000)}s`
+    });
+
+    if (isExpired) {
       // Remove expired token
       resetTokens.delete(token);
+      console.log(`[Password Reset] Expired token removed: ${token.substring(0, 8)}...`);
       return res.status(400).json({ 
         valid: false,
         error: "Token has expired" 
