@@ -135,13 +135,42 @@ export default function HomePage() {
                     />
                   </>
                   {user && selectedPalette && (
-                    <Button
-                      variant="outline"
-                      className="flex-shrink-0"
-                      onClick={() => setIsSaveAsNewDialogOpen(true)}
-                    >
-                      Save as new
-                    </Button>
+                    <>
+                      <Button
+                        variant="outline"
+                        className="flex-shrink-0"
+                        onClick={() => setIsSaveAsNewDialogOpen(true)}
+                      >
+                        Save as new
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="flex-shrink-0"
+                        onClick={() => {
+                          if (window.confirm('Are you sure you want to delete this palette? This action cannot be undone.')) {
+                            fetch(`/api/palettes/${selectedPalette.id}`, {
+                              method: "DELETE",
+                            }).then((response) => {
+                              if (response.ok) {
+                                toast({
+                                  title: "Success",
+                                  description: "Palette deleted successfully",
+                                });
+                                setSelectedPalette(null);
+                              } else {
+                                toast({
+                                  variant: "destructive",
+                                  title: "Error",
+                                  description: "Failed to delete palette",
+                                });
+                              }
+                            });
+                          }
+                        }}
+                      >
+                        Delete
+                      </Button>
+                    </>
                   )}
                   {!user && (
                   <>
