@@ -18,11 +18,20 @@ const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
 if (!SENDGRID_API_KEY) {
   console.error('[SendGrid] API key is missing. Email functionality will not work.');
 } else {
+  sgMail.setApiKey(SENDGRID_API_KEY);
+  console.log('[SendGrid] API key successfully configured');
+}
+
+// Verify SendGrid configuration
+async function verifySendGridConfig() {
   try {
-    sgMail.setApiKey(SENDGRID_API_KEY);
-    console.log('[SendGrid] API key successfully configured');
+    if (!SENDGRID_API_KEY) {
+      throw new Error('SendGrid API key not configured');
+    }
+    return true;
   } catch (error) {
-    console.error('[SendGrid] Failed to initialize:', error);
+    console.error('[SendGrid] Configuration verification failed:', error);
+    return false;
   }
 }
 
@@ -425,15 +434,12 @@ export function setupAuth(app: Express) {
       };
 
       try {
-        if (!process.env.SENDGRID_API_KEY) {
-          console.error('[Password Reset] SendGrid API key not configured');
-          throw new Error('SendGrid API key not configured');
-        }
-
-        // Verify API key is loaded correctly
-        if (!sgMail.getApiKey()) {
-          console.error('[Password Reset] SendGrid API key not initialized properly');
-          sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+        if (!SENDGRID_API_KEY) {
+          console.error('[Password Reset] SendGrid API key is missing');
+          return res.status(500).json({ 
+            error: "Email service is not configured. Please contact support.",
+            code: 'CONFIG_ERROR'
+          });
         }
 
         console.log('[Password Reset] Attempting to send email:', {
@@ -487,9 +493,10 @@ export function setupAuth(app: Express) {
         }
 
         return res.status(500).json({ 
-          error: "Failed to send reset email. Please try again later.",
+          error: "We're having trouble sending the reset email at the moment. Please try again in a few minutes.",
           code: 'SEND_ERROR',
-          details: process.env.NODE_ENV === 'development' ? emailError.message : undefined
+          details: process.env.NODE_ENV === 'development' ? emailError.message : undefined,
+          message: "Email service temporarily unavailable"
         });
       }
 

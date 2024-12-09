@@ -117,7 +117,7 @@ export default function ResetPasswordPage() {
           
           if (data.expiryWarning) {
             toast({
-              variant: "warning",
+              variant: "destructive",
               title: "Warning",
               description: data.expiryWarning,
             });
@@ -208,12 +208,18 @@ export default function ResetPasswordPage() {
           error: result.error,
           timestamp: new Date().toISOString()
         });
-        throw new Error(result.error || "Failed to reset password");
+        
+        // Show specific error messages based on the error type
+        const errorMessage = result.code === 'CONFIG_ERROR' 
+          ? "Email service is currently unavailable. Please try again later or contact support."
+          : result.error || "Failed to reset password";
+        
+        throw new Error(errorMessage);
       }
 
       toast({
-        title: "Success",
-        description: "Your password has been reset successfully",
+        title: "Password Reset Successful",
+        description: "Your password has been reset successfully. You will be redirected to the login page.",
       });
 
       // Redirect to home page after 2 seconds
