@@ -10,6 +10,7 @@ import UserProfileDropdown from "../components/UserProfileDropdown";
 import LoadingOverlay from "../components/LoadingOverlay";
 import { useColorPalette } from "../hooks/use-color-palette";
 import { useUser } from "../hooks/use-user";
+import { useToast } from "@/hooks/use-toast";
 
 
 interface Palette {
@@ -27,6 +28,7 @@ export default function HomePage() {
   
   // Authentication and color palette hooks
   const { user, logout, isLoading, isFetching } = useUser();
+  const { toast } = useToast();
   const { 
     colors,
     setColors,
@@ -114,15 +116,51 @@ export default function HomePage() {
           {!isLoading && (
             <>
               <div className="flex items-center gap-2 flex-shrink-0">
-                <SavePaletteDialog 
-                  colors={colors} 
-                  isOpen={isDialogOpen}
-                  onOpenChange={setIsDialogOpen}
-                  onSaveAttempt={!user ? () => setIsAuthDialogOpen(true) : undefined}
-                  selectedPalette={selectedPalette}
-                  onSaveSuccess={handlePaletteSave}
-                />
-                {!user && (
+                  <SavePaletteDialog 
+                    colors={colors} 
+                    isOpen={isDialogOpen}
+                    onOpenChange={setIsDialogOpen}
+                    onSaveAttempt={!user ? () => setIsAuthDialogOpen(true) : undefined}
+                    selectedPalette={selectedPalette}
+                    onSaveSuccess={handlePaletteSave}
+                  />
+                  {user && selectedPalette && (
+                    <Button
+                      variant="outline"
+                      className="flex-shrink-0"
+                      onClick={() => {
+                        fetch('/api/palettes', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ 
+                            name: `${selectedPalette.name} (Copy)`,
+                            colors: colors 
+                          }),
+                        })
+                          .then(response => {
+                            if (!response.ok) throw new Error('Failed to save palette');
+                            return response.json();
+                          })
+                          .then(newPalette => {
+                            setSelectedPalette(newPalette);
+                            toast({
+                              title: "Success",
+                              description: "Palette saved as new copy",
+                            });
+                          })
+                          .catch(error => {
+                            toast({
+                              variant: "destructive",
+                              title: "Error",
+                              description: error.message,
+                            });
+                          });
+                      }}
+                    >
+                      Save as new
+                    </Button>
+                  )}
+                  {!user && (
                   <>
                     <Button 
                       variant="outline"
