@@ -142,7 +142,7 @@ export default function SavePaletteDialog({
       <DialogTrigger asChild>
         <Button variant="default" className="flex items-center gap-2">
           <SaveIcon className="h-4 w-4" />
-          {selectedPalette ? 'Update palette' : 'Save palette'}
+          {selectedPalette ? 'Update' : 'Save palette'}
         </Button>
       </DialogTrigger>
       <DialogContent>

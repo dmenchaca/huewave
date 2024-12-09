@@ -124,22 +124,24 @@ export default function HomePage() {
               <div className="flex items-center gap-2 flex-shrink-0">
                   <>
                     {user ? (
-                      <>
-                        <SavePaletteDialog 
-                          colors={colors} 
-                          isOpen={isDialogOpen}
-                          onOpenChange={setIsDialogOpen}
-                          selectedPalette={selectedPalette}
-                          onSaveSuccess={handlePaletteSave}
-                        />
-                        <SavePaletteDialog 
-                          colors={colors} 
-                          isOpen={isSaveAsNewDialogOpen}
-                          onOpenChange={setIsSaveAsNewDialogOpen}
-                          defaultName={selectedPalette ? `${selectedPalette.name} (Copy)` : undefined}
-                          onSaveSuccess={handlePaletteSave}
-                        />
-                      </>
+                      selectedPalette && (
+                        <>
+                          <SavePaletteDialog 
+                            colors={colors} 
+                            isOpen={isDialogOpen}
+                            onOpenChange={setIsDialogOpen}
+                            selectedPalette={selectedPalette}
+                            onSaveSuccess={handlePaletteSave}
+                          />
+                          <SavePaletteDialog 
+                            colors={colors} 
+                            isOpen={isSaveAsNewDialogOpen}
+                            onOpenChange={setIsSaveAsNewDialogOpen}
+                            defaultName={selectedPalette ? `${selectedPalette.name} (Copy)` : undefined}
+                            onSaveSuccess={handlePaletteSave}
+                          />
+                        </>
+                      )
                     ) : (
                       <SavePaletteDialog 
                         colors={colors} 
