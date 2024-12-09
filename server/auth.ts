@@ -338,7 +338,7 @@ export function setupAuth(app: Express) {
       const resetUrl = `${req.protocol}://${req.get('host')}/reset-password?token=${token}`;
       const msg = {
         to: email,
-        from: 'noreply@huewave.com',
+        from: 'hi@diego.bio',
         subject: 'Password Reset Request',
         text: `To reset your password, click the following link: ${resetUrl}\n\nThis link will expire in 1 hour.`,
         html: `
