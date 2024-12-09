@@ -115,23 +115,34 @@ export default function AuthDialog({ isOpen, onOpenChange, triggerContent, custo
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
-                    name: storedPalette.name,
+                    name: storedPalette.name || 'My Palette',
                     colors: storedPalette.colors
                   })
                 });
                 
                 if (savePaletteResponse.ok) {
                   const savedPalette = await savePaletteResponse.json();
+                  // Clear the stored palette first
+                  await fetch('/api/clear-stored-palette', { method: 'POST' });
+                  
                   if (onSuccess) {
                     onSuccess(savedPalette);
                   }
-                  // Clear the stored palette
-                  await fetch('/api/clear-stored-palette', { method: 'POST' });
+                  
+                  toast({
+                    title: "Palette saved",
+                    description: "Your palette has been saved to your account",
+                  });
                 }
               }
             }
           } catch (error) {
             console.error('Error handling stored palette:', error);
+            toast({
+              variant: "destructive",
+              title: "Error",
+              description: "Failed to save stored palette",
+            });
           }
         }
         

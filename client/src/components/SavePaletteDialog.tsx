@@ -91,7 +91,7 @@ export default function SavePaletteDialog({
     },
   });
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name.trim()) {
       toast({
         variant: "destructive",
@@ -103,13 +103,30 @@ export default function SavePaletteDialog({
 
     if (!user) {
       // Store palette data in session
-      fetch('/api/store-palette', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, colors })
-      });
-      onSaveAttempt?.();
-      onOpenChange(false); // Close the save dialog
+      try {
+        const response = await fetch('/api/store-palette', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, colors })
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to store palette');
+        }
+
+        toast({
+          title: "Palette stored",
+          description: "Please log in to save your palette permanently",
+        });
+        onSaveAttempt?.();
+        onOpenChange(false); // Close the save dialog
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to store palette",
+        });
+      }
       return;
     }
 
