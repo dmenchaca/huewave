@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import AuthDialog from "@/components/AuthDialog";
 import { Button } from "@/components/ui/button";
-import { MoonIcon, SunIcon } from "lucide-react";
+import { MoonIcon, SunIcon, SaveIcon } from "lucide-react";
 import ColorPalette from "../components/ColorPalette";
 import PaletteControls from "../components/PaletteControls";
 import SavedPalettesDropdown from "../components/SavedPalettesDropdown";
