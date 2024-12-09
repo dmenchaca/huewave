@@ -126,6 +126,14 @@ export default function HomePage() {
                     {user ? (
                       selectedPalette && (
                         <>
+                          <Button
+                            variant="default"
+                            className="flex items-center gap-2"
+                            onClick={() => setIsDialogOpen(true)}
+                          >
+                            <SaveIcon className="h-4 w-4" />
+                            Update
+                          </Button>
                           <SavePaletteDialog 
                             colors={colors} 
                             isOpen={isDialogOpen}
