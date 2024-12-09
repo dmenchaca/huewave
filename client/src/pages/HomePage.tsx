@@ -123,21 +123,32 @@ export default function HomePage() {
             <>
               <div className="flex items-center gap-2 flex-shrink-0">
                   <>
-                    <SavePaletteDialog 
-                      colors={colors} 
-                      isOpen={isDialogOpen}
-                      onOpenChange={setIsDialogOpen}
-                      onSaveAttempt={!user ? () => setIsAuthDialogOpen(true) : undefined}
-                      selectedPalette={selectedPalette}
-                      onSaveSuccess={handlePaletteSave}
-                    />
-                    <SavePaletteDialog 
-                      colors={colors} 
-                      isOpen={isSaveAsNewDialogOpen}
-                      onOpenChange={setIsSaveAsNewDialogOpen}
-                      defaultName={selectedPalette ? `${selectedPalette.name} (Copy)` : undefined}
-                      onSaveSuccess={handlePaletteSave}
-                    />
+                    {user ? (
+                      <>
+                        <SavePaletteDialog 
+                          colors={colors} 
+                          isOpen={isDialogOpen}
+                          onOpenChange={setIsDialogOpen}
+                          selectedPalette={selectedPalette}
+                          onSaveSuccess={handlePaletteSave}
+                        />
+                        <SavePaletteDialog 
+                          colors={colors} 
+                          isOpen={isSaveAsNewDialogOpen}
+                          onOpenChange={setIsSaveAsNewDialogOpen}
+                          defaultName={selectedPalette ? `${selectedPalette.name} (Copy)` : undefined}
+                          onSaveSuccess={handlePaletteSave}
+                        />
+                      </>
+                    ) : (
+                      <SavePaletteDialog 
+                        colors={colors} 
+                        isOpen={isDialogOpen}
+                        onOpenChange={setIsDialogOpen}
+                        onSaveAttempt={() => setIsAuthDialogOpen(true)}
+                        onSaveSuccess={handlePaletteSave}
+                      />
+                    )}
                   </>
                   {user && selectedPalette && (
                     <>
