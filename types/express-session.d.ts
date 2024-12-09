@@ -1,4 +1,5 @@
 import 'express-session';
+import type { Palette } from '@db/schema';
 
 declare module 'express-session' {
   interface SessionData {
@@ -19,9 +20,7 @@ declare module 'express-session' {
       domain?: string;
       sameSite?: boolean | 'lax' | 'strict' | 'none';
     };
-    palette?: {
-      name: string;
-      colors: string[];
+    palette?: Pick<Palette, 'name' | 'colors'> & {
       created_at?: string;
       id?: number;
       user_id?: number;
