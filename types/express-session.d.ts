@@ -13,5 +13,9 @@ declare module 'express-session' {
       id?: number;
       user_id?: number;
     };
+    user?: {
+      id: number;
+      email: string;
+    };
   }
 }

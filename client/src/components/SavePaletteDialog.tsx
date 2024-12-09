@@ -29,6 +29,7 @@ interface SavePaletteDialogProps {
   selectedPalette?: Palette | null;
   onSaveSuccess: (palette: Palette) => void;
   onSaveAttempt?: () => void;
+  defaultName?: string;
 }
 
 export default function SavePaletteDialog({ 

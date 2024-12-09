@@ -1,5 +1,5 @@
 import { render, fireEvent, screen } from '@testing-library/react';
-import { vi } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import EditPaletteDialog from '../components/EditPaletteDialog';
 
 describe('EditPaletteDialog', () => {
