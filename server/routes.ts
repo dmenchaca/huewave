@@ -2,7 +2,8 @@ import type { Express } from "express";
 import { eq, and } from "drizzle-orm";
 import { setupAuth } from "./auth";
 import { db } from "../db";
-import { palettes } from "@db/schema";
+import { palettes, insertPaletteSchema } from "../db/schema";
+import { z } from "zod";
 
 export function registerRoutes(app: Express) {
   setupAuth(app);
@@ -19,7 +20,8 @@ export function registerRoutes(app: Express) {
         orderBy: (palettes, { desc }) => [desc(palettes.created_at)],
       });
       res.json(userPalettes);
-    } catch (error) {
+    } catch (error: unknown) {
+      console.error('Error fetching palettes:', error);
       res.status(500).send("Failed to fetch palettes");
     }
   });
@@ -42,7 +44,7 @@ export function registerRoutes(app: Express) {
       }
       
       res.json(latestPalette);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error fetching latest palette:', error);
       res.status(500).send("Failed to fetch latest palette");
     }
@@ -63,7 +65,7 @@ export function registerRoutes(app: Express) {
       if (!result.success) {
         return res.status(400).json({
           error: "Invalid palette data",
-          details: result.error.errors.map(err => ({
+          details: result.error.errors.map((err: z.ZodError["errors"][0]) => ({
             path: err.path.join('.'),
             message: err.message
           }))
@@ -75,7 +77,7 @@ export function registerRoutes(app: Express) {
         .values(result.data)
         .returning();
       res.json(palette);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error saving palette:', error);
       res.status(500).send("Failed to save palette");
     }
@@ -92,14 +94,18 @@ export function registerRoutes(app: Express) {
       await db
         .delete(palettes)
         .where(
-          eq(palettes.id, parseInt(id)) && 
-          eq(palettes.user_id, req.user.id)
+          and(
+            eq(palettes.id, parseInt(id)),
+            eq(palettes.user_id, req.user.id)
+          )
         );
       res.status(200).send("Palette deleted");
-    } catch (error) {
+    } catch (error: unknown) {
+      console.error('Error deleting palette:', error);
       res.status(500).send("Failed to delete palette");
     }
   });
+
   // Update a palette
   app.put("/api/palettes/:id", async (req, res) => {
     if (!req.user) {
@@ -116,7 +122,7 @@ export function registerRoutes(app: Express) {
       if (!result.success) {
         return res.status(400).json({
           error: "Invalid palette data",
-          details: result.error.errors.map(err => ({
+          details: result.error.errors.map((err: z.ZodError["errors"][0]) => ({
             path: err.path.join('.'),
             message: err.message
           }))
@@ -155,7 +161,7 @@ export function registerRoutes(app: Express) {
         .returning();
       
       res.json(updatedPalette);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error updating palette:', error);
       res.status(500).send("Failed to update palette");
     }
@@ -170,4 +176,3 @@ export function registerStorePaletteRoute(app: Express) {
     res.json({ message: "Palette stored in session" });
   });
 }
-
