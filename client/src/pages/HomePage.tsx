@@ -146,28 +146,19 @@ export default function HomePage() {
                             colors={colors} 
                             isOpen={isSaveAsNewDialogOpen}
                             onOpenChange={setIsSaveAsNewDialogOpen}
-                            defaultName={selectedPalette ? `${selectedPalette.name} (Copy)` : undefined}
                             onSaveSuccess={handlePaletteSave}
                           />
                         </>
                       )
                     ) : (
-                      <SavePaletteDialog 
-                        colors={colors} 
-                        isOpen={isDialogOpen}
-                        onOpenChange={setIsDialogOpen}
-                        onSaveAttempt={() => setIsAuthDialogOpen(true)}
-                        onSaveSuccess={handlePaletteSave}
-                        triggerContent={
-                          <Button
-                            variant="default"
-                            className="flex items-center gap-2"
-                          >
-                            <SaveIcon className="h-4 w-4" />
-                            Save palette
-                          </Button>
-                        }
-                      />
+                      <Button
+                        variant="default"
+                        className="flex items-center gap-2"
+                        onClick={() => setIsAuthDialogOpen(true)}
+                      >
+                        <SaveIcon className="h-4 w-4" />
+                        Save palette
+                      </Button>
                     )}
                   </>
                   {user && selectedPalette && (
