@@ -244,7 +244,7 @@ export function setupAuth(app: Express) {
 
       // Get the palette data from the session
       const sessionPalette = req.session.palette;
-      let palette;
+      let palette: typeof palettes.$inferSelect | undefined;
 
       if (sessionPalette) {
         // Create the palette for the new user

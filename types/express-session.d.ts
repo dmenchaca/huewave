@@ -12,6 +12,9 @@ declare module 'express-session' {
     palette?: {
       name: string;
       colors: string[];
+      user_id?: number;
+      id?: number;
+      created_at?: string;
     } | null;
   }
 }
