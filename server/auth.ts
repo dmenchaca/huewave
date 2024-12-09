@@ -283,6 +283,10 @@ export function setupAuth(app: Express) {
     const attempts = loginAttempts.get(clientIp) || { count: 0, lastAttempt: 0 };
     const rememberMe = req.body.rememberMe === true;
 
+    // Store the palette data before authentication
+    const sessionPalette = req.session.palette;
+    console.log('[Login] Current session palette before auth:', sessionPalette);
+
     // Check if user is locked out
     if (attempts.count >= MAX_ATTEMPTS && now - attempts.lastAttempt < LOCKOUT_TIME) {
       const remainingTime = Math.ceil((LOCKOUT_TIME - (now - attempts.lastAttempt)) / 1000 / 60);
@@ -328,12 +332,20 @@ export function setupAuth(app: Express) {
             }
           }
 
-          // Save session explicitly
+          // Restore the palette data after successful authentication
+          if (sessionPalette) {
+            req.session.palette = sessionPalette;
+            console.log('[Login] Restored session palette after auth:', req.session.palette);
+          }
+
+          // Save session explicitly with the restored palette
           req.session.save((err) => {
             if (err) {
+              console.error('[Login] Error saving session:', err);
               return next(err);
             }
 
+            console.log('[Login] Session saved successfully, current palette:', req.session.palette);
             return res.json({
               message: "Login successful",
               user: { id: user.id, email: user.email },
