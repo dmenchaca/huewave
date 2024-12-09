@@ -387,6 +387,9 @@ export function setupAuth(app: Express) {
             <p>If you didn't request this password reset, please ignore this email.</p>
           </div>
         `,
+        trackingSettings: {
+          clickTracking: { enable: false }
+        }
       };
 
       try {
