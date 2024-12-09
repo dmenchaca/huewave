@@ -98,9 +98,9 @@ export default function HomePage() {
     <div className="min-h-screen bg-background">
       <header className="container mx-auto px-4 py-2 md:py-0 md:h-16 flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-0">
         <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4 w-full md:w-auto">
-          <div className="flex items-center gap-2">
-            <img src="/images/huewave-icon.png" alt="HueWave Logo" className="w-8" />
-            <h1 className="text-2xl font-bold">HueWave</h1>
+          <div className="inline-flex items-center gap-2">
+            <img src="/images/huewave-icon.png" alt="HueWave Logo" className="w-8 flex-shrink-0" />
+            <h1 className="text-2xl font-bold leading-none">HueWave</h1>
           </div>
           <div className="w-full md:w-48 h-10">
             {isFetching ? (
