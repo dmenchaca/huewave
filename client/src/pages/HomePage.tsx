@@ -83,14 +83,14 @@ export default function HomePage() {
       return;
     }
 
-    // Only trigger on actual spacebar press, ensure it's not from a button click
+    // Only generate new colors on spacebar press
     if (e.code === "Space" && 
         e.type === 'keydown' && 
         !e.repeat && 
-        e.isTrusted && 
+        !(e.target instanceof HTMLInputElement) && 
+        !(e.target instanceof HTMLTextAreaElement) &&
         !(e.target instanceof HTMLButtonElement)) {
       e.preventDefault();
-      e.stopPropagation();
       generateNewPalette();
     }
   }, [generateNewPalette, isDialogOpen, isSaveAsNewDialogOpen, isAuthDialogOpen]);

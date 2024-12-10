@@ -173,8 +173,6 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
       next[index] = !next[index];
       return next;
     });
-    // Return early to prevent any side effects
-    return;
   }, []);
 
   const toggleDarkMode = useCallback(() => {
