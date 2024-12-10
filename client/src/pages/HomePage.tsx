@@ -28,7 +28,7 @@ export default function HomePage() {
   const [isSaveAsNewDialogOpen, setIsSaveAsNewDialogOpen] = useState(false);
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
   const [selectedPalette, setSelectedPalette] = useState<Palette | null>(null);
-  
+
   // Authentication and color palette hooks
   const { user, logout, isLoading, isFetching } = useUser();
   const { toast } = useToast();
@@ -79,7 +79,7 @@ export default function HomePage() {
           document.activeElement instanceof HTMLTextAreaElement) {
         return;
       }
-      
+
       if (e.code === "Space" && !isDialogOpen) {
         e.preventDefault();
         generateNewPalette();
@@ -176,7 +176,7 @@ export default function HomePage() {
                         onClick={() => {
                           if (window.confirm('Are you sure you want to delete this palette? This action cannot be undone.')) {
                             const paletteId = selectedPalette.id;
-                            fetch(`/api/palettes/${paletteId}`, {
+                            fetch(/api/palettes/${paletteId}, {
                               method: "DELETE",
                             }).then(async (response) => {
                               if (response.ok) {
