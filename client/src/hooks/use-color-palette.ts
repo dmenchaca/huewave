@@ -71,37 +71,55 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
   });
 
   const generateNewPalette = useCallback(() => {
-    // Generate a base color with controlled saturation and brightness
+    // Generate a base color with controlled saturation and lightness
     const baseColor: Color = chroma.random()
-      .set('hsl.s', 0.5 + Math.random() * 0.3) // Vibrant saturation
-      .set('hsl.l', 0.4 + Math.random() * 0.2); // Controlled lightness
+      .set('hsl.s', 0.4 + Math.random() * 0.3) // Vibrant to moderately vibrant
+      .set('hsl.l', 0.5 + Math.random() * 0.2); // Balanced lightness
 
     // Generate harmonious colors using patterns observed
     const newColors = [
       baseColor.hex(), // Base color
-      chroma(baseColor).set('hsl.h', baseColor.get('hsl.h') + 15).hex(), // Slightly shifted hue
-      chroma(baseColor).set('hsl.h', baseColor.get('hsl.h') + 60).brighten(1).hex(), // Lighter analogous
-      chroma(baseColor).set('hsl.h', (baseColor.get('hsl.h') + 180) % 360).darken(1).hex(), // Complementary darker
-      chroma(baseColor).set('hsl.h', (baseColor.get('hsl.h') + 150) % 360).hex(), // Split complementary
+      chroma(baseColor)
+        .set('hsl.h', (baseColor.get('hsl.h') + 20) % 360) // Slight hue shift
+        .set('hsl.l', 0.6 + Math.random() * 0.2) // Pastel or lighter
+        .hex(),
+      chroma(baseColor)
+        .set('hsl.h', (baseColor.get('hsl.h') + 150) % 360) // Split-complementary
+        .set('hsl.l', 0.3 + Math.random() * 0.2) // Darker
+        .saturate(0.5) // Less saturated for balance
+        .hex(),
+      chroma(baseColor)
+        .set('hsl.h', (baseColor.get('hsl.h') + 180) % 360) // Complementary
+        .set('hsl.l', 0.5) // Balanced lightness
+        .saturate(1) // Vibrant
+        .hex(),
+      chroma(baseColor)
+        .set('hsl.h', (baseColor.get('hsl.h') + 60) % 360) // Analogous
+        .brighten(0.5) // Slightly brighter
+        .hex(),
     ];
 
-    // Ensure minimum contrast between adjacent colors
+    // Adjust for better contrast and variety
     const adjustedColors = newColors.map((color, i) => {
       if (i === 0) return color; // Skip base color
       const prevColor = chroma(newColors[i - 1]);
       const currentColor = chroma(color);
-      const contrast = chroma.contrast(prevColor, currentColor);
 
-      // Adjust lightness to improve contrast if necessary
-      if (contrast < 2) {
+      // Ensure a contrast ratio between 2.5 and 4 for accessibility
+      const contrast = chroma.contrast(prevColor, currentColor);
+      if (contrast < 2.5) {
         return currentColor
-          .set('hsl.l', Math.min(currentColor.get('hsl.l') + 0.2, 1))
+          .set('hsl.l', currentColor.get('hsl.l') + 0.2)
+          .hex();
+      } else if (contrast > 4) {
+        return currentColor
+          .set('hsl.l', Math.max(currentColor.get('hsl.l') - 0.2, 0))
           .hex();
       }
       return color;
     });
 
-    // Update the state, respecting locked colors
+    // Respect locked colors
     setColors(prev =>
       prev.length === 0
         ? adjustedColors
