@@ -171,18 +171,53 @@ export function registerRoutes(app: Express) {
 export function registerStorePaletteRoute(app: Express) {
   // Store palette in session
   app.post("/api/store-palette", (req, res) => {
-    console.log('Storing palette in session:', req.body);
+    console.log('\n[Store Palette Request]', new Date().toISOString());
+    console.log('Session ID:', req.sessionID);
+    console.log('Request Body:', req.body);
+    
     const { name, colors } = req.body;
+    if (!name || !colors) {
+      console.log('Invalid palette data received');
+      return res.status(400).json({ message: "Invalid palette data" });
+    }
+    
     req.session.palette = { name, colors };
-    console.log('Current session palette:', req.session.palette);
-    res.json({ message: "Palette stored in session" });
+    
+    // Save session explicitly to ensure palette is stored
+    req.session.save((err) => {
+      if (err) {
+        console.error('Error saving session with palette:', err);
+        return res.status(500).json({ message: "Failed to store palette" });
+      }
+      
+      console.log('Session saved with palette:', {
+        sessionId: req.sessionID,
+        palette: req.session.palette,
+        user: req.session.passport?.user
+      });
+      
+      res.json({ message: "Palette stored in session" });
+    });
   });
 
   // Get stored palette from session
   app.get("/api/palettes/stored", (req, res) => {
-    console.log('Retrieving palette from session:', req.session.palette);
+    console.log('\n[Stored Palette Request]', new Date().toISOString());
+    console.log('Session ID:', req.sessionID);
+    console.log('Full Session Data:', {
+      palette: req.session.palette,
+      user: req.session.passport?.user,
+      cookie: req.session.cookie
+    });
+    
     const palette = req.session.palette;
-    res.json(palette || null);
+    if (!palette) {
+      console.log('No palette found in session');
+      return res.json(null);
+    }
+    
+    console.log('Found palette in session:', palette);
+    res.json(palette);
   });
 
   // Clear stored palette from session
