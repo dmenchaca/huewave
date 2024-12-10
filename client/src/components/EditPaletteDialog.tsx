@@ -53,6 +53,7 @@ export default function EditPaletteDialog({
     mutationFn: async (data: { name: string; colors: string[] }) => {
       const response = await fetch(`/api/palettes/${palette.id}`, {
         method: "PUT",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });

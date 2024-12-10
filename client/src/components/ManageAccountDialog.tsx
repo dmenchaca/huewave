@@ -29,8 +29,9 @@ export default function ManageAccountDialog({
 
   const updateAccountMutation = useMutation({
     mutationFn: async (data: { email: string }) => {
-      const response = await fetch(`/api/user`, {
+      const response = await fetch("/api/user", {
         method: "PUT",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });

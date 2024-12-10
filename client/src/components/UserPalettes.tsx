@@ -33,9 +33,11 @@ export default function UserPalettes() {
     mutationFn: async (id: number) => {
       const response = await fetch(`/api/palettes/${id}`, {
         method: "DELETE",
+        credentials: "include",
       });
       if (!response.ok) {
-        throw new Error("Failed to delete palette");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to delete palette");
       }
     },
     onSuccess: () => {
