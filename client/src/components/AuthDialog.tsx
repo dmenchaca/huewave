@@ -283,6 +283,7 @@ export default function AuthDialog({ isOpen, onOpenChange, triggerContent, custo
                   </span>
                 </div>
               </div>
+              {/* Google OAuth button - Temporarily commented out
               <Button
                 type="button"
                 variant="outline"
@@ -309,6 +310,7 @@ export default function AuthDialog({ isOpen, onOpenChange, triggerContent, custo
                 </svg>
                 Continue with Google
               </Button>
+              */}
               {isResetPassword ? (
                 resetSubmitted ? (
                   <div className="text-center space-y-4">

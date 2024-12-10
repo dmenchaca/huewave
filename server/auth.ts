@@ -138,7 +138,8 @@ export function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
-  // Google OAuth Strategy
+  // Google OAuth Strategy - Temporarily commented out
+  /*
   passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID!,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
@@ -173,6 +174,7 @@ export function setupAuth(app: Express) {
       return done(err as Error);
     }
   }));
+  */
 
   // Local Strategy
   passport.use(
@@ -758,7 +760,8 @@ export function setupAuth(app: Express) {
       });
     }
   });
-  // Google OAuth routes
+  // Google OAuth routes - Temporarily commented out
+  /*
   app.get('/auth/google',
     passport.authenticate('google', { scope: ['profile', 'email'] })
   );
@@ -770,6 +773,7 @@ export function setupAuth(app: Express) {
       res.redirect('/');
     }
   );
+  */
 
   app.get("/api/user", (req, res) => {
     if (req.isAuthenticated()) {
