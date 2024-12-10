@@ -176,7 +176,7 @@ export default function HomePage() {
                         onClick={() => {
                           if (window.confirm('Are you sure you want to delete this palette? This action cannot be undone.')) {
                             const paletteId = selectedPalette.id;
-                            fetch(/api/palettes/${paletteId}, {
+                            fetch(`/api/palettes/${paletteId}`, {
                               method: "DELETE",
                             }).then(async (response) => {
                               if (response.ok) {
