@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import AuthDialog from "@/components/AuthDialog";
 import { Button } from "@/components/ui/button";
-import { MoonIcon, SunIcon, SaveIcon } from "lucide-react";
+import { MoonIcon, SunIcon, SaveIcon, Trash2Icon } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -171,12 +171,13 @@ export default function HomePage() {
                         variant="destructive"
                         className="flex items-center gap-2"
                       >
+                        <Trash2Icon className="h-4 w-4" />
                         Delete
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Delete "{selectedPalette?.name}"?</AlertDialogTitle>
+                        <AlertDialogTitle>Delete palette?</AlertDialogTitle>
                         <AlertDialogDescription>
                           This action cannot be undone. This will permanently delete your palette "{selectedPalette?.name}".
                         </AlertDialogDescription>
