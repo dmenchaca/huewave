@@ -3,6 +3,17 @@ import { useQueryClient } from "@tanstack/react-query";
 import AuthDialog from "@/components/AuthDialog";
 import { Button } from "@/components/ui/button";
 import { MoonIcon, SunIcon, SaveIcon } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import ColorPalette from "../components/ColorPalette";
 import PaletteControls from "../components/PaletteControls";
 import SavedPalettesDropdown from "../components/SavedPalettesDropdown";
@@ -154,39 +165,58 @@ export default function HomePage() {
                       </Button>
                     }
                   />
-                  <Button
-                    variant="destructive"
-                    className="flex items-center gap-2"
-                    onClick={async () => {
-                      if (selectedPalette) {
-                        try {
-                          const response = await fetch(`/api/palettes/${selectedPalette.id}`, {
-                            method: 'DELETE',
-                            credentials: 'include'
-                          });
-                          
-                          if (!response.ok) {
-                            throw new Error('Failed to delete palette');
-                          }
-                          
-                          queryClient.invalidateQueries({ queryKey: ['palettes'] });
-                          setSelectedPalette(null);
-                          toast({
-                            title: "Success",
-                            description: "Palette deleted successfully",
-                          });
-                        } catch (error) {
-                          toast({
-                            variant: "destructive",
-                            title: "Error",
-                            description: "Failed to delete palette",
-                          });
-                        }
-                      }
-                    }}
-                  >
-                    Delete
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="destructive"
+                        className="flex items-center gap-2"
+                      >
+                        Delete
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete your palette.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={async () => {
+                            if (selectedPalette) {
+                              try {
+                                const response = await fetch(`/api/palettes/${selectedPalette.id}`, {
+                                  method: 'DELETE',
+                                  credentials: 'include'
+                                });
+                                
+                                if (!response.ok) {
+                                  throw new Error('Failed to delete palette');
+                                }
+                                
+                                queryClient.invalidateQueries({ queryKey: ['palettes'] });
+                                setSelectedPalette(null);
+                                toast({
+                                  title: "Success",
+                                  description: "Palette deleted successfully",
+                                });
+                              } catch (error) {
+                                toast({
+                                  variant: "destructive",
+                                  title: "Error",
+                                  description: "Failed to delete palette",
+                                });
+                              }
+                            }
+                          }}
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </>
               ) : (
                 // Show save button for non-logged-in users
