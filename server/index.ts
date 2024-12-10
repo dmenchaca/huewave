@@ -53,12 +53,12 @@ app.use((req, res, next) => {
   registerStorePaletteRoute(app);
   const server = createServer(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  app.use((err: Error & { status?: number; statusCode?: number }, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
+    log(`Error: ${message}`);
     res.status(status).json({ message });
-    throw err;
   });
 
   // importantly only setup vite in development and after
@@ -74,21 +74,22 @@ app.use((req, res, next) => {
   // this serves both the API and the client
   const PORT = process.env.PORT || 5000;
   
-  try {
-    server.listen(Number(PORT), () => {
-      log(`Server started successfully on port ${PORT}`);
-    }, "0.0.0.0");
-
-    server.on('error', (error: any) => {
-      if (error.code === 'EADDRINUSE') {
-        log(`Error: Port ${PORT} is already in use`);
-      } else {
-        log(`Server error: ${error.message}`);
-      }
-      process.exit(1);
-    });
-  } catch (error: any) {
-    log(`Failed to start server: ${error.message}`);
+  const port = Number(PORT);
+  if (isNaN(port)) {
+    log(`Invalid port number: ${PORT}`);
     process.exit(1);
   }
+
+  server.on('error', (error: NodeJS.ErrnoException) => {
+    if (error.code === 'EADDRINUSE') {
+      log(`Error: Port ${port} is already in use`);
+    } else {
+      log(`Server error: ${error.message}`);
+    }
+    process.exit(1);
+  });
+
+  server.listen(port, "0.0.0.0", () => {
+    log(`Server started successfully on port ${port}`);
+  });
 })();
