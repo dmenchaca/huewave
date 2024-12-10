@@ -87,7 +87,7 @@ export default function ColorPalette({
             <Button
               variant="secondary"
               size="icon"
-              className="opacity-0 group-hover:opacity-100 transition-opacity"
+              className="opacity-0 group-hover:opacity-100 transition-opacity relative z-50"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
