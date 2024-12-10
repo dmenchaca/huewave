@@ -89,10 +89,14 @@ export default function ColorPalette({
               size="icon"
               className="opacity-0 group-hover:opacity-100 transition-opacity relative z-50"
               onClick={(e) => {
+                // Prevent any event bubbling
                 e.preventDefault();
                 e.stopPropagation();
-                if (e.type === 'click') {
+                // Ensure this is a genuine click event
+                if (e.type === 'click' && e.isTrusted) {
                   onToggleLock(index);
+                  // Prevent any other handlers from executing
+                  e.stopImmediatePropagation();
                 }
               }}
             >

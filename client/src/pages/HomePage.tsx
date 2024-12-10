@@ -83,8 +83,12 @@ export default function HomePage() {
       return;
     }
 
-    // Only trigger on actual spacebar press, not synthetic events
-    if (e.code === "Space" && e.type === 'keydown' && !e.repeat) {
+    // Only trigger on actual spacebar press, ensure it's not from a button click
+    if (e.code === "Space" && 
+        e.type === 'keydown' && 
+        !e.repeat && 
+        e.isTrusted && 
+        !(e.target instanceof HTMLButtonElement)) {
       e.preventDefault();
       e.stopPropagation();
       generateNewPalette();
