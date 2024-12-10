@@ -165,29 +165,30 @@ export default function HomePage() {
                       </Button>
                     }
                   />
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="destructive"
-                        className="flex items-center gap-2"
-                      >
-                        <Trash2Icon className="h-4 w-4" />
-                        Delete
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete palette?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action cannot be undone. This will permanently delete your palette "{selectedPalette?.name}".
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
+                  {selectedPalette && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
                           variant="destructive"
-                          onClick={async () => {
-                            if (selectedPalette) {
+                          className="flex items-center gap-2"
+                        >
+                          <Trash2Icon className="h-4 w-4" />
+                          Delete
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete palette "{selectedPalette.name}"?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete your palette "{selectedPalette.name}".
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            variant="destructive"
+                            onClick={async () => {
+                              if (selectedPalette) {
                               try {
                                 const response = await fetch(`/api/palettes/${selectedPalette.id}`, {
                                   method: 'DELETE',
@@ -219,6 +220,7 @@ export default function HomePage() {
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
+                  )}
                 </>
               ) : (
                 // Show save button for non-logged-in users
