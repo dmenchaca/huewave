@@ -75,9 +75,9 @@ app.use((req, res, next) => {
   const PORT = process.env.PORT || 5000;
   
   try {
-    server.listen(PORT, "0.0.0.0", () => {
+    server.listen(Number(PORT), () => {
       log(`Server started successfully on port ${PORT}`);
-    });
+    }, "0.0.0.0");
 
     server.on('error', (error: any) => {
       if (error.code === 'EADDRINUSE') {
