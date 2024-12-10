@@ -8,13 +8,15 @@ interface ColorPaletteProps {
   lockedColors: boolean[];
   onToggleLock: (index: number) => void;
   onColorChange?: (index: number, color: string) => void;
+  generateNewPalette?: () => void;
 }
 
 export default function ColorPalette({ 
   colors, 
   lockedColors, 
   onToggleLock,
-  onColorChange 
+  onColorChange,
+  generateNewPalette
 }: ColorPaletteProps) {
   const { toast } = useToast();
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
@@ -79,21 +81,29 @@ export default function ColorPalette({
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-5 h-[50vh] min-h-[400px] rounded-lg overflow-hidden">
+    <div className="grid grid-cols-1 md:grid-cols-5 h-full overflow-hidden">
       {colors.map((color, index) => (
         <div
           key={index}
           className="relative group flex items-center justify-center"
           style={{ backgroundColor: color }}
+          onClick={(e) => {
+            // Only proceed if the click didn't come from a button or input
+            if (!(e.target as HTMLElement).closest('button') && 
+                !(e.target as HTMLElement).closest('input')) {
+              generateNewPalette?.();
+            }
+          }}
         >
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
           
           <div className="absolute top-4 right-4 flex gap-2">
             <Button
               variant="secondary"
               size="icon"
-              className="opacity-0 group-hover:opacity-100 transition-opacity"
+              className="opacity-0 group-hover:opacity-100 transition-opacity relative z-50"
               onClick={(e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 onToggleLock(index);
               }}
@@ -108,8 +118,12 @@ export default function ColorPalette({
             <Button
               variant="secondary"
               size="icon"
-              className="opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={() => copyToClipboard(color, index)}
+              className="opacity-0 group-hover:opacity-100 transition-opacity relative z-50"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                copyToClipboard(color, index);
+              }}
             >
               {copiedIndex === index ? (
                 <CheckIcon className="h-4 w-4" />
@@ -128,6 +142,7 @@ export default function ColorPalette({
               value={color.toUpperCase()}
               onChange={(e) => handleColorChange(index, e.target.value)}
               onClick={(e) => {
+                e.stopPropagation();
                 if (e.target instanceof HTMLInputElement) {
                   e.target.select();
                   setEditingIndex(index);
@@ -140,7 +155,7 @@ export default function ColorPalette({
                   onColorChange?.(index, '#000000');
                 }
               }}
-              className="bg-transparent text-lg font-mono text-center uppercase w-24 focus:outline-none cursor-text relative"
+              className="bg-transparent text-lg font-mono text-center uppercase w-24 focus:outline-none cursor-text relative z-50"
               style={{
                 color: getContrastColor(color),
                 caretColor: getContrastColor(color),

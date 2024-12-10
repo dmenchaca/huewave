@@ -104,11 +104,11 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="container mx-auto px-4 py-2 md:py-0 md:h-16 flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-0">
+      <header className="mx-auto px-4 py-2 md:h-16 flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-0">
         <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4 w-full md:w-auto">
           <div className="inline-flex items-center gap-2">
             <img src="/images/huewave-icon.png" alt="HueWave Logo" className="w-8 flex-shrink-0" />
-            <h1 className="text-2xl font-bold leading-none pb-1">HueWave</h1>
+            <h1 className="text-2xl font-extrabold leading-none pb-1">HueWave</h1>
           </div>
           <div className="w-full md:w-48 h-10">
             {isFetching ? (
@@ -270,13 +270,14 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid gap-8">
+      <main className="">
+        <div className="grid gap-8 min-h-screen">
           <ColorPalette 
             colors={colors}
             lockedColors={lockedColors}
             onToggleLock={toggleLock}
             onColorChange={handleColorChange}
+            generateNewPalette={generateNewPalette}
           />
           <PaletteControls />
         </div>
