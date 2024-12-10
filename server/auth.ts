@@ -113,27 +113,34 @@ export function setupAuth(app: Express) {
   const MAX_ATTEMPTS = 5;
   const LOCKOUT_TIME = 15 * 60 * 1000; // 15 minutes
 
-  app.use(
-    session({
-      cookie: {
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-        secure: process.env.NODE_ENV === 'production',
-        httpOnly: true,
-        sameSite: 'strict',
-        path: '/'
-      },
-      secret: process.env.SESSION_SECRET || process.env.REPL_ID || "color-palette-secret",
-      resave: false,
-      saveUninitialized: true,
-      rolling: true,
-      store: new MemoryStore({
-        checkPeriod: 86400000,
-        max: 100000,
-        ttl: 30 * 24 * 60 * 60 * 1000 // 30 days
-      }),
-      name: 'sessionId'
-    })
-  );
+  const isProduction = process.env.NODE_ENV === 'production';
+  const sessionConfig = {
+    cookie: {
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      secure: isProduction,
+      httpOnly: true,
+      sameSite: isProduction ? 'none' as const : 'lax' as const,
+      path: '/',
+      domain: isProduction ? '.huewave.co' : undefined
+    },
+    secret: process.env.SESSION_SECRET || process.env.REPL_ID || "color-palette-secret",
+    resave: false,
+    saveUninitialized: false,
+    rolling: true,
+    store: new MemoryStore({
+      checkPeriod: 86400000, // 24 hours
+      max: 100000,
+      ttl: 30 * 24 * 60 * 60 * 1000 // 30 days
+    }),
+    name: 'sessionId',
+    proxy: isProduction // Trust the reverse proxy when in production
+  };
+
+  if (isProduction) {
+    app.set('trust proxy', 1); // Trust first proxy
+  }
+
+  app.use(session(sessionConfig));
 
   app.use(passport.initialize());
   app.use(passport.session());
