@@ -89,7 +89,7 @@ export default function ColorPalette({
               size="icon"
               className="opacity-0 group-hover:opacity-100 transition-opacity relative z-50"
               onClick={(e: React.MouseEvent) => {
-                // Stop the event from propagating to prevent any side effects
+                e.preventDefault();
                 e.stopPropagation();
                 onToggleLock(index);
               }}
