@@ -76,4 +76,4 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npx vitest client/src/pages/__tests__/HomePage.test.tsx"
+args = "npx vitest client/src/pages/__tests__/HomePage.test.tsx --environment=jsdom --run --no-watch"

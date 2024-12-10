@@ -1,19 +1,21 @@
+/// <reference types="vitest" />
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, fireEvent, screen } from '@testing-library/react';
+import { render, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import HomePage from '../HomePage';
-import { useUser } from '../../hooks/use-user';
-import { useColorPalette } from '../../hooks/use-color-palette';
+import { useUser } from '@/hooks/use-user';
+import { useColorPalette } from '@/hooks/use-color-palette';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-// Import test setup
-import '../test/setup';
-
-// Mocks
-vi.mock('../../hooks/use-user');
-vi.mock('../../hooks/use-color-palette');
-vi.mock('../../hooks/use-toast');
+// Mock hooks
+vi.mock('@/hooks/use-user');
+vi.mock('@/hooks/use-color-palette');
+vi.mock('@/hooks/use-toast', () => ({
+  useToast: () => ({
+    toast: vi.fn()
+  })
+}));
 
 // Create a custom render function that includes providers
 function renderWithProviders(ui: React.ReactElement) {
@@ -34,17 +36,12 @@ function renderWithProviders(ui: React.ReactElement) {
   );
 }
 
-// Reset mocks before each test
-beforeEach(() => {
-  vi.resetModules();
-  vi.clearAllMocks();
-});
-
 describe('HomePage Color Regeneration', () => {
   const mockGenerateNewPalette = vi.fn();
   
   beforeEach(() => {
     // Reset all mocks before each test
+    vi.resetModules();
     vi.clearAllMocks();
     
     // Mock useUser hook
@@ -70,7 +67,7 @@ describe('HomePage Color Regeneration', () => {
     renderWithProviders(<HomePage />);
     
     // Simulate spacebar press on document
-    fireEvent.keyDown(window.document, { code: 'Space' });
+    fireEvent.keyDown(document.body, { code: 'Space' });
     
     // Check if generateNewPalette was called
     expect(mockGenerateNewPalette).toHaveBeenCalledTimes(1);
@@ -80,9 +77,9 @@ describe('HomePage Color Regeneration', () => {
     renderWithProviders(<HomePage />);
     
     // Simulate various other key presses
-    fireEvent.keyDown(window.document, { code: 'Enter' });
-    fireEvent.keyDown(window.document, { code: 'KeyA' });
-    fireEvent.keyDown(window.document, { code: 'ArrowUp' });
+    fireEvent.keyDown(document.body, { code: 'Enter' });
+    fireEvent.keyDown(document.body, { code: 'KeyA' });
+    fireEvent.keyDown(document.body, { code: 'ArrowUp' });
     
     // Check that generateNewPalette was not called
     expect(mockGenerateNewPalette).not.toHaveBeenCalled();
@@ -122,7 +119,7 @@ describe('HomePage Color Regeneration', () => {
     renderWithProviders(<HomePage />);
     
     // Simulate spacebar press
-    fireEvent.keyDown(window.document, { code: 'Space' });
+    fireEvent.keyDown(document.body, { code: 'Space' });
     
     // Check that generateNewPalette was not called
     expect(mockGenerateNewPalette).not.toHaveBeenCalled();
@@ -132,7 +129,7 @@ describe('HomePage Color Regeneration', () => {
     renderWithProviders(<HomePage />);
     
     // Simulate spacebar being held down (repeat = true)
-    fireEvent.keyDown(window.document, { code: 'Space', repeat: true });
+    fireEvent.keyDown(document.body, { code: 'Space', repeat: true });
     
     // Check that generateNewPalette was not called
     expect(mockGenerateNewPalette).not.toHaveBeenCalled();
