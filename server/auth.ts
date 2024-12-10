@@ -122,6 +122,9 @@ export function setupAuth(app: Express) {
 
   const PostgresStore = connectPgSimple(session);
   
+  // Always trust the reverse proxy in Replit environment
+  app.set('trust proxy', 1);
+  
   const sessionConfig: session.SessionOptions = {
     cookie: {
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
@@ -138,32 +141,76 @@ export function setupAuth(app: Express) {
       pool: pgPool,
       tableName: 'session',
       createTableIfMissing: true,
-      pruneSessionInterval: 24 * 60 * 60 // 24 hours
+      pruneSessionInterval: 24 * 60 * 60, // 24 hours
+      errorLog: (...args) => {
+        console.error('\n[Session Store Error]', new Date().toISOString());
+        console.error(...args);
+      }
     }),
-    name: 'sessionId',
-    proxy: true // Always trust the reverse proxy in Replit environment
+    name: 'sessionId'
   };
 
-  if (isProduction) {
-    app.set('trust proxy', 1); // Trust first proxy
-  }
+  // Create and configure session middleware
+  const sessionMiddleware = session(sessionConfig);
 
-  app.use(session(sessionConfig));
+  // Add session error handling
+  app.use((req, res, next) => {
+    sessionMiddleware(req, res, (err) => {
+      if (err) {
+        console.error('\n[Session Middleware Error]', new Date().toISOString());
+        console.error('Error:', err);
+        // Don't fail on session errors, just log them
+        next();
+      } else {
+        next();
+      }
+    });
+  });
   app.use(passport.initialize());
   app.use(passport.session());
 
-  // Add session debugging after session middleware is initialized
+  // Add comprehensive session debugging
   app.use((req, res, next) => {
     try {
       console.log('\n[Session Debug]', new Date().toISOString());
+      console.log('Request Details:', {
+        method: req.method,
+        path: req.path,
+        headers: {
+          cookie: req.headers.cookie,
+          'user-agent': req.headers['user-agent']
+        }
+      });
       console.log('Session ID:', req.sessionID);
-      console.log('Cookie Settings:', req.session?.cookie);
-      console.log('Session User:', req.session?.passport?.user);
-      console.log('Session State:', {
+      console.log('Cookie Settings:', {
+        maxAge: req.session?.cookie?.maxAge,
+        expires: req.session?.cookie?.expires,
+        secure: req.session?.cookie?.secure,
+        httpOnly: req.session?.cookie?.httpOnly,
+        path: req.session?.cookie?.path,
+        sameSite: req.session?.cookie?.sameSite
+      });
+      console.log('Session Data:', {
+        user: req.session?.passport?.user,
         authenticated: req.isAuthenticated(),
         hasSession: !!req.session,
         hasCookie: !!req.session?.cookie
       });
+
+      // Monitor session changes
+      const originalSave = req.session.save;
+      req.session.save = function(callback) {
+        console.log('\n[Session Save]', new Date().toISOString());
+        console.log('Saving session:', req.sessionID);
+        return originalSave.call(this, (err) => {
+          if (err) {
+            console.error('Session save error:', err);
+          } else {
+            console.log('Session saved successfully');
+          }
+          if (callback) callback(err);
+        });
+      };
     } catch (error) {
       console.error('Error in session debug middleware:', error);
     }
