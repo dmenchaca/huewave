@@ -88,15 +88,15 @@ export default function ColorPalette({
               variant="secondary"
               size="icon"
               className="opacity-0 group-hover:opacity-100 transition-opacity relative z-50"
-              onClick={(e) => {
+              onClick={(e: React.MouseEvent) => {
                 // Prevent any event bubbling
                 e.preventDefault();
                 e.stopPropagation();
-                // Ensure this is a genuine click event
+                // Handle only genuine click events
                 if (e.type === 'click' && e.isTrusted) {
                   onToggleLock(index);
-                  // Prevent any other handlers from executing
-                  e.stopImmediatePropagation();
+                  // Use native event to stop immediate propagation
+                  e.nativeEvent.stopImmediatePropagation?.();
                 }
               }}
             >

@@ -97,11 +97,14 @@ export default function EditPaletteDialog({
   // Handle spacebar only when dialog is open
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.code === "Space" && isOpen) {
-        // Check if the target is an input element
-        if (e.target instanceof HTMLInputElement) {
-          return; // Don't generate new colors when input is focused
-        }
+      // Only handle space key when dialog is open and not from a button
+      if (e.code === "Space" && 
+          isOpen && 
+          e.type === 'keydown' && 
+          !e.repeat && 
+          e.isTrusted && 
+          !(e.target instanceof HTMLInputElement) && 
+          !(e.target instanceof HTMLButtonElement)) {
         e.preventDefault();
         e.stopPropagation();
         generateNewPalette();
@@ -109,8 +112,8 @@ export default function EditPaletteDialog({
     };
 
     if (isOpen) {
-      window.addEventListener("keydown", handleKeyPress, true);
-      return () => window.removeEventListener("keydown", handleKeyPress, true);
+      window.addEventListener("keydown", handleKeyPress);
+      return () => window.removeEventListener("keydown", handleKeyPress);
     }
   }, [generateNewPalette, isOpen]);
 
