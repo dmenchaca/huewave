@@ -273,6 +273,7 @@ export default function AuthDialog({ isOpen, onOpenChange, triggerContent, custo
                   isLogin ? "Log in" : "Create an account"
                 )}
               </Button>
+              {/* Divider commented out
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t" />
@@ -283,6 +284,7 @@ export default function AuthDialog({ isOpen, onOpenChange, triggerContent, custo
                   </span>
                 </div>
               </div>
+              */}
               {/* Google OAuth button - Temporarily commented out
               <Button
                 type="button"
