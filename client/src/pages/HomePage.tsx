@@ -184,6 +184,7 @@ export default function HomePage() {
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
+                          variant="destructive"
                           onClick={async () => {
                             if (selectedPalette) {
                               try {

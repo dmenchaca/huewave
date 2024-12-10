@@ -109,6 +109,7 @@ export default function UserPalettes() {
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <AlertDialogAction
+                        variant="destructive"
                         onClick={() => deleteMutation.mutate(palette.id)}
                       >
                         Delete
