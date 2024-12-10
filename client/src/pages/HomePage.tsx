@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import AuthDialog from "@/components/AuthDialog";
 import { Button } from "@/components/ui/button";
@@ -32,29 +32,28 @@ interface Palette {
 }
 
 export default function HomePage() {
-  // Core state management
+  // Authentication and core hooks
+  const { user, logout, isLoading, isFetching } = useUser();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // UI state management
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSaveAsNewDialogOpen, setIsSaveAsNewDialogOpen] = useState(false);
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
   const [selectedPalette, setSelectedPalette] = useState<Palette | null>(null);
 
-  // Authentication and color palette hooks
-  const { user, logout, isLoading, isFetching } = useUser();
-  const { toast } = useToast();
+  // Color palette hook
   const { 
     colors,
     setColors,
     lockedColors,
-    toggleLock,
     darkMode,
+    toggleLock,
     toggleDarkMode,
     generateNewPalette,
     handleColorChange
-  } = useColorPalette({ 
-    isDialogOpen,
-    initialColors: selectedPalette?.colors 
-  });
+  } = useColorPalette({ isDialogOpen });
 
   // Handle palette synchronization when user auth state changes
   useEffect(() => {
@@ -68,7 +67,7 @@ export default function HomePage() {
 
       try {
         const response = await fetch('/api/palettes/latest', {
-          credentials: 'include' // Ensure cookies are sent
+          credentials: 'include'
         });
         
         if (!isMounted) return;
@@ -80,7 +79,6 @@ export default function HomePage() {
             setColors(latestPalette.colors);
           }
         } else if (response.status === 401) {
-          // Handle unauthorized access
           setSelectedPalette(null);
         }
       } catch (error) {
@@ -94,31 +92,30 @@ export default function HomePage() {
     };
   }, [user, setColors]);
 
+  // Memoized key press handler
+  const handleKeyPress = useCallback((e: KeyboardEvent) => {
+    // Skip if generateNewPalette is not available
+    if (!generateNewPalette) return;
+
+    if (document.activeElement instanceof HTMLInputElement || 
+        document.activeElement instanceof HTMLTextAreaElement ||
+        document.activeElement instanceof HTMLButtonElement) {
+      return;
+    }
+
+    if (e.code === "Space" && !isDialogOpen) {
+      e.preventDefault();
+      generateNewPalette();
+    }
+  }, [generateNewPalette, isDialogOpen]);
+
   // Space key handler for generating new palettes
   useEffect(() => {
-    if (!generateNewPalette) return; // Guard against undefined generateNewPalette
-
-    const handleKeyPress = (e: KeyboardEvent) => {
-      // Prevent triggering when typing in input fields
-      if (document.activeElement instanceof HTMLInputElement || 
-          document.activeElement instanceof HTMLTextAreaElement ||
-          document.activeElement instanceof HTMLButtonElement) {
-        return;
-      }
-
-      // Check for space key and ensure no dialogs are open
-      if (e.code === "Space" && !isDialogOpen) {
-        e.preventDefault();
-        generateNewPalette();
-      }
-    };
-
-    // Add event listener with proper cleanup
     window.addEventListener("keydown", handleKeyPress);
     return () => {
       window.removeEventListener("keydown", handleKeyPress);
     };
-  }, [generateNewPalette, isDialogOpen]);
+  }, [handleKeyPress]);
 
   const handlePaletteSave = (palette: Palette) => {
     setSelectedPalette(palette);
@@ -153,7 +150,6 @@ export default function HomePage() {
           {!isLoading && (
             <div className="flex items-center gap-2 flex-shrink-0">
               {user ? (
-                // Show Update, Save as new, and Delete buttons for logged-in users
                 <>
                   <SavePaletteDialog 
                     colors={colors} 
@@ -162,10 +158,7 @@ export default function HomePage() {
                     selectedPalette={selectedPalette}
                     onSaveSuccess={handlePaletteSave}
                     triggerContent={
-                      <Button
-                        variant="default"
-                        className="flex items-center gap-2"
-                      >
+                      <Button variant="default" className="flex items-center gap-2">
                         <SaveIcon className="h-4 w-4" />
                         Update
                       </Button>
@@ -177,10 +170,7 @@ export default function HomePage() {
                     onOpenChange={setIsSaveAsNewDialogOpen}
                     onSaveSuccess={handlePaletteSave}
                     triggerContent={
-                      <Button
-                        variant="outline"
-                        className="flex items-center gap-2"
-                      >
+                      <Button variant="outline" className="flex items-center gap-2">
                         <SaveIcon className="h-4 w-4" />
                         Save as new
                       </Button>
@@ -189,10 +179,7 @@ export default function HomePage() {
                   {selectedPalette && (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button
-                          variant="destructive"
-                          className="flex items-center gap-2"
-                        >
+                        <Button variant="destructive" className="flex items-center gap-2">
                           <Trash2Icon className="h-4 w-4" />
                           Delete
                         </Button>
@@ -209,7 +196,6 @@ export default function HomePage() {
                           <AlertDialogAction
                             variant="destructive"
                             onClick={async () => {
-                              if (selectedPalette) {
                               try {
                                 const response = await fetch(`/api/palettes/${selectedPalette.id}`, {
                                   method: 'DELETE',
@@ -233,18 +219,16 @@ export default function HomePage() {
                                   description: "Failed to delete palette",
                                 });
                               }
-                            }
-                          }}
-                        >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                            }}
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   )}
                 </>
               ) : (
-                // Show save button for non-logged-in users
                 <SavePaletteDialog 
                   colors={colors} 
                   isOpen={isDialogOpen}
@@ -255,10 +239,7 @@ export default function HomePage() {
                   }}
                   onSaveAttempt={() => setIsAuthDialogOpen(true)}
                   triggerContent={
-                    <Button
-                      variant="default"
-                      className="flex items-center gap-2"
-                    >
+                    <Button variant="default" className="flex items-center gap-2">
                       <SaveIcon className="h-4 w-4" />
                       Save palette
                     </Button>
