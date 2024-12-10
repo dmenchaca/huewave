@@ -133,7 +133,9 @@ export function setupAuth(app: Express) {
       stale: false, // Don't serve stale data
       dispose: (key, val) => {
         console.log(`Session expired: ${key}`);
-      }
+      },
+      noDisposeOnSet: true, // Prevent disposal on session updates
+      touchAfter: 60 // Only update timestamps every 60 seconds
     }),
     name: 'sessionId',
     proxy: true // Always trust the reverse proxy in Replit environment
@@ -344,11 +346,29 @@ export function setupAuth(app: Express) {
               return next(err);
             }
 
-            console.log('[Login] Session saved successfully, current palette:', req.session.palette);
+            console.log('\n[Login Session Details]', new Date().toISOString());
+            console.log('Session ID:', req.sessionID);
+            console.log('Session Cookie:', {
+              maxAge: req.session.cookie?.maxAge,
+              expires: req.session.cookie?._expires,
+              secure: req.session.cookie?.secure,
+              httpOnly: req.session.cookie?.httpOnly,
+              path: req.session.cookie?.path,
+              sameSite: req.session.cookie?.sameSite
+            });
+            console.log('Session Data:', {
+              user: req.session.passport?.user,
+              palette: req.session.palette
+            });
+            console.log('Headers:', {
+              'set-cookie': res.getHeader('set-cookie')
+            });
+
             return res.json({
               message: "Login successful",
               user: { id: user.id, email: user.email },
-              sessionExpiry: req.session.cookie?.maxAge
+              sessionExpiry: req.session.cookie?.maxAge,
+              sessionId: req.sessionID
             });
           });
         })
