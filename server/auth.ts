@@ -142,7 +142,7 @@ export function setupAuth(app: Express) {
       tableName: 'session',
       createTableIfMissing: true,
       pruneSessionInterval: 24 * 60 * 60, // 24 hours
-      errorLog: (...args) => {
+      errorLog: (...args: unknown[]) => {
         console.error('\n[Session Store Error]', new Date().toISOString());
         console.error(...args);
       }
@@ -412,7 +412,7 @@ export function setupAuth(app: Express) {
             console.log('Session ID:', req.sessionID);
             console.log('Session Cookie:', {
               maxAge: req.session.cookie?.maxAge,
-              expires: req.session.cookie?._expires,
+              expires: req.session.cookie?.expires,
               secure: req.session.cookie?.secure,
               httpOnly: req.session.cookie?.httpOnly,
               path: req.session.cookie?.path,

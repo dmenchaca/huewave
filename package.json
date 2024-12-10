@@ -49,6 +49,7 @@
     "@testing-library/react": "^16.1.0",
     "@types/canvas-confetti": "^1.6.4",
     "@types/chroma-js": "^2.4.4",
+    "@types/connect-pg-simple": "^7.0.3",
     "@types/jest": "^29.5.14",
     "@types/js-cookie": "^3.0.6",
     "@types/passport-google-oauth20": "^2.0.16",
