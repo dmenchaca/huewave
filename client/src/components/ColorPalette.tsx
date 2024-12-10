@@ -120,18 +120,6 @@ export default function ColorPalette({
             </Button>
           </div>
 
-          {/* Clickable area for palette generation */}
-          <div 
-            className="absolute inset-0 cursor-pointer"
-            onClick={(e) => {
-              const target = e.target as HTMLElement;
-              // Only generate if clicking the color area directly
-              if (target.classList.contains('cursor-pointer')) {
-                generateNewPalette?.();
-              }
-            }}
-          />
-
           <div 
             className="flex flex-col items-center gap-2 relative z-10 min-h-[80px]"
             style={{ color: getContrastColor(color) }}
