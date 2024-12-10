@@ -144,9 +144,26 @@ export function setupAuth(app: Express) {
   }
 
   app.use(session(sessionConfig));
-
   app.use(passport.initialize());
   app.use(passport.session());
+
+  // Add session debugging after session middleware is initialized
+  app.use((req, res, next) => {
+    try {
+      console.log('\n[Session Debug]', new Date().toISOString());
+      console.log('Session ID:', req.sessionID);
+      console.log('Cookie Settings:', req.session?.cookie);
+      console.log('Session User:', req.session?.passport?.user);
+      console.log('Session State:', {
+        authenticated: req.isAuthenticated(),
+        hasSession: !!req.session,
+        hasCookie: !!req.session?.cookie
+      });
+    } catch (error) {
+      console.error('Error in session debug middleware:', error);
+    }
+    next();
+  });
 
   // Local Strategy
   passport.use(
@@ -181,12 +198,20 @@ export function setupAuth(app: Express) {
   );
 
   passport.serializeUser((user, done) => {
-    done(null, { id: user.id, email: user.email, timestamp: Date.now() });
+    console.log('\n[Passport Serialize]', new Date().toISOString());
+    console.log('Serializing user:', user);
+    const serialized = { id: user.id, email: user.email, timestamp: Date.now() };
+    console.log('Serialized data:', serialized);
+    done(null, serialized);
   });
 
   passport.deserializeUser((serializedUser: { id: number; email: string; timestamp: number }, done) => {
+    console.log('\n[Passport Deserialize]', new Date().toISOString());
+    console.log('Deserializing data:', serializedUser);
     // We could add additional validation here if needed
-    done(null, { id: serializedUser.id, email: serializedUser.email });
+    const user = { id: serializedUser.id, email: serializedUser.email };
+    console.log('Deserialized user:', user);
+    done(null, user);
   });
 
   app.post("/api/register", async (req, res, next) => {
