@@ -91,7 +91,9 @@ export default function ColorPalette({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                onToggleLock(index);
+                if (e.type === 'click') {
+                  onToggleLock(index);
+                }
               }}
             >
               {lockedColors[index] ? (
