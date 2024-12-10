@@ -3,7 +3,8 @@ import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { type Express } from "express";
 import session from "express-session";
-import createMemoryStore from "memorystore";
+import pg from "pg";
+import connectPgSimple from "connect-pg-simple";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import sgMail from '@sendgrid/mail';
@@ -106,14 +107,21 @@ declare global {
 }
 
 export function setupAuth(app: Express) {
-  const MemoryStore = createMemoryStore(session);
-
   // Add rate limiting with proper typing
   const loginAttempts = new Map<string, { count: number; lastAttempt: number }>();
   const MAX_ATTEMPTS = 5;
   const LOCKOUT_TIME = 15 * 60 * 1000; // 15 minutes
 
   const isProduction = process.env.NODE_ENV === 'production';
+  
+  // Initialize PostgreSQL session store
+  const pgPool = new pg.Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: isProduction ? { rejectUnauthorized: false } : false
+  });
+
+  const PostgresStore = connectPgSimple(session);
+  
   const sessionConfig: session.SessionOptions = {
     cookie: {
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
@@ -126,18 +134,11 @@ export function setupAuth(app: Express) {
     resave: false,
     saveUninitialized: false,
     rolling: true,
-    store: new MemoryStore({
-      checkPeriod: 86400000, // 24 hours
-      max: 1000, // Reduce max sessions to prevent memory issues
-      ttl: 30 * 24 * 60 * 60 * 1000, // 30 days
-      stale: false, // Don't serve stale data
-      dispose: (key, val) => {
-        console.log('\n[Session Store Event]', new Date().toISOString());
-        console.log('Session disposed:', key);
-        console.log('Session value:', val);
-      },
-      noDisposeOnSet: true,
-      // Remove touchAfter as it may cause issues with session updates
+    store: new PostgresStore({
+      pool: pgPool,
+      tableName: 'session',
+      createTableIfMissing: true,
+      pruneSessionInterval: 24 * 60 * 60 // 24 hours
     }),
     name: 'sessionId',
     proxy: true // Always trust the reverse proxy in Replit environment
