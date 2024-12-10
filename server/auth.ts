@@ -132,10 +132,12 @@ export function setupAuth(app: Express) {
       ttl: 30 * 24 * 60 * 60 * 1000, // 30 days
       stale: false, // Don't serve stale data
       dispose: (key, val) => {
-        console.log(`Session expired: ${key}`);
+        console.log('\n[Session Store Event]', new Date().toISOString());
+        console.log('Session disposed:', key);
+        console.log('Session value:', val);
       },
-      noDisposeOnSet: true, // Prevent disposal on session updates
-      touchAfter: 60 // Only update timestamps every 60 seconds
+      noDisposeOnSet: true,
+      // Remove touchAfter as it may cause issues with session updates
     }),
     name: 'sessionId',
     proxy: true // Always trust the reverse proxy in Replit environment
@@ -284,6 +286,18 @@ export function setupAuth(app: Express) {
     const attempts = loginAttempts.get(clientIp) || { count: 0, lastAttempt: 0 };
     const rememberMe = req.body.rememberMe === true;
 
+    console.log('\n[Login Request]', new Date().toISOString());
+    console.log('Client IP:', clientIp);
+    console.log('Remember Me:', rememberMe);
+    console.log('Session ID:', req.sessionID);
+    console.log('Session Cookie:', {
+      maxAge: req.session?.cookie?.maxAge,
+      expires: req.session?.cookie?.expires,
+      secure: req.session?.cookie?.secure,
+      httpOnly: req.session?.cookie?.httpOnly,
+      sameSite: req.session?.cookie?.sameSite
+    });
+    
     // Store the palette data before authentication
     const sessionPalette = req.session.palette;
     console.log('[Login] Current session palette before auth:', sessionPalette);
