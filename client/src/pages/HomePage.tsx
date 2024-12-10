@@ -58,45 +58,66 @@ export default function HomePage() {
 
   // Handle palette synchronization when user auth state changes
   useEffect(() => {
+    let isMounted = true;
+
     const syncPalette = async () => {
-      if (user) {
-        try {
-          const response = await fetch('/api/palettes/latest');
-          if (response.ok) {
-            const latestPalette = await response.json();
-            if (latestPalette) {
-              setSelectedPalette(latestPalette);
-              setColors(latestPalette.colors);
-            }
-          }
-        } catch (error) {
-          console.error('Error fetching latest palette:', error);
-        }
-      } else {
-        // Only reset selected palette when user logs out, keep colors for guest mode
+      if (!user) {
         setSelectedPalette(null);
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/palettes/latest', {
+          credentials: 'include' // Ensure cookies are sent
+        });
+        
+        if (!isMounted) return;
+
+        if (response.ok) {
+          const latestPalette = await response.json();
+          if (latestPalette && isMounted) {
+            setSelectedPalette(latestPalette);
+            setColors(latestPalette.colors);
+          }
+        } else if (response.status === 401) {
+          // Handle unauthorized access
+          setSelectedPalette(null);
+        }
+      } catch (error) {
+        console.error('Error fetching latest palette:', error);
       }
     };
 
     syncPalette();
+    return () => {
+      isMounted = false;
+    };
   }, [user, setColors]);
 
   // Space key handler for generating new palettes
   useEffect(() => {
+    if (!generateNewPalette) return; // Guard against undefined generateNewPalette
+
     const handleKeyPress = (e: KeyboardEvent) => {
+      // Prevent triggering when typing in input fields
       if (document.activeElement instanceof HTMLInputElement || 
-          document.activeElement instanceof HTMLTextAreaElement) {
+          document.activeElement instanceof HTMLTextAreaElement ||
+          document.activeElement instanceof HTMLButtonElement) {
         return;
       }
 
+      // Check for space key and ensure no dialogs are open
       if (e.code === "Space" && !isDialogOpen) {
         e.preventDefault();
         generateNewPalette();
       }
     };
 
+    // Add event listener with proper cleanup
     window.addEventListener("keydown", handleKeyPress);
-    return () => window.removeEventListener("keydown", handleKeyPress);
+    return () => {
+      window.removeEventListener("keydown", handleKeyPress);
+    };
   }, [generateNewPalette, isDialogOpen]);
 
   const handlePaletteSave = (palette: Palette) => {
