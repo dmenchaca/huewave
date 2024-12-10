@@ -120,43 +120,8 @@ export default function HomePage() {
         <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
           {!isLoading && (
             <div className="flex items-center gap-2 flex-shrink-0">
-              {user ? (
-                // Logged-in user interface
-                selectedPalette && (
-                  <>
-                    <SavePaletteDialog 
-                      colors={colors} 
-                      isOpen={isDialogOpen}
-                      onOpenChange={setIsDialogOpen}
-                      selectedPalette={selectedPalette}
-                      onSaveSuccess={handlePaletteSave}
-                      triggerContent={
-                        <Button
-                          variant="default"
-                          className="flex items-center gap-2"
-                        >
-                          <SaveIcon className="h-4 w-4" />
-                          Update
-                        </Button>
-                      }
-                    />
-                    <SavePaletteDialog 
-                      colors={colors} 
-                      isOpen={isSaveAsNewDialogOpen}
-                      onOpenChange={setIsSaveAsNewDialogOpen}
-                      onSaveSuccess={handlePaletteSave}
-                    />
-                    <Button
-                      variant="outline"
-                      className="flex-shrink-0"
-                      onClick={() => setIsSaveAsNewDialogOpen(true)}
-                    >
-                      Save as new
-                    </Button>
-                  </>
-                )
-              ) : (
-                // Non-logged-in user interface
+              {!user && (
+                // Only show save button for non-logged-in users
                 <SavePaletteDialog 
                   colors={colors} 
                   isOpen={isDialogOpen}
