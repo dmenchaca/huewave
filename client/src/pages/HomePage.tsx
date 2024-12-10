@@ -120,8 +120,76 @@ export default function HomePage() {
         <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
           {!isLoading && (
             <div className="flex items-center gap-2 flex-shrink-0">
-              {!user && (
-                // Only show save button for non-logged-in users
+              {user ? (
+                // Show Update, Save as new, and Delete buttons for logged-in users
+                <>
+                  <SavePaletteDialog 
+                    colors={colors} 
+                    isOpen={isDialogOpen}
+                    onOpenChange={setIsDialogOpen}
+                    selectedPalette={selectedPalette}
+                    onSaveSuccess={handlePaletteSave}
+                    triggerContent={
+                      <Button
+                        variant="default"
+                        className="flex items-center gap-2"
+                      >
+                        <SaveIcon className="h-4 w-4" />
+                        Update
+                      </Button>
+                    }
+                  />
+                  <SavePaletteDialog 
+                    colors={colors} 
+                    isOpen={isSaveAsNewDialogOpen}
+                    onOpenChange={setIsSaveAsNewDialogOpen}
+                    onSaveSuccess={handlePaletteSave}
+                    triggerContent={
+                      <Button
+                        variant="outline"
+                        className="flex items-center gap-2"
+                      >
+                        <SaveIcon className="h-4 w-4" />
+                        Save as new
+                      </Button>
+                    }
+                  />
+                  <Button
+                    variant="destructive"
+                    className="flex items-center gap-2"
+                    onClick={async () => {
+                      if (selectedPalette) {
+                        try {
+                          const response = await fetch(`/api/palettes/${selectedPalette.id}`, {
+                            method: 'DELETE',
+                            credentials: 'include'
+                          });
+                          
+                          if (!response.ok) {
+                            throw new Error('Failed to delete palette');
+                          }
+                          
+                          queryClient.invalidateQueries({ queryKey: ['palettes'] });
+                          setSelectedPalette(null);
+                          toast({
+                            title: "Success",
+                            description: "Palette deleted successfully",
+                          });
+                        } catch (error) {
+                          toast({
+                            variant: "destructive",
+                            title: "Error",
+                            description: "Failed to delete palette",
+                          });
+                        }
+                      }
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </>
+              ) : (
+                // Show save button for non-logged-in users
                 <SavePaletteDialog 
                   colors={colors} 
                   isOpen={isDialogOpen}
