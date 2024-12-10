@@ -71,7 +71,7 @@ export default function ColorPalette({
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-5 h-full overflow-hidden">
+    <div className="grid grid-cols-1 md:grid-cols-5 h-full overflow-hidden pointer-events-none">
       {colors.map((color, index) => (
         <div
           key={index}
@@ -82,7 +82,7 @@ export default function ColorPalette({
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
           
           {/* Controls container */}
-          <div className="absolute top-4 right-4 flex gap-2">
+          <div className="absolute top-4 right-4 flex gap-2 pointer-events-auto">
             {/* Lock button */}
             <Button
               variant="secondary"
@@ -121,7 +121,7 @@ export default function ColorPalette({
           </div>
 
           <div 
-            className="flex flex-col items-center gap-2 relative z-10 min-h-[80px]"
+            className="flex flex-col items-center gap-2 relative z-10 min-h-[80px] pointer-events-auto"
             style={{ color: getContrastColor(color) }}
           >
             <input
