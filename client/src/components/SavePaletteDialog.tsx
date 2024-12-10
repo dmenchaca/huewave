@@ -39,7 +39,9 @@ export default function SavePaletteDialog({
   onOpenChange,
   selectedPalette,
   onSaveSuccess,
-  onSaveAttempt
+  onSaveAttempt,
+  triggerContent,
+  defaultName
 }: SavePaletteDialogProps) {
   const { user } = useUser();
   const [name, setName] = useState(selectedPalette?.name || generatePaletteName(colors));

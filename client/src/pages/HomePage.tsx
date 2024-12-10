@@ -151,14 +151,25 @@ export default function HomePage() {
                         </>
                       )
                     ) : (
-                      <Button
-                        variant="default"
-                        className="flex items-center gap-2"
-                        onClick={() => setIsAuthDialogOpen(true)}
-                      >
-                        <SaveIcon className="h-4 w-4" />
-                        Save palette
-                      </Button>
+                      <SavePaletteDialog 
+                        colors={colors} 
+                        isOpen={isDialogOpen}
+                        onOpenChange={setIsDialogOpen}
+                        onSaveSuccess={(palette) => {
+                          setSelectedPalette(palette);
+                          setIsDialogOpen(false);
+                        }}
+                        onSaveAttempt={() => setIsAuthDialogOpen(true)}
+                        triggerContent={
+                          <Button
+                            variant="default"
+                            className="flex items-center gap-2"
+                          >
+                            <SaveIcon className="h-4 w-4" />
+                            Save palette
+                          </Button>
+                        }
+                      />
                     )}
                   </>
                   {user && selectedPalette && (
