@@ -32,18 +32,21 @@ interface Palette {
 }
 
 export default function HomePage() {
-  // Initialize auth and core hooks first
+  // Initialize all hooks at the top level in the same order
   const { user, logout, isLoading, isFetching } = useUser();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
-  // UI state management - initialize all state hooks together
+  
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSaveAsNewDialogOpen, setIsSaveAsNewDialogOpen] = useState(false);
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
   const [selectedPalette, setSelectedPalette] = useState<Palette | null>(null);
+  
+  const paletteConfig = useColorPalette({
+    isDialogOpen,
+    initialColors: selectedPalette?.colors
+  });
 
-  // Initialize color palette hook after state initialization
   const {
     colors,
     setColors,
@@ -53,10 +56,7 @@ export default function HomePage() {
     toggleDarkMode,
     generateNewPalette,
     handleColorChange
-  } = useColorPalette({
-    isDialogOpen,
-    initialColors: selectedPalette?.colors
-  });
+  } = paletteConfig;
 
   // Handle palette synchronization when user auth state changes
   useEffect(() => {
@@ -95,12 +95,13 @@ export default function HomePage() {
     };
   }, [user, setColors]);
 
-  // Define keypress handler with proper dependencies
   const handleKeyPress = useCallback((e: KeyboardEvent) => {
-    // Return early if no palette generator or dialog is open
-    if (!generateNewPalette || isDialogOpen) return;
+    // Skip if any modal is open or there's no generator
+    if (isDialogOpen || isSaveAsNewDialogOpen || isAuthDialogOpen || !generateNewPalette) {
+      return;
+    }
 
-    // Skip if focus is on input elements
+    // Skip if focus is on interactive elements
     if (
       document.activeElement instanceof HTMLInputElement || 
       document.activeElement instanceof HTMLTextAreaElement ||
@@ -109,20 +110,19 @@ export default function HomePage() {
       return;
     }
 
-    // Handle space key
     if (e.code === "Space") {
       e.preventDefault();
       e.stopPropagation();
       generateNewPalette();
     }
-  }, [generateNewPalette, isDialogOpen]);
+  }, [generateNewPalette, isDialogOpen, isSaveAsNewDialogOpen, isAuthDialogOpen]);
 
-  // Add event listener with proper cleanup
+  // Register keypress listener
   useEffect(() => {
-    if (!generateNewPalette) return;
-    
     window.addEventListener("keydown", handleKeyPress);
-    return () => window.removeEventListener("keydown", handleKeyPress);
+    return () => {
+      window.removeEventListener("keydown", handleKeyPress);
+    };
   }, [handleKeyPress]);
 
   const handlePaletteSave = (palette: Palette) => {
