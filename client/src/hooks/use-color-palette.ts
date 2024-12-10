@@ -83,11 +83,11 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
     const randomLightnessAdjustment = () => Math.random() * 0.3 - 0.15; // Random adjustment [-0.15, 0.15]
     const randomSaturationAdjustment = () => Math.random() * 0.3 - 0.15; // Random adjustment [-0.15, 0.15]
 
-    const newColors = [];
-    const colorSet = new Set(); // Use a set to track unique colors
+    const newColors: string[] = [];
+    const colorSet: Set<string> = new Set(); // Use a set to track unique colors
 
     for (let i = 0; i < 5; i++) {
-      let newColor;
+      let newColor: string;
       let attempts = 0;
 
       do {
@@ -115,7 +115,7 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
     }
 
     // Adjust for visual balance, contrast, and uniqueness
-    const adjustedColors = [];
+    const adjustedColors: string[] = [];
     for (let i = 0; i < newColors.length; i++) {
       const prevColor = i > 0 ? chroma(adjustedColors[i - 1]) : null;
       let currentColor = chroma(newColors[i]);
@@ -132,7 +132,7 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
 
       // Final validation: ensure no white/black and uniqueness
       let finalColor = currentColor.hex();
-      let attempts = 0; // Declare `attempts` for the second while loop
+      let attempts = 0;
       while (
         (adjustedColors.includes(finalColor) || finalColor.toLowerCase() === '#ffffff' || finalColor.toLowerCase() === '#000000') &&
         attempts < 10
