@@ -13,7 +13,6 @@ import { useColorPalette } from "../hooks/use-color-palette";
 import { useUser } from "../hooks/use-user";
 import { useToast } from "@/hooks/use-toast";
 
-
 interface Palette {
   id: number;
   name: string;
@@ -69,12 +68,11 @@ export default function HomePage() {
     };
 
     syncPalette();
-  }, [user, setColors]); // Include setColors in dependencies
+  }, [user, setColors]);
 
   // Space key handler for generating new palettes
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      // Don't trigger if any input element is focused
       if (document.activeElement instanceof HTMLInputElement || 
           document.activeElement instanceof HTMLTextAreaElement) {
         return;
@@ -118,70 +116,37 @@ export default function HomePage() {
             )}
           </div>
         </div>
+
         <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
           {!isLoading && (
-            <>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                  <>
-                    {user ? (
-                      selectedPalette && (
-                        <>
-                          <SavePaletteDialog 
-                            colors={colors} 
-                            isOpen={isDialogOpen}
-                            onOpenChange={setIsDialogOpen}
-                            selectedPalette={selectedPalette}
-                            onSaveSuccess={handlePaletteSave}
-                            triggerContent={
-                              <Button
-                                variant="default"
-                                className="flex items-center gap-2"
-                              >
-                                <SaveIcon className="h-4 w-4" />
-                                Update
-                              </Button>
-                            }
-                          />
-                          <SavePaletteDialog 
-                            colors={colors} 
-                            isOpen={isSaveAsNewDialogOpen}
-                            onOpenChange={setIsSaveAsNewDialogOpen}
-                            onSaveSuccess={handlePaletteSave}
-                          />
-                        </>
-                      )
-                    ) : (
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {user ? (
+                // Logged-in user interface
+                <>
+                  {selectedPalette ? (
+                    <>
                       <SavePaletteDialog 
                         colors={colors} 
                         isOpen={isDialogOpen}
                         onOpenChange={setIsDialogOpen}
-                        onSaveSuccess={(palette) => {
-                          setSelectedPalette(palette);
-                          setIsDialogOpen(false);
-                        }}
-                        onSaveAttempt={() => setIsAuthDialogOpen(true)}
+                        selectedPalette={selectedPalette}
+                        onSaveSuccess={handlePaletteSave}
                         triggerContent={
                           <Button
                             variant="default"
                             className="flex items-center gap-2"
                           >
                             <SaveIcon className="h-4 w-4" />
-                            Save palette
+                            Update
                           </Button>
                         }
                       />
-                    )}
-                    {user && !selectedPalette && (
                       <SavePaletteDialog 
                         colors={colors} 
-                        isOpen={isDialogOpen}
-                        onOpenChange={setIsDialogOpen}
+                        isOpen={isSaveAsNewDialogOpen}
+                        onOpenChange={setIsSaveAsNewDialogOpen}
                         onSaveSuccess={handlePaletteSave}
                       />
-                    )}
-                  </>
-                  {user && selectedPalette && (
-                    <>
                       <Button
                         variant="outline"
                         className="flex-shrink-0"
@@ -199,14 +164,13 @@ export default function HomePage() {
                               method: "DELETE",
                             }).then(async (response) => {
                               if (response.ok) {
-                                // Only invalidate the queries after successful deletion
                                 await queryClient.invalidateQueries({ queryKey: ["palettes"] });
                                 toast({
                                   title: "Success",
                                   description: "Palette deleted successfully",
                                 });
                                 setSelectedPalette(null);
-                                generateNewPalette(); // Generate a new palette after deletion
+                                generateNewPalette();
                               } else {
                                 const errorData = await response.json().catch(() => ({}));
                                 toast({
@@ -229,30 +193,70 @@ export default function HomePage() {
                         Delete
                       </Button>
                     </>
-                  )}
-                  {!user && (
-                  <>
-                    <Button 
-                      variant="outline"
-                      onClick={() => setIsAuthDialogOpen(true)}
-                      className="whitespace-nowrap"
-                    >
-                      Login
-                    </Button>
-                    <AuthDialog
-                      isOpen={isAuthDialogOpen}
-                      onOpenChange={setIsAuthDialogOpen}
-                      customTitle="You are almost there"
-                      onSuccess={(palette) => {
-                        setSelectedPalette(palette);
-                        setIsAuthDialogOpen(false);
-                      }}
+                  ) : (
+                    <SavePaletteDialog 
+                      colors={colors} 
+                      isOpen={isDialogOpen}
+                      onOpenChange={setIsDialogOpen}
+                      onSaveSuccess={handlePaletteSave}
+                      triggerContent={
+                        <Button
+                          variant="default"
+                          className="flex items-center gap-2"
+                        >
+                          <SaveIcon className="h-4 w-4" />
+                          Save
+                        </Button>
+                      }
                     />
-                  </>
-                )}
-              </div>
+                  )}
+                </>
+              ) : (
+                // Non-logged-in user interface
+                <SavePaletteDialog 
+                  colors={colors} 
+                  isOpen={isDialogOpen}
+                  onOpenChange={setIsDialogOpen}
+                  onSaveSuccess={(palette) => {
+                    setSelectedPalette(palette);
+                    setIsDialogOpen(false);
+                  }}
+                  onSaveAttempt={() => setIsAuthDialogOpen(true)}
+                  triggerContent={
+                    <Button
+                      variant="default"
+                      className="flex items-center gap-2"
+                    >
+                      <SaveIcon className="h-4 w-4" />
+                      Save palette
+                    </Button>
+                  }
+                />
+              )}
+            </div>
+          )}
+          
+          {!isLoading && !user && (
+            <>
+              <Button 
+                variant="outline"
+                onClick={() => setIsAuthDialogOpen(true)}
+                className="whitespace-nowrap"
+              >
+                Login
+              </Button>
+              <AuthDialog
+                isOpen={isAuthDialogOpen}
+                onOpenChange={setIsAuthDialogOpen}
+                customTitle="You are almost there"
+                onSuccess={(palette) => {
+                  setSelectedPalette(palette);
+                  setIsAuthDialogOpen(false);
+                }}
+              />
             </>
           )}
+          
           {!isLoading && user ? (
             <UserProfileDropdown
               darkMode={darkMode}
