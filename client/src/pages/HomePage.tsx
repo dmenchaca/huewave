@@ -58,42 +58,15 @@ export default function HomePage() {
     handleColorChange
   } = paletteConfig;
 
-  // Handle palette synchronization when user auth state changes
+  // Generate new palette when component mounts
   useEffect(() => {
-    let isMounted = true;
-
-    const syncPalette = async () => {
-      if (!user) {
-        setSelectedPalette(null);
-        return;
-      }
-
-      try {
-        const response = await fetch('/api/palettes/latest', {
-          credentials: 'include'
-        });
-        
-        if (!isMounted) return;
-
-        if (response.ok) {
-          const latestPalette = await response.json();
-          if (latestPalette && isMounted) {
-            setSelectedPalette(latestPalette);
-            setColors(latestPalette.colors);
-          }
-        } else if (response.status === 401) {
-          setSelectedPalette(null);
-        }
-      } catch (error) {
-        console.error('Error fetching latest palette:', error);
-      }
-    };
-
-    syncPalette();
-    return () => {
-      isMounted = false;
-    };
-  }, [user, setColors]);
+    if (generateNewPalette) {
+      generateNewPalette();
+    }
+    if (!user) {
+      setSelectedPalette(null);
+    }
+  }, [user, generateNewPalette]);
 
   const handleKeyPress = useCallback((e: KeyboardEvent) => {
     // Skip if any modal is open or there's no generator
