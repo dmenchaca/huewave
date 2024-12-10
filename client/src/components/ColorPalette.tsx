@@ -70,17 +70,6 @@ export default function ColorPalette({
     }
   };
 
-  const handleColorClick = (e: React.MouseEvent, index: number) => {
-    // Check if the click target is a button or input
-    const target = e.target as HTMLElement;
-    if (target.closest('button') || target.closest('input')) {
-      return;
-    }
-    
-    // Only generate new palette if clicking directly on the color area
-    generateNewPalette?.();
-  };
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-5 h-full overflow-hidden">
       {colors.map((color, index) => (
@@ -88,11 +77,13 @@ export default function ColorPalette({
           key={index}
           className="relative group flex items-center justify-center"
           style={{ backgroundColor: color }}
-          onClick={(e) => handleColorClick(e, index)}
         >
+          {/* Background overlay */}
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
           
+          {/* Controls container */}
           <div className="absolute top-4 right-4 flex gap-2">
+            {/* Lock button */}
             <Button
               variant="secondary"
               size="icon"
@@ -110,6 +101,7 @@ export default function ColorPalette({
               )}
             </Button>
             
+            {/* Copy button */}
             <Button
               variant="secondary"
               size="icon"
@@ -127,6 +119,18 @@ export default function ColorPalette({
               )}
             </Button>
           </div>
+
+          {/* Clickable area for palette generation */}
+          <div 
+            className="absolute inset-0 cursor-pointer"
+            onClick={(e) => {
+              const target = e.target as HTMLElement;
+              // Only generate if clicking the color area directly
+              if (target.classList.contains('cursor-pointer')) {
+                generateNewPalette?.();
+              }
+            }}
+          />
 
           <div 
             className="flex flex-col items-center gap-2 relative z-10 min-h-[80px]"
