@@ -93,7 +93,10 @@ export default function ColorPalette({
               variant="secondary"
               size="icon"
               className="opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={() => onToggleLock(index)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleLock(index);
+              }}
             >
               {lockedColors[index] ? (
                 <LockIcon className="h-4 w-4" />
