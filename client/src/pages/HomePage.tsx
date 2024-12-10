@@ -70,7 +70,7 @@ export default function HomePage() {
 
   const handleKeyPress = useCallback((e: KeyboardEvent) => {
     // Skip if any modal is open or there's no generator
-    if (isDialogOpen || isSaveAsNewDialogOpen || isAuthDialogOpen || !generateNewPalette) {
+    if (isDialogOpen || isSaveAsNewDialogOpen || isAuthDialogOpen || !generateNewPalette || e.target instanceof HTMLInputElement) {
       return;
     }
 
