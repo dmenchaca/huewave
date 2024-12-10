@@ -171,6 +171,14 @@ export default function HomePage() {
                         }
                       />
                     )}
+                    {user && !selectedPalette && (
+                      <SavePaletteDialog 
+                        colors={colors} 
+                        isOpen={isDialogOpen}
+                        onOpenChange={setIsDialogOpen}
+                        onSaveSuccess={handlePaletteSave}
+                      />
+                    )}
                   </>
                   {user && selectedPalette && (
                     <>
