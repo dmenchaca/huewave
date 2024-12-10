@@ -32,19 +32,19 @@ interface Palette {
 }
 
 export default function HomePage() {
-  // Authentication and core hooks
+  // Initialize auth and core hooks first
   const { user, logout, isLoading, isFetching } = useUser();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // UI state management
+  // UI state management - initialize all state hooks together
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSaveAsNewDialogOpen, setIsSaveAsNewDialogOpen] = useState(false);
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
   const [selectedPalette, setSelectedPalette] = useState<Palette | null>(null);
 
-  // Color palette hook
-  const { 
+  // Initialize color palette hook after state initialization
+  const {
     colors,
     setColors,
     lockedColors,
@@ -53,7 +53,10 @@ export default function HomePage() {
     toggleDarkMode,
     generateNewPalette,
     handleColorChange
-  } = useColorPalette({ isDialogOpen });
+  } = useColorPalette({
+    isDialogOpen,
+    initialColors: selectedPalette?.colors
+  });
 
   // Handle palette synchronization when user auth state changes
   useEffect(() => {
@@ -92,29 +95,34 @@ export default function HomePage() {
     };
   }, [user, setColors]);
 
-  // Memoized key press handler
+  // Define keypress handler with proper dependencies
   const handleKeyPress = useCallback((e: KeyboardEvent) => {
-    // Skip if generateNewPalette is not available
-    if (!generateNewPalette) return;
+    // Return early if no palette generator or dialog is open
+    if (!generateNewPalette || isDialogOpen) return;
 
-    if (document.activeElement instanceof HTMLInputElement || 
-        document.activeElement instanceof HTMLTextAreaElement ||
-        document.activeElement instanceof HTMLButtonElement) {
+    // Skip if focus is on input elements
+    if (
+      document.activeElement instanceof HTMLInputElement || 
+      document.activeElement instanceof HTMLTextAreaElement ||
+      document.activeElement instanceof HTMLButtonElement
+    ) {
       return;
     }
 
-    if (e.code === "Space" && !isDialogOpen) {
+    // Handle space key
+    if (e.code === "Space") {
       e.preventDefault();
+      e.stopPropagation();
       generateNewPalette();
     }
   }, [generateNewPalette, isDialogOpen]);
 
-  // Space key handler for generating new palettes
+  // Add event listener with proper cleanup
   useEffect(() => {
+    if (!generateNewPalette) return;
+    
     window.addEventListener("keydown", handleKeyPress);
-    return () => {
-      window.removeEventListener("keydown", handleKeyPress);
-    };
+    return () => window.removeEventListener("keydown", handleKeyPress);
   }, [handleKeyPress]);
 
   const handlePaletteSave = (palette: Palette) => {
