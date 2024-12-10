@@ -115,7 +115,7 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
     }
 
     // Adjust for visual balance, contrast, and uniqueness
-    const adjustedColors = [];
+    const adjustedColors: string[] = [];
     for (let i = 0; i < newColors.length; i++) {
       const prevColor = i > 0 ? chroma(adjustedColors[i - 1]) : null;
       let currentColor = chroma(newColors[i]);
