@@ -41,43 +41,44 @@ export default function ColorPalette({
   };
 
   const getContrastColor = (hexColor: string): string => {
-    // Remove # if present
     const hex = hexColor.replace('#', '');
     const r = parseInt(hex.substr(0, 2), 16);
     const g = parseInt(hex.substr(2, 2), 16);
     const b = parseInt(hex.substr(4, 2), 16);
     
-    // Calculate relative luminance
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    
-    // Return black for light colors, white for dark colors
     return luminance > 0.6 ? '#000000' : '#ffffff';
   };
 
   const handleColorChange = (index: number, value: string) => {
-    // Allow any input while editing
     onColorChange?.(index, value);
     
-    // Only validate when the input is complete
     if (value.length >= 7) {
-      // Remove # if present
       let hex = value.replace('#', '');
       
-      // Handle 3 character hex
       if (hex.length === 3) {
         hex = hex.split('').map(char => char + char).join('');
       }
       
-      // Add # if needed
       if (!value.startsWith('#')) {
         value = '#' + hex;
       }
       
-      // Validate hex color format
       if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
         onColorChange?.(index, value);
       }
     }
+  };
+
+  const handleColorClick = (e: React.MouseEvent, index: number) => {
+    // Check if the click target is a button or input
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('input')) {
+      return;
+    }
+    
+    // Only generate new palette if clicking directly on the color area
+    generateNewPalette?.();
   };
 
   return (
@@ -87,13 +88,7 @@ export default function ColorPalette({
           key={index}
           className="relative group flex items-center justify-center"
           style={{ backgroundColor: color }}
-          onClick={(e) => {
-            // Only proceed if the click didn't come from a button or input
-            if (!(e.target as HTMLElement).closest('button') && 
-                !(e.target as HTMLElement).closest('input')) {
-              generateNewPalette?.();
-            }
-          }}
+          onClick={(e) => handleColorClick(e, index)}
         >
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
           
@@ -101,7 +96,7 @@ export default function ColorPalette({
             <Button
               variant="secondary"
               size="icon"
-              className="opacity-0 group-hover:opacity-100 transition-opacity relative z-50"
+              className="opacity-0 group-hover:opacity-100 transition-opacity"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -118,7 +113,7 @@ export default function ColorPalette({
             <Button
               variant="secondary"
               size="icon"
-              className="opacity-0 group-hover:opacity-100 transition-opacity relative z-50"
+              className="opacity-0 group-hover:opacity-100 transition-opacity"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
