@@ -37,23 +37,42 @@ async function handleRequest(
 }
 
 async function fetchUser(): Promise<User | null> {
-  const response = await fetch('/api/user', {
-    credentials: 'include'
-  });
+  console.log('[useUser] Fetching user session...');
+  try {
+    const response = await fetch('/api/user', {
+      credentials: 'include'
+    });
 
-  if (!response.ok) {
-    if (response.status === 401) {
-      return null;
+    console.log('[useUser] Response status:', response.status);
+    const responseText = await response.text();
+    console.log('[useUser] Response body:', responseText);
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        console.log('[useUser] Not authenticated (401)');
+        return null;
+      }
+
+      if (response.status >= 500) {
+        throw new Error(`${response.status}: ${response.statusText}`);
+      }
+
+      throw new Error(`${response.status}: ${responseText}`);
     }
 
-    if (response.status >= 500) {
-      throw new Error(`${response.status}: ${response.statusText}`);
+    // Try to parse the response as JSON
+    try {
+      const userData = JSON.parse(responseText);
+      console.log('[useUser] Successfully fetched user:', userData);
+      return userData;
+    } catch (e) {
+      console.error('[useUser] Error parsing user data:', e);
+      throw new Error('Invalid user data received');
     }
-
-    throw new Error(`${response.status}: ${await response.text()}`);
+  } catch (error) {
+    console.error('[useUser] Error fetching user:', error);
+    throw error;
   }
-
-  return response.json();
 }
 
 export function useUser() {
