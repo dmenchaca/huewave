@@ -30,6 +30,7 @@ interface SavePaletteDialogProps {
   onSaveSuccess: (palette: Palette) => void;
   onSaveAttempt?: () => void;
   defaultName?: string;
+  triggerContent?: React.ReactNode;
 }
 
 export default function SavePaletteDialog({ 
@@ -140,10 +141,12 @@ export default function SavePaletteDialog({
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="default" className="flex items-center gap-2">
-          <SaveIcon className="h-4 w-4" />
-          {selectedPalette ? 'Update' : 'Save palette'}
-        </Button>
+        {triggerContent || (
+          <Button variant="default" className="flex items-center gap-2">
+            <SaveIcon className="h-4 w-4" />
+            {selectedPalette ? 'Update' : 'Save palette'}
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
