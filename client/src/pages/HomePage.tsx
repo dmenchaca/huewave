@@ -285,11 +285,9 @@ export default function HomePage() {
           <ColorPalette 
             colors={colors}
             onColorChange={handleColorChange}
-            generateNewPalette={generateNewPalette}
             lockedColors={lockedColors}
             onToggleLock={toggleLock}
           />
-          <PaletteControls />
         </div>
       </main>
     </div>

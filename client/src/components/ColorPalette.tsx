@@ -7,7 +7,7 @@ import styles from './ColorPalette.module.css';
 interface ColorPaletteProps {
   colors: string[];
   onColorChange?: (index: number, color: string) => void;
-  generateNewPalette?: () => void;
+  
   lockedColors?: boolean[];
   onToggleLock?: (index: number) => void;
 }
@@ -15,7 +15,7 @@ interface ColorPaletteProps {
 export default function ColorPalette({ 
   colors, 
   onColorChange,
-  generateNewPalette,
+  
   lockedColors = [],
   onToggleLock
 }: ColorPaletteProps) {
