@@ -54,29 +54,16 @@ export function useColorPalette({
     setLockedColors(prev => {
       const newLocks = [...prev];
       newLocks[index] = !newLocks[index];
-      console.log(`[ColorPalette] Color ${index} is now ${newLocks[index] ? 'LOCKED' : 'UNLOCKED'}`);
-      console.log('[ColorPalette] Updated lock state:', newLocks);
       return newLocks;
     });
-  }, [colors]);
+  }, []);
 
   const generateNewPalette = useCallback(() => {
-    console.log('[ColorPalette] Generating new palette...');
-    console.log('[ColorPalette] Current lock state:', lockedColors);
-
-    setColors(prevColors => {
-      const newColors = prevColors.map((color, index) => {
-        if (lockedColors[index]) {
-          console.log(`[ColorPalette] Color ${index} is locked, keeping ${color}`);
-          return color;
-        }
-        const newColor = chroma.random().hex();
-        console.log(`[ColorPalette] Generated new color for index ${index}: ${newColor}`);
-        return newColor;
-      });
-      console.log('[ColorPalette] New palette generated:', newColors);
-      return newColors;
-    });
+    setColors(prevColors => 
+      prevColors.map((color, index) => 
+        lockedColors[index] ? color : chroma.random().hex()
+      )
+    );
   }, [lockedColors]);
 
   const handleColorChange = useCallback((index: number, color: string) => {
