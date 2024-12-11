@@ -127,7 +127,10 @@ export default function EditPaletteDialog({ palette, isOpen, onOpenChange }: Edi
           <ColorPalette 
             colors={colors}
             lockedColors={lockedColors}
-            onToggleLock={toggleLock}
+            onToggleLock={(index) => {
+              console.log('EditPaletteDialog: calling toggleLock with index:', index);
+              toggleLock(index);
+            }}
           />
           
           <div className="flex justify-between gap-4">

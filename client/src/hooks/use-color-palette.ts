@@ -47,7 +47,7 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
   });
 
   const [lockedColors, setLockedColors] = useState<boolean[]>(() => 
-    new Array(initialColors?.length || 0).fill(false)
+    new Array(5).fill(false)
   );
 
   const generateNewPalette = useCallback(() => {
