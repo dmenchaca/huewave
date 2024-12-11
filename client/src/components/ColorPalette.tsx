@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { LockIcon, UnlockIcon, CheckIcon } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { CopyIcon, CheckIcon, LockIcon, UnlockIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 interface ColorPaletteProps {
   colors: string[];
@@ -45,6 +45,36 @@ export default function ColorPalette({
     const target = e.target as HTMLElement;
     if (target.classList.contains('color-area-background') && generateNewPalette) {
       generateNewPalette();
+    }
+  };
+
+  const getContrastColor = (hexColor: string): string => {
+    const hex = hexColor.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.6 ? '#000000' : '#ffffff';
+  };
+
+  const handleColorChange = (index: number, value: string) => {
+    if (!onColorChange) return;
+    
+    if (value.length >= 7) {
+      let hex = value.replace('#', '');
+      
+      if (hex.length === 3) {
+        hex = hex.split('').map(char => char + char).join('');
+      }
+      
+      if (!value.startsWith('#')) {
+        value = '#' + hex;
+      }
+      
+      if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
+        onColorChange(index, value);
+      }
     }
   };
 
@@ -91,9 +121,39 @@ export default function ColorPalette({
               {copiedIndex === index ? (
                 <CheckIcon className="h-4 w-4" />
               ) : (
-                <span className="font-mono text-sm">{color}</span>
+                <CopyIcon className="h-4 w-4" />
               )}
             </Button>
+          </div>
+
+          <div 
+            className="flex flex-col items-center gap-2 relative z-10 min-h-[80px]"
+            style={{ color: getContrastColor(color) }}
+          >
+            <input
+              type="text"
+              value={color.toUpperCase()}
+              onChange={(e) => handleColorChange(index, e.target.value)}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (e.target instanceof HTMLInputElement) {
+                  e.target.select();
+                  setEditingIndex(index);
+                }
+              }}
+              onBlur={() => {
+                setEditingIndex(null);
+                if (!/^#[0-9A-Fa-f]{6}$/.test(color)) {
+                  onColorChange?.(index, '#000000');
+                }
+              }}
+              className="bg-transparent text-lg font-mono text-center uppercase w-24 focus:outline-none cursor-text"
+              style={{
+                color: getContrastColor(color),
+                caretColor: getContrastColor(color),
+                backgroundColor: editingIndex === index ? 'rgba(0,0,0,0.1)' : 'transparent'
+              }}
+            />
           </div>
         </div>
       ))}
