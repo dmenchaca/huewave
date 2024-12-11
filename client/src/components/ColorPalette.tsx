@@ -1,5 +1,5 @@
 
-import { CopyIcon, CheckIcon } from "lucide-react";
+import { CopyIcon, CheckIcon, LockIcon, UnlockIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -8,12 +8,16 @@ interface ColorPaletteProps {
   colors: string[];
   onColorChange?: (index: number, color: string) => void;
   generateNewPalette?: () => void;
+  lockedColors?: boolean[];
+  onToggleLock?: (index: number) => void;
 }
 
 export default function ColorPalette({ 
   colors, 
   onColorChange,
-  generateNewPalette
+  generateNewPalette,
+  lockedColors = [],
+  onToggleLock
 }: ColorPaletteProps) {
   const { toast } = useToast();
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
@@ -102,6 +106,23 @@ export default function ColorPalette({
                 <CopyIcon className="h-4 w-4" />
               )}
             </Button>
+            {onToggleLock && (
+              <Button
+                variant="secondary"
+                size="icon"
+                className={`transition-opacity ${lockedColors[index] ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleLock(index);
+                }}
+              >
+                {lockedColors[index] ? (
+                  <LockIcon className="h-4 w-4" />
+                ) : (
+                  <UnlockIcon className="h-4 w-4" />
+                )}
+              </Button>
+            )}
           </div>
 
           <div 

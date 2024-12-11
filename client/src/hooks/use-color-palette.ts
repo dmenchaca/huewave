@@ -12,28 +12,33 @@ interface UseColorPaletteProps {
 
 export function useColorPalette({ isDialogOpen = false, initialColors }: UseColorPaletteProps = {}) {
   const [colors, setColors] = useState<string[]>(() => {
-    try {
-      const savedColors = Cookies.get(PALETTE_COOKIE_NAME);
-      if (savedColors) {
-        const parsed = JSON.parse(savedColors);
-        if (Array.isArray(parsed) && 
-            parsed.length <= 5 && 
-            parsed.every(color => 
-              typeof color === 'string' && 
-              /^#[0-9A-Fa-f]{6}$/.test(color)
-            )
-        ) {
-          return parsed;
-        } else {
-          Cookies.remove(PALETTE_COOKIE_NAME);
-          console.warn('Invalid color data found in cookie, clearing...');
+    let startingColors = initialColors || [];
+    
+    if (startingColors.length === 0) {
+      try {
+        const savedColors = Cookies.get(PALETTE_COOKIE_NAME);
+        if (savedColors) {
+          const parsed = JSON.parse(savedColors);
+          if (Array.isArray(parsed) && 
+              parsed.length <= 5 && 
+              parsed.every(color => 
+                typeof color === 'string' && 
+                /^#[0-9A-Fa-f]{6}$/.test(color)
+              )
+          ) {
+            startingColors = parsed;
+          } else {
+            Cookies.remove(PALETTE_COOKIE_NAME);
+            console.warn('Invalid color data found in cookie, clearing...');
+          }
         }
+      } catch (error) {
+        Cookies.remove(PALETTE_COOKIE_NAME);
+        console.error('Failed to parse colors from cookie:', error);
       }
-    } catch (error) {
-      Cookies.remove(PALETTE_COOKIE_NAME);
-      console.error('Failed to parse colors from cookie:', error);
     }
-    return initialColors || [];
+    
+    return startingColors;
   });
 
   const [darkMode, setDarkMode] = useState(() => {
@@ -41,79 +46,63 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
     return saved ? JSON.parse(saved) : false;
   });
 
+  const [lockedColors, setLockedColors] = useState<boolean[]>(() => 
+    new Array(initialColors?.length || 0).fill(false)
+  );
+
   const generateNewPalette = useCallback(() => {
+    if (colors.length === 0) return;
+
     const themes = [
-      { name: "nature", baseHues: [120, 60, 30] }, // Greens, yellows, browns
-      { name: "muted-vintage", baseHues: [0, 15, 300] }, // Reds, purples
-      { name: "cool-blues", baseHues: [200, 210, 230] }, // Blues
+      { name: "nature", baseHues: [120, 60, 30] },
+      { name: "muted-vintage", baseHues: [0, 15, 300] },
+      { name: "cool-blues", baseHues: [200, 210, 230] },
     ];
 
-    // Pick a random theme
     const theme = themes[Math.floor(Math.random() * themes.length)];
     const baseHue = theme.baseHues[Math.floor(Math.random() * theme.baseHues.length)];
-    const baseColor = chroma.hsl(baseHue, 0.6, 0.5); // Mid-saturation and mid-lightness
 
-    const randomLightness = () => 0.05 + Math.random() * 0.9; // Range from very dark to bright
-    const randomSaturation = () => Math.random() * 0.4 + 0.4; // Balanced saturation
-
-    const newColors = [];
-    const colorSet = new Set();
-
-    for (let i = 0; i < 5; i++) {
-      let newColor;
-      let attempts = 0;
-
-      do {
-        if (i === 0) {
-          // Base color
-          newColor = baseColor.hex();
-        } else if (i === 4) {
-          // Generate a neutral or thematic color with moderate vibrancy
-          const neutralHue = baseHue + Math.random() * 20 - 10; // Slight hue variation
-          newColor = chroma.hsl(
-            (neutralHue + 360) % 360, // Wrap hue
-            randomSaturation() * 0.6, // Low to moderate saturation for neutral
-            randomLightness() * 0.7 + 0.1 // Broader lightness range
-          ).hex();
-        } else {
-          // Generate theme-based colors
-          newColor = chroma.hsl(
-            (baseHue + i * 30 + Math.random() * 20 - 10) % 360, // Slight random shift
-            randomSaturation(),
-            randomLightness()
-          ).hex();
-        }
-        attempts++;
-      } while (
-        (colorSet.has(newColor) || newColor.toLowerCase() === '#ffffff' || newColor.toLowerCase() === '#000000') &&
-        attempts < 10
-      );
-
-      colorSet.add(newColor);
-      newColors.push(newColor);
-    }
-
-    // Ensure no duplicates and no whites in the final palette
-    const adjustedColors = newColors.map(color => {
-      let adjustedColor = color;
-      let attempts = 0;
-
-      while (adjustedColor.toLowerCase() === '#ffffff' && attempts < 10) {
-        // Regenerate if the color is white
-        adjustedColor = chroma.hsl(
-          Math.random() * 360,
-          randomSaturation(),
-          randomLightness()
-        ).hex();
-        attempts++;
+    const generateColorForIndex = (index: number): string => {
+      const sat = 0.4 + Math.random() * 0.4;
+      const light = 0.1 + Math.random() * 0.8;
+      
+      if (index === 0) {
+        return chroma.hsl(baseHue, sat, light).hex();
+      } 
+      
+      if (index === colors.length - 1) {
+        const neutralHue = (baseHue + Math.random() * 20 - 10 + 360) % 360;
+        return chroma.hsl(neutralHue, sat * 0.6, light).hex();
       }
 
-      return adjustedColor;
-    });
+      const hue = (baseHue + index * 30 + Math.random() * 20 - 10 + 360) % 360;
+      return chroma.hsl(hue, sat, light).hex();
+    };
 
-    // Update the state with the new palette
-    setColors(adjustedColors);
-  }, []);
+    setColors(prevColors => {
+      const newColors = prevColors.map((currentColor, index) => {
+        if (lockedColors[index]) return currentColor;
+
+        let newColor;
+        let attempts = 0;
+        const usedColors = new Set(prevColors.filter((_, i) => lockedColors[i]));
+
+        do {
+          newColor = generateColorForIndex(index);
+          attempts++;
+        } while (
+          attempts < 10 && 
+          (usedColors.has(newColor) || 
+           newColor.toLowerCase() === '#ffffff' || 
+           newColor.toLowerCase() === '#000000')
+        );
+
+        return newColor;
+      });
+
+      return newColors;
+    });
+  }, [colors.length, lockedColors]);
 
   useEffect(() => {
     if (colors.length === 0 && !initialColors?.length && process.env.NODE_ENV !== 'test') {
@@ -151,6 +140,22 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
 
   const toggleDarkMode = () => setDarkMode(prev => !prev);
 
+  useEffect(() => {
+    if (colors.length > 0 && colors.length !== lockedColors.length) {
+      setLockedColors(new Array(colors.length).fill(false));
+    }
+  }, [colors.length, lockedColors.length]);
+
+  const toggleLock = useCallback((index: number) => {
+    if (index < 0 || index >= colors.length) return;
+    
+    setLockedColors(prev => {
+      const next = [...prev];
+      next[index] = !next[index];
+      return next;
+    });
+  }, [colors.length]);
+
   return {
     colors,
     setColors,
@@ -158,5 +163,7 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
     generateNewPalette,
     toggleDarkMode,
     handleColorChange,
+    lockedColors,
+    toggleLock,
   };
 }
