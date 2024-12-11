@@ -1,21 +1,17 @@
 
-import { LockIcon, UnlockIcon, CopyIcon, CheckIcon } from "lucide-react";
+import { CopyIcon, CheckIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ColorPaletteProps {
   colors: string[];
-  lockedColors: boolean[];
-  onToggleLock: (index: number) => void;
   onColorChange?: (index: number, color: string) => void;
   generateNewPalette?: () => void;
 }
 
 export default function ColorPalette({ 
   colors, 
-  lockedColors, 
-  onToggleLock,
   onColorChange,
   generateNewPalette
 }: ColorPaletteProps) {
@@ -43,7 +39,6 @@ export default function ColorPalette({
 
   const handleColorClick = (e: React.MouseEvent, index: number) => {
     const target = e.target as HTMLElement;
-    // Only generate new palette if clicking the background area
     if (target.classList.contains('color-area-background') && generateNewPalette) {
       generateNewPalette();
     }
@@ -92,23 +87,6 @@ export default function ColorPalette({
           />
           
           <div className="absolute top-4 right-4 flex gap-2">
-            <Button
-              variant="secondary"
-              size="icon"
-              className="opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleLock(index);
-              }}
-              aria-label={lockedColors[index] ? "Unlock color" : "Lock color"}
-            >
-              {lockedColors[index] ? (
-                <LockIcon className="h-4 w-4" />
-              ) : (
-                <UnlockIcon className="h-4 w-4" />
-              )}
-            </Button>
-            
             <Button
               variant="secondary"
               size="icon"
