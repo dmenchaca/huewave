@@ -108,10 +108,7 @@ export default function ColorPalette({
               variant="secondary"
               size="icon"
               className={`transition-opacity ${lockedColors[index] ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleLock?.(index);
-              }}
+              onClick={() => onToggleLock?.(index)}
             >
               {lockedColors[index] ? (
                 <LockIcon className="h-4 w-4" style={{ color: getContrastColor(color) }} />
