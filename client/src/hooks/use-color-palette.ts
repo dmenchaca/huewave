@@ -64,19 +64,19 @@ export function useColorPalette({
 
   const generateNewPalette = useCallback(() => {
     console.log('[ColorPalette] Generating new palette via spacebar');
-    setColors(prevColors => 
-      prevColors.map((color, index) => {
-        // Access lockedColors directly in the closure instead of from deps
+    setColors(prevColors => {
+      console.log('[ColorPalette] Current locked states:', lockedColors);
+      return prevColors.map((color, index) => {
         if (lockedColors[index]) {
-          console.log(`[ColorPalette] Keeping locked color at index ${index}: ${color}`);
+          console.log(`[ColorPalette] Color ${index} is locked, keeping ${color}`);
           return color;
         }
         const newColor = chroma.random().hex();
-        console.log(`[ColorPalette] Generated new color at index ${index}: ${newColor}`);
+        console.log(`[ColorPalette] Generated new color for index ${index}: ${newColor}`);
         return newColor;
-      })
-    );
-  }, []); // Remove lockedColors from dependencies to prevent regeneration on lock changes
+      });
+    });
+  }, []); // No dependencies to prevent regeneration on lock changes
 
   const handleColorChange = useCallback((index: number, color: string) => {
     setColors(prev => {

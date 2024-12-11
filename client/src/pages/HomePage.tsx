@@ -75,14 +75,17 @@ export default function HomePage() {
   }, [user, generateNewPalette, isDialogOpen, isSaveAsNewDialogOpen, isAuthDialogOpen]);
 
   const handleKeyPress = useCallback((e: KeyboardEvent) => {
-    // Skip if there's no generator function
-    if (!generateNewPalette) return;
-
-    // Skip if any dialog is open
-    if (isDialogOpen || isSaveAsNewDialogOpen || isAuthDialogOpen) return;
+    // Skip if any dialog is open or no generator function
+    if (!generateNewPalette || isDialogOpen || isSaveAsNewDialogOpen || isAuthDialogOpen) {
+      console.log('[HomePage] Skipping key press - dialogs open or no generator');
+      return;
+    }
 
     // Skip repeated keypresses
-    if (e.repeat) return;
+    if (e.repeat) {
+      console.log('[HomePage] Skipping repeated keypress');
+      return;
+    }
 
     // Skip if event originated from or is focused on form elements
     const isFormElement = (element: EventTarget | null): boolean => 
@@ -90,10 +93,14 @@ export default function HomePage() {
       element instanceof HTMLTextAreaElement || 
       element instanceof HTMLButtonElement;
 
-    if (isFormElement(e.target) || isFormElement(document.activeElement)) return;
+    if (isFormElement(e.target) || isFormElement(document.activeElement)) {
+      console.log('[HomePage] Skipping keypress - form element focused');
+      return;
+    }
 
     // Only handle spacebar press
     if (e.code === "Space" && e.type === 'keydown') {
+      console.log('[HomePage] Spacebar pressed - generating new palette');
       e.preventDefault();
       e.stopPropagation();
       generateNewPalette();
