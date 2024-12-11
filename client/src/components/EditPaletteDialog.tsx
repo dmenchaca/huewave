@@ -26,10 +26,10 @@ interface EditPaletteDialogProps {
 }
 
 export default function EditPaletteDialog({ palette, isOpen, onOpenChange }: EditPaletteDialogProps) {
+  // State and hooks
   const [name, setName] = useState(palette.name);
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  
   const {
     colors,
     generateNewPalette,
@@ -40,50 +40,10 @@ export default function EditPaletteDialog({ palette, isOpen, onOpenChange }: Edi
     initialColors: palette.colors 
   });
 
+  // Effects
   useEffect(() => {
     setName(palette.name);
   }, [palette.name]);
-
-  const editPaletteMutation = useMutation({
-    mutationFn: async (data: { name: string; colors: string[] }) => {
-      const response = await fetch(`/api/palettes/${palette.id}`, {
-        method: "PUT",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      
-      if (!response.ok) throw new Error(await response.text());
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["palettes"] });
-      toast({
-        title: "Success",
-        description: "Palette updated successfully",
-      });
-      onOpenChange(false);
-    },
-    onError: (error: Error) => {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message,
-      });
-    },
-  });
-
-  const handleSave = () => {
-    if (!name.trim()) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Please enter a name for your palette",
-      });
-      return;
-    }
-    editPaletteMutation.mutate({ name, colors });
-  };
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -104,6 +64,48 @@ export default function EditPaletteDialog({ palette, isOpen, onOpenChange }: Edi
       return () => window.removeEventListener("keydown", handleKeyPress);
     }
   }, [generateNewPalette, isOpen]);
+
+  // Mutations
+  const editPaletteMutation = useMutation({
+    mutationFn: async (data: { name: string; colors: string[] }) => {
+      const response = await fetch(`/api/palettes/${palette.id}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error(await response.text());
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["palettes"] });
+      toast({
+        title: "Success",
+        description: "Palette updated successfully",
+      });
+      onOpenChange(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message,
+      });
+    },
+  });
+
+  // Event handlers
+  const handleSave = () => {
+    if (!name.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please enter a name for your palette",
+      });
+      return;
+    }
+    editPaletteMutation.mutate({ name, colors });
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,15 +19,14 @@ interface ManageAccountDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export default function ManageAccountDialog({ 
-  isOpen, 
-  onOpenChange 
-}: ManageAccountDialogProps) {
+export default function ManageAccountDialog({ isOpen, onOpenChange }: ManageAccountDialogProps) {
+  // State and hooks
   const { user } = useUser();
+  const { toast } = useToast();
   const [email, setEmail] = useState(user?.email || "");
   const [confirmDelete, setConfirmDelete] = useState("");
-  const { toast } = useToast();
 
+  // Mutations
   const updateAccountMutation = useMutation({
     mutationFn: async (data: { email: string }) => {
       const response = await fetch("/api/user", {
@@ -35,11 +35,7 @@ export default function ManageAccountDialog({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
-      
+      if (!response.ok) throw new Error(await response.text());
       return response.json();
     },
     onSuccess: () => {
@@ -60,13 +56,8 @@ export default function ManageAccountDialog({
 
   const deleteAccountMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(`/api/user`, {
-        method: "DELETE",
-      });
-      
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
+      const response = await fetch("/api/user", { method: "DELETE" });
+      if (!response.ok) throw new Error(await response.text());
     },
     onSuccess: () => {
       toast({
@@ -74,7 +65,7 @@ export default function ManageAccountDialog({
         description: "Your account has been successfully deleted",
       });
       onOpenChange(false);
-      window.location.href = "/"; // Redirect to home page
+      window.location.href = "/";
     },
     onError: (error: Error) => {
       toast({
@@ -85,6 +76,7 @@ export default function ManageAccountDialog({
     },
   });
 
+  // Event handlers
   const handleUpdateAccount = () => {
     if (!email.trim()) {
       toast({
@@ -94,7 +86,6 @@ export default function ManageAccountDialog({
       });
       return;
     }
-
     updateAccountMutation.mutate({ email });
   };
 
@@ -107,7 +98,6 @@ export default function ManageAccountDialog({
       });
       return;
     }
-
     deleteAccountMutation.mutate();
   };
 
@@ -120,7 +110,9 @@ export default function ManageAccountDialog({
             Manage your account details and preferences
           </DialogDescription>
         </DialogHeader>
+
         <div className="grid gap-4 py-4">
+          {/* Account Details Section */}
           <div className="space-y-2">
             <h3 className="text-sm font-medium">Account Details</h3>
             <Input
@@ -137,6 +129,7 @@ export default function ManageAccountDialog({
             </Button>
           </div>
           
+          {/* Danger Zone Section */}
           <div className="space-y-2 pt-4 border-t">
             <h3 className="text-sm font-medium text-destructive flex items-center gap-2">
               <AlertCircleIcon className="h-4 w-4" />
