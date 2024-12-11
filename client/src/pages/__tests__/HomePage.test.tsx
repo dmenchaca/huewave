@@ -40,21 +40,10 @@ const renderWithProviders = (ui: React.ReactElement): RenderResult => {
     },
   });
 
-  // Mock window.location for BrowserRouter
-  Object.defineProperty(window, 'location', {
-    value: {
-      pathname: '/',
-      search: '',
-      hash: '',
-      href: 'http://localhost/',
-      origin: 'http://localhost',
-      protocol: 'http:',
-      host: 'localhost',
-      hostname: 'localhost',
-      port: '',
-    },
-    writable: true,
-  });
+  // Set up basic window location properties
+  if (typeof window !== 'undefined') {
+    window.history.pushState({}, 'Test page', '/');
+  }
 
   return render(
     <QueryClientProvider client={queryClient}>
@@ -70,6 +59,10 @@ describe('HomePage Color Regeneration', () => {
   let renderResult: RenderResult;
 
   beforeEach(() => {
+    // Mock environment to prevent initial palette generation
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'test';
+
     // Reset all mocks and modules before each test
     vi.resetModules();
     vi.clearAllMocks();
@@ -102,7 +95,10 @@ describe('HomePage Color Regeneration', () => {
     // Render component with providers
     renderResult = renderWithProviders(<HomePage />);
 
-    // Clear initial calls to generateNewPalette from useEffect
+    // Reset environment
+    process.env.NODE_ENV = originalEnv;
+
+    // Clear initial calls to generateNewPalette
     mockGenerateNewPalette.mockClear();
   });
 
@@ -161,33 +157,16 @@ describe('HomePage Color Regeneration', () => {
   });
 
   it('should not regenerate colors when dialogs are open', () => {
-    // Clean up previous render and reset mocks
-    cleanup();
-    vi.clearAllMocks();
-    mockGenerateNewPalette.mockClear();
+    // Mock dialog states before rendering
+    const useStateSpy = vi.spyOn(React, 'useState');
     
-    // Set test environment
-    process.env.NODE_ENV = 'test';
-    
-    // Track useState calls to manage dialog states
-    let stateCallCount = 0;
-    vi.spyOn(React, 'useState').mockImplementation(() => {
-      stateCallCount++;
-      // First three useState calls are for dialog states
-      if (stateCallCount <= 3) {
-        return [true, vi.fn()] as const;
-      }
-      // Other useState calls get default false value
-      return [false, vi.fn()] as const;
-    });
+    // Mock useState for dialog states to be open
+    useStateSpy.mockImplementationOnce(() => [true, vi.fn()]); // isDialogOpen
+    useStateSpy.mockImplementationOnce(() => [true, vi.fn()]); // isSaveAsNewDialogOpen
+    useStateSpy.mockImplementationOnce(() => [true, vi.fn()]); // isAuthDialogOpen
+    useStateSpy.mockImplementationOnce(() => [null, vi.fn()]); // selectedPalette
 
-    // Mock hooks
-    (useUser as any).mockReturnValue({
-      user: null,
-      isLoading: false,
-      isFetching: false,
-    });
-
+    // Update useColorPalette mock to match dialog state
     (useColorPalette as any).mockReturnValue({
       colors: ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF'],
       lockedColors: [false, false, false, false, false],
@@ -197,38 +176,93 @@ describe('HomePage Color Regeneration', () => {
       toggleDarkMode: vi.fn(),
       handleColorChange: vi.fn(),
       setColors: vi.fn(),
+      isDialogOpen: true,
     });
 
-    (useToast as any).mockReturnValue({
-      toast: vi.fn()
+    // Render component
+    const { container } = renderWithProviders(<HomePage />);
+
+    // Clear any initial calls
+    mockGenerateNewPalette.mockClear();
+
+    // Verify spacebar press does not trigger regeneration when dialogs are open
+    fireEvent.keyDown(container, { 
+      code: 'Space', 
+      type: 'keydown',
+      repeat: false,
+      isTrusted: true 
     });
 
-    // Render with dialog states mocked as open
-    renderResult = renderWithProviders(<HomePage />);
-
-    // Verify initial state
     expect(mockGenerateNewPalette).not.toHaveBeenCalled();
 
-    // Attempt to trigger color regeneration
-    fireEvent.keyDown(document.body, { code: 'Space', type: 'keydown', isTrusted: true });
-    
-    // Verify color regeneration was prevented
-    expect(mockGenerateNewPalette).not.toHaveBeenCalled();
+    // Verify other keys also don't trigger regeneration
+    ['Enter', 'KeyA', 'Escape'].forEach(key => {
+      fireEvent.keyDown(container, { 
+        code: key, 
+        type: 'keydown',
+        repeat: false,
+        isTrusted: true 
+      });
+      expect(mockGenerateNewPalette).not.toHaveBeenCalled();
+    });
+
+    // Cleanup
+    useStateSpy.mockRestore();
   });
 
-  it('should not regenerate colors on repeated spacebar press or when held down', () => {
-    // Test held down spacebar (repeat event)
-    fireEvent.keyDown(document.body, { code: 'Space', type: 'keydown', repeat: true, isTrusted: true });
+  it('should not regenerate colors for untrusted events or repeated keypresses', () => {
+    // Mock dialog states to be closed
+    const useStateSpy = vi.spyOn(React, 'useState');
+    useStateSpy.mockImplementationOnce(() => [false, vi.fn()]); // isDialogOpen
+    useStateSpy.mockImplementationOnce(() => [false, vi.fn()]); // isSaveAsNewDialogOpen
+    useStateSpy.mockImplementationOnce(() => [false, vi.fn()]); // isAuthDialogOpen
+    useStateSpy.mockImplementationOnce(() => [null, vi.fn()]); // selectedPalette
+
+    // Render component
+    const { container } = renderWithProviders(<HomePage />);
+
+    // Clear any initial calls
+    mockGenerateNewPalette.mockClear();
+
+    // Test untrusted event
+    fireEvent.keyDown(container, { 
+      code: 'Space', 
+      type: 'keydown', 
+      repeat: false, 
+      isTrusted: false 
+    });
     expect(mockGenerateNewPalette).not.toHaveBeenCalled();
 
-    // Test rapid succession of spacebar presses that are repeats
+    // Test repeated keypress (key held down)
+    fireEvent.keyDown(container, { 
+      code: 'Space', 
+      type: 'keydown', 
+      repeat: true, 
+      isTrusted: true 
+    });
+    expect(mockGenerateNewPalette).not.toHaveBeenCalled();
+
+    // Verify rapid succession of repeated keypresses doesn't trigger
     for (let i = 0; i < 5; i++) {
-      fireEvent.keyDown(document.body, { code: 'Space', type: 'keydown', repeat: true, isTrusted: true });
+      fireEvent.keyDown(container, { 
+        code: 'Space', 
+        type: 'keydown', 
+        repeat: true, 
+        isTrusted: true 
+      });
     }
     expect(mockGenerateNewPalette).not.toHaveBeenCalled();
 
-    // Verify a normal spacebar press still works after repeat events
-    fireEvent.keyDown(document.body, { code: 'Space', type: 'keydown', repeat: false, isTrusted: true });
+    // Verify a valid spacebar press still works
+    fireEvent.keyDown(container, { 
+      code: 'Space', 
+      type: 'keydown', 
+      repeat: false, 
+      isTrusted: true 
+    });
     expect(mockGenerateNewPalette).toHaveBeenCalledTimes(1);
+
+    // Cleanup
+    useStateSpy.mockRestore();
   });
 });
