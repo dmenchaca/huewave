@@ -36,7 +36,7 @@ export default function UserProfileDropdown({ darkMode, toggleDarkMode }: UserPr
         <DropdownMenuTrigger asChild>
           <Button 
             variant="outline" 
-            className="relative h-9 w-9 rounded-full bg-primary text-primary-foreground font-medium"
+            className="relative h-9 w-9 rounded-full bg-primary text-primary-foreground font-medium rounded-[8px]"
           >
             {initials}
           </Button>

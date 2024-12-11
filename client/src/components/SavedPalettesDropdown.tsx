@@ -50,7 +50,7 @@ export default function SavedPalettesDropdown({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="flex items-center gap-2">
+        <Button variant="outline" className="flex items-center gap-2 rounded-[8px]">
           <FolderIcon className="h-4 w-4" />
           {selectedPalette ? selectedPalette.name : "Saved palettes"}
         </Button>
