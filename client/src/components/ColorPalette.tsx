@@ -22,7 +22,7 @@ export default function ColorPalette({
   const { toast } = useToast();
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [locked, setLocked] = useState(lockedColors); // Added state for locked colors
+  // Using lockedColors prop directly instead of local state
 
   const copyToClipboard = async (color: string, index: number) => {
     try {
@@ -57,10 +57,10 @@ export default function ColorPalette({
   };
 
   const toggleLock = (index: number) => {
-    const newLocked = [...locked];
-    newLocked[index] = !newLocked[index];
-    setLocked(newLocked);
-    onToggleLock?.(index);
+    console.log(`Toggling lock for color ${index}:`, colors[index]);
+    if (onToggleLock) {
+      onToggleLock(index);
+    }
   };
 
   const handleColorChange = (index: number, value: string) => {
@@ -126,7 +126,7 @@ export default function ColorPalette({
                 toggleLock(index);
               }}
             >
-              {locked[index] ? (
+              {lockedColors[index] ? (
                 <LockIcon className="h-4 w-4" style={{ color: getContrastColor(color) }} />
               ) : (
                 <UnlockIcon className="h-4 w-4" style={{ color: getContrastColor(color) }} />

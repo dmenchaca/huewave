@@ -20,6 +20,13 @@ export function useColorPalette({ initialColors }: { initialColors?: string[] } 
     return initialState;
   });
 
+  // Ensure lockedColors array stays in sync with colors length
+  useEffect(() => {
+    if (lockedColors.length !== colors.length) {
+      setLockedColors(Array(colors.length).fill(false));
+    }
+  }, [colors.length, lockedColors.length]);
+
   const toggleLock = useCallback((index: number) => {
     console.log(`[ColorPalette] Attempting to toggle lock for color ${index}:`, colors[index]);
     setLockedColors(prev => {
