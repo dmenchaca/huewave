@@ -46,9 +46,20 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
     return saved ? JSON.parse(saved) : false;
   });
 
-  const [lockedColors, setLockedColors] = useState<boolean[]>(() => 
-    new Array(5).fill(false)
-  );
+  const [lockedColors, setLockedColors] = useState<boolean[]>(() => {
+    try {
+      const savedLocks = Cookies.get('locked_colors');
+      if (savedLocks) {
+        const parsed = JSON.parse(savedLocks);
+        if (Array.isArray(parsed) && parsed.length === 5 && parsed.every(lock => typeof lock === 'boolean')) {
+          return parsed;
+        }
+      }
+    } catch (error) {
+      console.error('Failed to parse locked colors from cookie:', error);
+    }
+    return new Array(5).fill(false);
+  });
 
   const generateNewPalette = useCallback(() => {
     if (colors.length === 0) return;
@@ -152,6 +163,14 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
       const next = [...prev];
       next[index] = !next[index];
       console.log('New locked colors state:', next);
+      
+      // Save to cookie
+      try {
+        Cookies.set('locked_colors', JSON.stringify(next), { expires: COOKIE_EXPIRY });
+      } catch (error) {
+        console.error('Failed to save locked colors to cookie:', error);
+      }
+      
       return next;
     });
   }, [colors.length]);

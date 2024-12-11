@@ -108,7 +108,8 @@ export default function ColorPalette({
               variant="secondary"
               size="icon"
               className={`transition-opacity ${lockedColors[index] ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 console.log('Lock button clicked for color index:', index);
                 onToggleLock?.(index);
               }}
