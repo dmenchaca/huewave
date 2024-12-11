@@ -15,7 +15,9 @@ interface ColorPaletteProps {
 export default function ColorPalette({ 
   colors, 
   onColorChange,
-  generateNewPalette
+  generateNewPalette,
+  lockedColors,
+  onToggleLock
 }: ColorPaletteProps) {
   const { toast } = useToast();
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
