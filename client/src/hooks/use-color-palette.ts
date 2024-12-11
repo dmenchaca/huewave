@@ -50,30 +50,33 @@ export function useColorPalette({
   }, [initialColors]);
 
   const toggleLock = useCallback((index: number) => {
-    console.log(`[ColorPalette] Toggling lock for index ${index}`);
+    console.log(`[ColorPalette] Attempting to toggle lock for index ${index}`);
     setLockedColors(prev => {
       const newLocks = [...prev];
       newLocks[index] = !newLocks[index];
-      console.log(`[ColorPalette] New lock state for index ${index}:`, newLocks[index]);
+      console.log(`[ColorPalette] Lock state updated for index ${index}:`, {
+        previous: prev[index],
+        new: newLocks[index]
+      });
       return newLocks;
     });
   }, []); // No dependencies to prevent unintended regeneration
 
   const generateNewPalette = useCallback(() => {
     console.log('[ColorPalette] Generating new palette via spacebar');
-    setColors(prevColors => {
-      const newColors = prevColors.map((color, index) => {
+    setColors(prevColors => 
+      prevColors.map((color, index) => {
+        // Access lockedColors directly in the closure instead of from deps
         if (lockedColors[index]) {
-          console.log(`[ColorPalette] Color ${index} is locked, keeping ${color}`);
+          console.log(`[ColorPalette] Keeping locked color at index ${index}: ${color}`);
           return color;
         }
         const newColor = chroma.random().hex();
-        console.log(`[ColorPalette] Generated new color for index ${index}: ${newColor}`);
+        console.log(`[ColorPalette] Generated new color at index ${index}: ${newColor}`);
         return newColor;
-      });
-      return newColors;
-    });
-  }, [lockedColors]); // Only depend on lockedColors for lock state checking
+      })
+    );
+  }, []); // Remove lockedColors from dependencies to prevent regeneration on lock changes
 
   const handleColorChange = useCallback((index: number, color: string) => {
     setColors(prev => {
