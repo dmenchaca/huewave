@@ -50,28 +50,30 @@ export default function HomePage() {
 
   return (
     <div className={`min-h-screen flex flex-col ${darkMode ? 'dark' : ''}`}>
-      <header className="container mx-auto px-4 py-2 md:py-0 md:h-16 flex flex-col md:flex-row justify-between items-center gap-2">
-        <div className="flex items-center gap-2">
-          <img src="/images/huewave-icon.png" alt="HueWave Logo" className="w-8 h-8" />
-          <h1 className="text-lg font-semibold">HueWave</h1>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <SavedPalettesDropdown 
-            onSelect={(paletteId) => {
-              setSelectedPaletteId(paletteId);
-              setIsEditDialogOpen(true);
-            }} 
-          />
-          {!user && (
-            <button
-              onClick={() => setIsAuthDialogOpen(true)}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md"
-            >
-              Sign In
-            </button>
-          )}
-          {user && <UserProfileDropdown />}
+      <header className="border-b">
+        <div className="container mx-auto px-4 py-2 md:py-0 md:h-16 flex flex-col md:flex-row justify-between items-center gap-2">
+          <div className="flex items-center gap-2">
+            <img src="/images/huewave-icon.png" alt="HueWave Logo" className="w-8 h-8" />
+            <h1 className="text-lg font-semibold">HueWave</h1>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <SavedPalettesDropdown 
+              onSelect={(paletteId) => {
+                setSelectedPaletteId(paletteId);
+                setIsEditDialogOpen(true);
+              }} 
+            />
+            {!user && (
+              <button
+                onClick={() => setIsAuthDialogOpen(true)}
+                className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md"
+              >
+                Sign In
+              </button>
+            )}
+            {user && <UserProfileDropdown />}
+          </div>
         </div>
       </header>
 
