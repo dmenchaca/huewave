@@ -40,7 +40,9 @@ export default function ColorPalette({
     }
   };
 
-  const handleLockToggle = (index: number) => {
+  const handleLockToggle = (e: React.MouseEvent, index: number) => {
+    e.preventDefault();
+    e.stopPropagation();
     onToggleLock(index);
   };
 
@@ -92,11 +94,7 @@ export default function ColorPalette({
               variant="secondary"
               size="icon"
               className="opacity-0 group-hover:opacity-100 transition-opacity relative z-50"
-              onClick={(e: React.MouseEvent) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleLockToggle(index);
-              }}
+              onClick={(e: React.MouseEvent) => handleLockToggle(e, index)}
             >
               {lockedColors[index] ? (
                 <LockIcon className="h-4 w-4" />
