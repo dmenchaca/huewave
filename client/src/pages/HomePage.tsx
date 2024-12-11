@@ -245,7 +245,7 @@ export default function HomePage() {
               <Button 
                 variant="outline"
                 onClick={() => setIsAuthDialogOpen(true)}
-                className="whitespace-nowrap"
+                className="whitespace-nowrap rounded-[8px]"
               >
                 Login
               </Button>
@@ -272,7 +272,7 @@ export default function HomePage() {
               size="icon"
               onClick={toggleDarkMode}
               aria-label="Toggle theme"
-              className="flex-shrink-0"
+              className="flex-shrink-0 rounded-[8px]"
             >
               {darkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
             </Button>
