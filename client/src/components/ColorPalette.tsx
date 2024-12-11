@@ -88,11 +88,7 @@ export default function ColorPalette({
           style={{ backgroundColor: color }}
         >
           <div 
-            className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors color-area-background cursor-pointer" 
-            onClick={(e) => {
-              e.stopPropagation();
-              generateNewPalette?.();
-            }}
+            className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors color-area-background"
           />
           
           <div className="absolute top-4 right-4 flex gap-2">
