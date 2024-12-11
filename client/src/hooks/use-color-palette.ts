@@ -43,12 +43,72 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
   });
 
   const generateNewPalette = useCallback(() => {
-    const baseHue = Math.random() * 360;
-    const newColors = Array.from({ length: 5 }, (_, i) => {
-      const hue = (baseHue + (i * 360 / 5)) % 360;
-      return chroma.hsl(hue, 0.7, 0.5).hex();
-    });
-    setColors(newColors);
+    const themes = [
+      { name: "nature", baseHues: [120, 60, 30] }, // Greens, yellows, browns
+      { name: "muted-vintage", baseHues: [0, 15, 300] }, // Reds, purples
+      { name: "cool-blues", baseHues: [200, 210, 230] }, // Blues
+    ];
+
+    // Pick a random theme
+    const theme = themes[Math.floor(Math.random() * themes.length)];
+    const baseHue = theme.baseHues[Math.floor(Math.random() * theme.baseHues.length)];
+    const baseColor = chroma.hsl(baseHue, 0.6, 0.5); // Mid-saturation and mid-lightness
+
+    const randomLightness = () => 0.05 + Math.random() * 0.9; // Range from very dark to very light
+    const randomSaturation = () => Math.random() * 0.4 + 0.4; // Balanced saturation
+
+    const newColors = [];
+    const colorSet = new Set();
+
+    for (let i = 0; i < 5; i++) {
+      let newColor;
+      let attempts = 0;
+
+      do {
+        if (i === 0) {
+          // Base color
+          newColor = baseColor.hex();
+        } else if (i === 4) {
+          // Add a neutral color (e.g., gray, off-white, or near black)
+          newColor = chroma.hsl(0, 0, randomLightness()).hex();
+        } else {
+          // Generate theme-based colors
+          newColor = chroma.hsl(
+            (baseHue + i * 30 + Math.random() * 20 - 10) % 360, // Slight random shift
+            randomSaturation(),
+            randomLightness()
+          ).hex();
+        }
+        attempts++;
+      } while (
+        (colorSet.has(newColor) || newColor.toLowerCase() === '#ffffff' || newColor.toLowerCase() === '#000000') &&
+        attempts < 10
+      );
+
+      colorSet.add(newColor);
+      newColors.push(newColor);
+    }
+
+    // Ensure contrast and uniqueness
+    const adjustedColors = [];
+    for (let i = 0; i < newColors.length; i++) {
+      const prevColor = i > 0 ? chroma(adjustedColors[i - 1]) : null;
+      let currentColor = chroma(newColors[i]);
+
+      if (prevColor) {
+        const contrast = chroma.contrast(prevColor, currentColor);
+        if (contrast < 2.5) {
+          currentColor = currentColor.set('hsl.l', Math.min(1, currentColor.get('hsl.l') + 0.2));
+        } else if (contrast > 4) {
+          currentColor = currentColor.set('hsl.l', Math.max(0, currentColor.get('hsl.l') - 0.2));
+        }
+      }
+
+      adjustedColors.push(currentColor.hex());
+    }
+
+    // Update the state with the new palette
+    setColors(adjustedColors);
   }, []);
 
   useEffect(() => {
