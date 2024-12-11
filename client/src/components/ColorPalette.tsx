@@ -54,7 +54,42 @@ export default function ColorPalette({
     return luminance > 0.6 ? '#000000' : '#ffffff';
   };
 
-  const handleColorChange = (index: number, value: string) => {
+  import styles from './ColorPalette.module.css';
+
+interface LockButtonProps {
+  locked: boolean;
+  onClick: () => void;
+}
+
+const LockButton = ({ locked, onClick }: LockButtonProps) => (
+  <button onClick={onClick} className={styles.lockButton}>
+    {locked ? (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        className={styles.lockIcon}
+      >
+        <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+      </svg>
+    ) : (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        className={styles.lockIcon}
+      >
+        <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+        <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
+      </svg>
+    )}
+  </button>
+);
+
+const handleColorChange = (index: number, value: string) => {
     if (value.length >= 7) {
       let hex = value.replace('#', '');
       
