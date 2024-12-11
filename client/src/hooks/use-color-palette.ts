@@ -1,10 +1,6 @@
+
 import { useState, useCallback, useEffect } from "react";
 import chroma from "chroma-js";
-import Cookies from 'js-cookie';
-
-const PALETTE_COOKIE_NAME = 'palette_colors';
-const LOCKED_COLORS_KEY = 'locked_colors';
-const COOKIE_EXPIRY = 7; // Days
 
 export interface ColorPaletteHook {
   colors: string[];
@@ -25,27 +21,27 @@ export function useColorPalette({ initialColors }: { initialColors?: string[] } 
   });
 
   const toggleLock = useCallback((index: number) => {
-    console.log(`[ColorPalette] Attempting to toggle lock for color at index ${index}`);
-    setLockedColors((prev) => {
+    console.log(`[ColorPalette] Attempting to toggle lock for color ${index}:`, colors[index]);
+    setLockedColors(prev => {
       const newLocks = [...prev];
       newLocks[index] = !newLocks[index];
       console.log(`[ColorPalette] Color ${index} is now ${newLocks[index] ? 'LOCKED' : 'UNLOCKED'}`);
       console.log('[ColorPalette] Updated lock state:', newLocks);
       return newLocks;
     });
-  }, []);
+  }, [colors]);
 
   const generateNewPalette = useCallback(() => {
     console.log('[ColorPalette] Generating new palette...');
     console.log('[ColorPalette] Current lock state:', lockedColors);
 
-    setColors((prevColors) => {
+    setColors(prevColors => {
       const newColors = prevColors.map((color, index) => {
         if (lockedColors[index]) {
           console.log(`[ColorPalette] Color ${index} is locked, keeping ${color}`);
           return color;
         }
-        const newColor = generateRandomColor();
+        const newColor = chroma.random().hex();
         console.log(`[ColorPalette] Generated new color for index ${index}: ${newColor}`);
         return newColor;
       });
@@ -55,6 +51,7 @@ export function useColorPalette({ initialColors }: { initialColors?: string[] } 
   }, [lockedColors]);
 
   const handleColorChange = useCallback((index: number, color: string) => {
+    console.log(`[ColorPalette] Manual color change at index ${index} to ${color}`);
     setColors(prev => {
       const updated = [...prev];
       updated[index] = color;
@@ -62,6 +59,9 @@ export function useColorPalette({ initialColors }: { initialColors?: string[] } 
     });
   }, []);
 
+  useEffect(() => {
+    console.log('[ColorPalette] Colors or locks updated:', { colors, lockedColors });
+  }, [colors, lockedColors]);
 
   return {
     colors,
@@ -74,9 +74,5 @@ export function useColorPalette({ initialColors }: { initialColors?: string[] } 
 }
 
 function generateRandomColors(): string[] {
-  return Array(5).fill(0).map(() => generateRandomColor());
-}
-
-function generateRandomColor(): string {
-  return chroma.random().hex();
+  return Array(5).fill(0).map(() => chroma.random().hex());
 }
