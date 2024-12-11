@@ -12,20 +12,26 @@ export interface ColorPaletteHook {
 }
 
 export function useColorPalette({ initialColors }: { initialColors?: string[] } = {}): ColorPaletteHook {
-  const [colors, setColors] = useState(initialColors?.length ? initialColors : generateRandomColors());
-  const [lockedColors, setLockedColors] = useState<boolean[]>(() => {
-    console.log('[ColorPalette] Initializing lock state...');
-    const initialState = Array(5).fill(false);
-    console.log('[ColorPalette] Initial lock state:', initialState);
-    return initialState;
-  });
+  const [colors, setColors] = useState(() => 
+    initialColors?.length ? initialColors : generateRandomColors()
+  );
+  
+  const [lockedColors, setLockedColors] = useState<boolean[]>(() => 
+    Array(initialColors?.length || 5).fill(false)
+  );
 
-  // Ensure lockedColors array stays in sync with colors length
+  // Sync colors and locks only when initialColors changes
   useEffect(() => {
-    if (lockedColors.length !== colors.length) {
-      setLockedColors(Array(colors.length).fill(false));
+    if (initialColors?.length) {
+      setColors(initialColors);
+      setLockedColors(prev => {
+        if (prev.length !== initialColors.length) {
+          return Array(initialColors.length).fill(false);
+        }
+        return prev;
+      });
     }
-  }, [colors.length, lockedColors.length]);
+  }, [initialColors]);
 
   const toggleLock = useCallback((index: number) => {
     console.log(`[ColorPalette] Attempting to toggle lock for color ${index}:`, colors[index]);

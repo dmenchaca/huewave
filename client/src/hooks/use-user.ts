@@ -38,41 +38,61 @@ async function handleRequest(
 
 async function fetchUser(): Promise<User | null> {
   console.log('[useUser] Fetching user session...');
-  try {
-    const response = await fetch('/api/user', {
-      credentials: 'include'
-    });
+  let retryCount = 0;
+  const maxRetries = 3;
+  const backoffMs = 1000; // Start with 1 second
 
-    console.log('[useUser] Response status:', response.status);
-    const responseText = await response.text();
-    console.log('[useUser] Response body:', responseText);
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        console.log('[useUser] Not authenticated (401)');
-        return null;
-      }
-
-      if (response.status >= 500) {
-        throw new Error(`${response.status}: ${response.statusText}`);
-      }
-
-      throw new Error(`${response.status}: ${responseText}`);
-    }
-
-    // Try to parse the response as JSON
+  while (retryCount < maxRetries) {
     try {
-      const userData = JSON.parse(responseText);
-      console.log('[useUser] Successfully fetched user:', userData);
-      return userData;
-    } catch (e) {
-      console.error('[useUser] Error parsing user data:', e);
-      throw new Error('Invalid user data received');
+      const response = await fetch('/api/user', {
+        credentials: 'include',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
+
+      console.log('[useUser] Response status:', response.status);
+      const responseText = await response.text();
+      console.log('[useUser] Response body:', responseText);
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          console.log('[useUser] Not authenticated (401)');
+          return null;
+        }
+
+        if (response.status >= 500) {
+          throw new Error(`Server error: ${response.status}`);
+        }
+
+        throw new Error(`Request failed: ${response.status}`);
+      }
+
+      try {
+        const userData = JSON.parse(responseText);
+        console.log('[useUser] Successfully fetched user:', userData);
+        return userData;
+      } catch (e) {
+        console.error('[useUser] Error parsing user data:', e);
+        throw new Error('Invalid user data received');
+      }
+    } catch (error) {
+      console.error(`[useUser] Attempt ${retryCount + 1} failed:`, error);
+      
+      if (retryCount === maxRetries - 1) {
+        throw error;
+      }
+
+      // Exponential backoff
+      await new Promise(resolve => 
+        setTimeout(resolve, backoffMs * Math.pow(2, retryCount))
+      );
+      retryCount++;
     }
-  } catch (error) {
-    console.error('[useUser] Error fetching user:', error);
-    throw error;
   }
+
+  throw new Error('Failed to fetch user after max retries');
 }
 
 export function useUser() {
