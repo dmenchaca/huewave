@@ -149,13 +149,12 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
     }
 
     // Update the state, respecting locked colors
-    setColors(prev =>
-      prev.length === 0
-        ? adjustedColors
-        : prev.map((color, index) =>
-            lockedColors[index] ? color : adjustedColors[index]
-          )
-    );
+    setColors(prev => {
+      if (prev.length === 0) return adjustedColors;
+      return prev.map((color, index) => 
+        lockedColors[index] ? color : adjustedColors[index]
+      );
+    });
   }, [lockedColors]);
 
 

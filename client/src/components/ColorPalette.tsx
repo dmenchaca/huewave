@@ -40,6 +40,10 @@ export default function ColorPalette({
     }
   };
 
+  const handleLockToggle = (index: number) => {
+    onToggleLock(index);
+  };
+
   const getContrastColor = (hexColor: string): string => {
     const hex = hexColor.replace('#', '');
     const r = parseInt(hex.substr(0, 2), 16);
@@ -91,7 +95,7 @@ export default function ColorPalette({
               onClick={(e: React.MouseEvent) => {
                 e.preventDefault();
                 e.stopPropagation();
-                onToggleLock(index);
+                handleLockToggle(index);
               }}
             >
               {lockedColors[index] ? (
