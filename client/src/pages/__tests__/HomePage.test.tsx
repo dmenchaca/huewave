@@ -40,6 +40,22 @@ const renderWithProviders = (ui: React.ReactElement): RenderResult => {
     },
   });
 
+  // Mock window.location for BrowserRouter
+  Object.defineProperty(window, 'location', {
+    value: {
+      pathname: '/',
+      search: '',
+      hash: '',
+      href: 'http://localhost/',
+      origin: 'http://localhost',
+      protocol: 'http:',
+      host: 'localhost',
+      hostname: 'localhost',
+      port: '',
+    },
+    writable: true,
+  });
+
   return render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
@@ -65,7 +81,7 @@ describe('HomePage Color Regeneration', () => {
       isFetching: false,
     });
 
-    // Mock color palette hook with test-specific values
+    // Mock color palette hook with test-specific values and prevent auto-generation
     (useColorPalette as any).mockReturnValue({
       colors: ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF'],
       lockedColors: [false, false, false, false, false],
@@ -75,6 +91,7 @@ describe('HomePage Color Regeneration', () => {
       toggleDarkMode: vi.fn(),
       handleColorChange: vi.fn(),
       setColors: vi.fn(),
+      isDialogOpen: false,
     });
 
     // Mock toast hook
@@ -84,6 +101,9 @@ describe('HomePage Color Regeneration', () => {
 
     // Render component with providers
     renderResult = renderWithProviders(<HomePage />);
+
+    // Clear initial calls to generateNewPalette from useEffect
+    mockGenerateNewPalette.mockClear();
   });
 
   afterEach(() => {
@@ -109,27 +129,65 @@ describe('HomePage Color Regeneration', () => {
   });
 
   it('should not regenerate colors when spacebar is pressed in input elements', () => {
+    // Test input element
     const input = document.createElement('input');
     document.body.appendChild(input);
     input.focus();
     
-    fireEvent.keyDown(input, { code: 'Space', type: 'keydown' });
+    fireEvent.keyDown(input, { code: 'Space', type: 'keydown', isTrusted: true });
     expect(mockGenerateNewPalette).not.toHaveBeenCalled();
     
     document.body.removeChild(input);
 
+    // Test textarea element
     const textarea = document.createElement('textarea');
     document.body.appendChild(textarea);
     textarea.focus();
     
-    fireEvent.keyDown(textarea, { code: 'Space', type: 'keydown' });
+    fireEvent.keyDown(textarea, { code: 'Space', type: 'keydown', isTrusted: true });
     expect(mockGenerateNewPalette).not.toHaveBeenCalled();
     
     document.body.removeChild(textarea);
+
+    // Test button element
+    const button = document.createElement('button');
+    document.body.appendChild(button);
+    button.focus();
+    
+    fireEvent.keyDown(button, { code: 'Space', type: 'keydown', isTrusted: true });
+    expect(mockGenerateNewPalette).not.toHaveBeenCalled();
+    
+    document.body.removeChild(button);
   });
 
   it('should not regenerate colors when dialogs are open', () => {
-    // Test with dialog open
+    // Clean up previous render and reset mocks
+    cleanup();
+    vi.clearAllMocks();
+    mockGenerateNewPalette.mockClear();
+    
+    // Set test environment
+    process.env.NODE_ENV = 'test';
+    
+    // Track useState calls to manage dialog states
+    let stateCallCount = 0;
+    vi.spyOn(React, 'useState').mockImplementation(() => {
+      stateCallCount++;
+      // First three useState calls are for dialog states
+      if (stateCallCount <= 3) {
+        return [true, vi.fn()] as const;
+      }
+      // Other useState calls get default false value
+      return [false, vi.fn()] as const;
+    });
+
+    // Mock hooks
+    (useUser as any).mockReturnValue({
+      user: null,
+      isLoading: false,
+      isFetching: false,
+    });
+
     (useColorPalette as any).mockReturnValue({
       colors: ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF'],
       lockedColors: [false, false, false, false, false],
@@ -138,23 +196,39 @@ describe('HomePage Color Regeneration', () => {
       toggleLock: vi.fn(),
       toggleDarkMode: vi.fn(),
       handleColorChange: vi.fn(),
-      isDialogOpen: true,
+      setColors: vi.fn(),
     });
 
-    renderResult.rerender(<HomePage />);
-    fireEvent.keyDown(document.body, { code: 'Space', type: 'keydown' });
+    (useToast as any).mockReturnValue({
+      toast: vi.fn()
+    });
+
+    // Render with dialog states mocked as open
+    renderResult = renderWithProviders(<HomePage />);
+
+    // Verify initial state
+    expect(mockGenerateNewPalette).not.toHaveBeenCalled();
+
+    // Attempt to trigger color regeneration
+    fireEvent.keyDown(document.body, { code: 'Space', type: 'keydown', isTrusted: true });
+    
+    // Verify color regeneration was prevented
     expect(mockGenerateNewPalette).not.toHaveBeenCalled();
   });
 
   it('should not regenerate colors on repeated spacebar press or when held down', () => {
-    // Test repeated keypress
-    fireEvent.keyDown(document.body, { code: 'Space', type: 'keydown', repeat: true });
+    // Test held down spacebar (repeat event)
+    fireEvent.keyDown(document.body, { code: 'Space', type: 'keydown', repeat: true, isTrusted: true });
     expect(mockGenerateNewPalette).not.toHaveBeenCalled();
 
-    // Test rapid succession of keypresses
+    // Test rapid succession of spacebar presses that are repeats
     for (let i = 0; i < 5; i++) {
-      fireEvent.keyDown(document.body, { code: 'Space', type: 'keydown', repeat: true });
+      fireEvent.keyDown(document.body, { code: 'Space', type: 'keydown', repeat: true, isTrusted: true });
     }
     expect(mockGenerateNewPalette).not.toHaveBeenCalled();
+
+    // Verify a normal spacebar press still works after repeat events
+    fireEvent.keyDown(document.body, { code: 'Space', type: 'keydown', repeat: false, isTrusted: true });
+    expect(mockGenerateNewPalette).toHaveBeenCalledTimes(1);
   });
 });

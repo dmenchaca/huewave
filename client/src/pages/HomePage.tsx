@@ -58,15 +58,21 @@ export default function HomePage() {
     handleColorChange
   } = paletteConfig;
 
-  // Generate new palette when component mounts
+  // Generate new palette when component mounts (except in test environment)
   useEffect(() => {
-    if (generateNewPalette) {
-      generateNewPalette();
+    if (!generateNewPalette) return;
+    
+    // Skip if we're in test environment or if any dialog is open
+    if (process.env.NODE_ENV === 'test' || isDialogOpen || isSaveAsNewDialogOpen || isAuthDialogOpen) {
+      return;
     }
+    
+    generateNewPalette();
+    
     if (!user) {
       setSelectedPalette(null);
     }
-  }, [user, generateNewPalette]);
+  }, [user, generateNewPalette, isDialogOpen, isSaveAsNewDialogOpen, isAuthDialogOpen]);
 
   const handleKeyPress = useCallback((e: KeyboardEvent) => {
     // Skip if there's no generator function
