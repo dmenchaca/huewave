@@ -2,6 +2,7 @@ import { CopyIcon, CheckIcon, LockIcon, UnlockIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import styles from './ColorPalette.module.css';
 
 interface ColorPaletteProps {
   colors: string[];
@@ -54,9 +55,7 @@ export default function ColorPalette({
     return luminance > 0.6 ? '#000000' : '#ffffff';
   };
 
-  import styles from './ColorPalette.module.css';
-
-interface LockButtonProps {
+  interface LockButtonProps {
   locked: boolean;
   onClick: () => void;
 }
