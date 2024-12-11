@@ -17,6 +17,11 @@ export default defineConfig({
       clientPort: 443
     }
   },
+  root: path.resolve(__dirname, "client"),
+  build: {
+    outDir: path.resolve(__dirname, "dist"),
+    emptyOutDir: true
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "client/src"),
