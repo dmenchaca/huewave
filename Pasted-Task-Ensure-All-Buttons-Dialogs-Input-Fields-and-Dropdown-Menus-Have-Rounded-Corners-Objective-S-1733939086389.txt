@@ -1,0 +1,119 @@
+Task: Ensure All Buttons, Dialogs, Input Fields, and Dropdown Menus Have Rounded Corners
+Objective
+Standardize the styling of all buttons, dialogs, input fields, and dropdown menus in the web app by ensuring they have rounded corners. This change should be purely visual and must not affect any existing functionality.
+
+Steps for Implementation
+1. Identify Global Tailwind Classes for Rounded Corners
+Use Tailwind's rounded utilities to apply consistent rounded corners:
+For buttons: rounded-md or rounded-lg.
+For dialogs: rounded-lg or a larger value like rounded-xl if appropriate.
+For input fields and dropdown menus: rounded-md.
+2. Update Global Styles for Buttons
+Locate all button components and add the rounded-md class (or another appropriate utility).
+Ensure the rounded utility is applied in conjunction with existing classes.
+Example Button Update: Before:
+
+html
+Copy code
+<button class="px-4 py-2 bg-primary text-white">
+  Save
+</button>
+After:
+
+html
+Copy code
+<button class="px-4 py-2 bg-primary text-white rounded-md">
+  Save
+</button>
+3. Update Global Styles for Dialogs
+Locate all dialog components and ensure they include a rounded utility like rounded-lg or rounded-xl.
+Example Dialog Update: Before:
+
+html
+Copy code
+<div class="bg-white shadow-md p-4">
+  <!-- Dialog content -->
+</div>
+After:
+
+html
+Copy code
+<div class="bg-white shadow-md p-4 rounded-lg">
+  <!-- Dialog content -->
+</div>
+4. Update Input Fields
+Locate all input fields (<input>, <textarea>, etc.) and add the rounded-md class.
+Example Input Update: Before:
+
+html
+Copy code
+<input type="text" class="border border-gray-300 p-2">
+After:
+
+html
+Copy code
+<input type="text" class="border border-gray-300 p-2 rounded-md">
+5. Update Dropdown Menus
+Locate all dropdown menus (<select> elements) and add the rounded-md class.
+Example Dropdown Update: Before:
+
+html
+Copy code
+<select class="border border-gray-300 p-2">
+  <option>Option 1</option>
+  <option>Option 2</option>
+</select>
+After:
+
+html
+Copy code
+<select class="border border-gray-300 p-2 rounded-md">
+  <option>Option 1</option>
+  <option>Option 2</option>
+</select>
+6. Add a Global Class for Consistency (Optional)
+Create reusable classes in your Tailwind config to maintain consistency across all elements.
+Example: Add to Tailwind Config
+
+js
+Copy code
+// tailwind.config.js
+module.exports = {
+  theme: {
+    extend: {
+      borderRadius: {
+        'button': '0.375rem', // Equivalent to rounded-md
+        'dialog': '0.5rem',   // Equivalent to rounded-lg
+        'input': '0.375rem',  // Equivalent to rounded-md
+      },
+    },
+  },
+};
+Apply the Classes:
+
+html
+Copy code
+<button class="btn-primary rounded-button">
+  Save
+</button>
+
+<div class="dialog-box rounded-dialog">
+  <!-- Dialog content -->
+</div>
+
+<input type="text" class="input-field rounded-input">
+<select class="dropdown-field rounded-input">
+  <option>Option 1</option>
+</select>
+7. Test Responsiveness and Consistency
+Verify the updated styles across all screen sizes.
+Check that:
+Buttons have consistent rounded corners.
+Dialogs have consistent rounded corners.
+Input fields and dropdown menus have consistent rounded corners.
+Ensure no visual regressions or overlap with other styles.
+Expected Outcome
+All buttons have rounded corners using rounded-md (or similar).
+All dialogs have rounded corners using rounded-lg (or similar).
+All input fields and dropdown menus have rounded corners using rounded-md (or similar).
+Functionality remains unaffected.
