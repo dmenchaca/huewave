@@ -50,8 +50,7 @@ export default function HomePage() {
 
   return (
     <div className={`min-h-screen flex flex-col ${darkMode ? 'dark' : ''}`}>
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-2 md:py-0 md:h-16 flex flex-col md:flex-row justify-between items-center gap-2">
+      <header className="container mx-auto px-4 py-2 md:py-0 md:h-16 flex flex-col md:flex-row justify-between items-center gap-2">
           <div className="flex items-center gap-2">
             <img src="/images/huewave-icon.png" alt="HueWave Logo" className="w-8 h-8" />
             <h1 className="text-lg font-semibold">HueWave</h1>
