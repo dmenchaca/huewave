@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,11 +15,11 @@ import ColorPalette from "./ColorPalette";
 import { useColorPalette } from "../hooks/use-color-palette";
 
 interface EditPaletteDialogProps {
-  palette?: {
+  palette: {
     id: number;
     name: string;
     colors: string[];
-  } | null;
+  };
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -30,7 +29,8 @@ export default function EditPaletteDialog({
   isOpen, 
   onOpenChange 
 }: EditPaletteDialogProps) {
-  const [name, setName] = useState(palette?.name || "");
+  // Separate state for name to prevent color updates
+  const [name, setName] = useState(palette.name);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
@@ -41,19 +41,16 @@ export default function EditPaletteDialog({
     toggleLock,
   } = useColorPalette({ 
     isDialogOpen: isOpen,
-    initialColors: palette?.colors || [] 
+    initialColors: palette.colors 
   });
 
+  // Reset name when dialog opens or palette changes
   useEffect(() => {
-    if (palette?.name) {
-      setName(palette.name);
-    }
-  }, [palette?.name]);
+    setName(palette.name);
+  }, [palette.name]);
 
   const editPaletteMutation = useMutation({
     mutationFn: async (data: { name: string; colors: string[] }) => {
-      if (!palette?.id) throw new Error("No palette ID provided");
-      
       const response = await fetch(`/api/palettes/${palette.id}`, {
         method: "PUT",
         credentials: "include",
@@ -97,8 +94,10 @@ export default function EditPaletteDialog({
     editPaletteMutation.mutate({ name, colors });
   };
 
+  // Handle spacebar only when dialog is open
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
+      // Only handle space key when dialog is open and not from a button
       if (e.code === "Space" && 
           isOpen && 
           e.type === 'keydown' && 
