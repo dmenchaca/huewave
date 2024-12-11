@@ -91,12 +91,13 @@ export default function ColorPalette({
             <Button
               variant="secondary"
               size="icon"
-              className="opacity-0 group-hover:opacity-100 transition-opacity relative z-50"
+              className="opacity-0 group-hover:opacity-100 transition-opacity"
               onClick={(e: React.MouseEvent) => {
                 e.preventDefault();
                 e.stopPropagation();
-                handleLockToggle(index);
+                onToggleLock(index);
               }}
+              aria-label={lockedColors[index] ? "Unlock color" : "Lock color"}
             >
               {lockedColors[index] ? (
                 <LockIcon className="h-4 w-4" />
