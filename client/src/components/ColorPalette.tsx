@@ -1,17 +1,21 @@
 
-import { CopyIcon, CheckIcon } from "lucide-react";
+import { CopyIcon, CheckIcon, LockIcon, UnlockIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ColorPaletteProps {
   colors: string[];
+  lockedColors?: boolean[];
+  onToggleLock?: (index: number) => void;
   onColorChange?: (index: number, color: string) => void;
   generateNewPalette?: () => void;
 }
 
 export default function ColorPalette({ 
   colors, 
+  lockedColors = [],
+  onToggleLock,
   onColorChange,
   generateNewPalette
 }: ColorPaletteProps) {
@@ -55,7 +59,7 @@ export default function ColorPalette({
   };
 
   const handleColorChange = (index: number, value: string) => {
-    onColorChange?.(index, value);
+    if (!onColorChange) return;
     
     if (value.length >= 7) {
       let hex = value.replace('#', '');
@@ -69,7 +73,7 @@ export default function ColorPalette({
       }
       
       if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
-        onColorChange?.(index, value);
+        onColorChange(index, value);
       }
     }
   };
@@ -84,9 +88,27 @@ export default function ColorPalette({
         >
           <div 
             className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors color-area-background"
+            onClick={(e) => handleColorClick(e, index)}
           />
           
           <div className="absolute top-4 right-4 flex gap-2">
+            {onToggleLock && (
+              <Button
+                variant="secondary"
+                size="icon"
+                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleLock(index);
+                }}
+              >
+                {lockedColors[index] ? (
+                  <LockIcon className="h-4 w-4" />
+                ) : (
+                  <UnlockIcon className="h-4 w-4" />
+                )}
+              </Button>
+            )}
             <Button
               variant="secondary"
               size="icon"

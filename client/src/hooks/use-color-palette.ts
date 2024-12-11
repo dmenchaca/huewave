@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from "react";
 import chroma from "chroma-js";
 import Cookies from 'js-cookie';
@@ -36,6 +37,7 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
     return initialColors || [];
   });
 
+  const [lockedColors, setLockedColors] = useState<boolean[]>(new Array(5).fill(false));
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem("darkMode");
     return saved ? JSON.parse(saved) : false;
@@ -48,71 +50,62 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
       { name: "cool-blues", baseHues: [200, 210, 230] }, // Blues
     ];
 
-    // Pick a random theme
     const theme = themes[Math.floor(Math.random() * themes.length)];
     const baseHue = theme.baseHues[Math.floor(Math.random() * theme.baseHues.length)];
-    const baseColor = chroma.hsl(baseHue, 0.6, 0.5); // Mid-saturation and mid-lightness
+    const baseColor = chroma.hsl(baseHue, 0.6, 0.5);
 
-    const randomLightness = () => 0.05 + Math.random() * 0.9; // Range from very dark to bright
-    const randomSaturation = () => Math.random() * 0.4 + 0.4; // Balanced saturation
+    const randomLightness = () => 0.05 + Math.random() * 0.9;
+    const randomSaturation = () => Math.random() * 0.4 + 0.4;
 
-    const newColors = [];
-    const colorSet = new Set();
+    setColors(prevColors => {
+      const newColors = [...prevColors];
+      const colorSet = new Set();
 
-    for (let i = 0; i < 5; i++) {
-      let newColor;
-      let attempts = 0;
+      for (let i = 0; i < 5; i++) {
+        if (!lockedColors[i]) {
+          let newColor;
+          let attempts = 0;
 
-      do {
-        if (i === 0) {
-          // Base color
-          newColor = baseColor.hex();
-        } else if (i === 4) {
-          // Generate a neutral or thematic color with moderate vibrancy
-          const neutralHue = baseHue + Math.random() * 20 - 10; // Slight hue variation
-          newColor = chroma.hsl(
-            (neutralHue + 360) % 360, // Wrap hue
-            randomSaturation() * 0.6, // Low to moderate saturation for neutral
-            randomLightness() * 0.7 + 0.1 // Broader lightness range
-          ).hex();
-        } else {
-          // Generate theme-based colors
-          newColor = chroma.hsl(
-            (baseHue + i * 30 + Math.random() * 20 - 10) % 360, // Slight random shift
-            randomSaturation(),
-            randomLightness()
-          ).hex();
+          do {
+            if (i === 0 && !lockedColors[i]) {
+              newColor = baseColor.hex();
+            } else if (i === 4 && !lockedColors[i]) {
+              const neutralHue = baseHue + Math.random() * 20 - 10;
+              newColor = chroma.hsl(
+                (neutralHue + 360) % 360,
+                randomSaturation() * 0.6,
+                randomLightness() * 0.7 + 0.1
+              ).hex();
+            } else if (!lockedColors[i]) {
+              newColor = chroma.hsl(
+                (baseHue + i * 30 + Math.random() * 20 - 10) % 360,
+                randomSaturation(),
+                randomLightness()
+              ).hex();
+            }
+            attempts++;
+          } while (
+            (!lockedColors[i] && colorSet.has(newColor) || newColor?.toLowerCase() === '#ffffff' || newColor?.toLowerCase() === '#000000') &&
+            attempts < 10
+          );
+
+          if (!lockedColors[i]) {
+            colorSet.add(newColor);
+            newColors[i] = newColor;
+          }
         }
-        attempts++;
-      } while (
-        (colorSet.has(newColor) || newColor.toLowerCase() === '#ffffff' || newColor.toLowerCase() === '#000000') &&
-        attempts < 10
-      );
-
-      colorSet.add(newColor);
-      newColors.push(newColor);
-    }
-
-    // Ensure no duplicates and no whites in the final palette
-    const adjustedColors = newColors.map(color => {
-      let adjustedColor = color;
-      let attempts = 0;
-
-      while (adjustedColor.toLowerCase() === '#ffffff' && attempts < 10) {
-        // Regenerate if the color is white
-        adjustedColor = chroma.hsl(
-          Math.random() * 360,
-          randomSaturation(),
-          randomLightness()
-        ).hex();
-        attempts++;
       }
 
-      return adjustedColor;
+      return newColors;
     });
+  }, [lockedColors]);
 
-    // Update the state with the new palette
-    setColors(adjustedColors);
+  const toggleLock = useCallback((index: number) => {
+    setLockedColors(prev => {
+      const next = [...prev];
+      next[index] = !next[index];
+      return next;
+    });
   }, []);
 
   useEffect(() => {
@@ -154,6 +147,8 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
   return {
     colors,
     setColors,
+    lockedColors,
+    toggleLock,
     darkMode,
     generateNewPalette,
     toggleDarkMode,
