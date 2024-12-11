@@ -81,16 +81,10 @@ export default function ColorPalette({
     }
   };
 
-  const generateRandomColor = () => {
-    const r = Math.floor(Math.random() * 256);
-    const g = Math.floor(Math.random() * 256);
-    const b = Math.floor(Math.random() * 256);
-    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-  };
-
-  const generateNewPalette = () => {
-    const newColors = colors.map((color, index) => locked[index] ? color : generateRandomColor());
-    onColorChange && newColors.forEach((c,i) => onColorChange(i,c));
+  const handlePaletteGeneration = () => {
+    if (generateNewPalette) {
+      generateNewPalette();
+    }
   };
 
 

@@ -1,4 +1,3 @@
-
 import { TinyColor } from '@ctrl/tinycolor';
 
 interface IceCreamFlavor {
@@ -74,3 +73,14 @@ export function generatePaletteName(colors: string[]): string {
     ? `${dominantFlavors[0]} Swirl`
     : `${dominantFlavors[0]} ${dominantFlavors[1]}`;
 }
+
+export const generateRandomColor = () => {
+  const r = Math.floor(Math.random() * 256);
+  const g = Math.floor(Math.random() * 256);
+  const b = Math.floor(Math.random() * 256);
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+};
+
+export const generatePalette = (currentColors: string[], lockedColors: boolean[]) => {
+  return currentColors.map((color, index) => lockedColors[index] ? color : generateRandomColor());
+};
