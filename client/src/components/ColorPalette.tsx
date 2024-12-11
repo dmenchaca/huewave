@@ -22,6 +22,7 @@ export default function ColorPalette({
   const { toast } = useToast();
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [locked, setLocked] = useState(lockedColors); // Added state for locked colors
 
   const copyToClipboard = async (color: string, index: number) => {
     try {
@@ -55,40 +56,14 @@ export default function ColorPalette({
     return luminance > 0.6 ? '#000000' : '#ffffff';
   };
 
-  interface LockButtonProps {
-  locked: boolean;
-  onClick: () => void;
-}
+  const toggleLock = (index: number) => {
+    const newLocked = [...locked];
+    newLocked[index] = !newLocked[index];
+    setLocked(newLocked);
+    onToggleLock?.(index);
+  };
 
-const LockButton = ({ locked, onClick }: LockButtonProps) => (
-  <button onClick={onClick} className={styles.lockButton}>
-    {locked ? (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        className={styles.lockIcon}
-      >
-        <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
-        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-      </svg>
-    ) : (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        className={styles.lockIcon}
-      >
-        <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
-        <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
-      </svg>
-    )}
-  </button>
-);
-
-const handleColorChange = (index: number, value: string) => {
+  const handleColorChange = (index: number, value: string) => {
     if (value.length >= 7) {
       let hex = value.replace('#', '');
       
@@ -105,6 +80,19 @@ const handleColorChange = (index: number, value: string) => {
       }
     }
   };
+
+  const generateRandomColor = () => {
+    const r = Math.floor(Math.random() * 256);
+    const g = Math.floor(Math.random() * 256);
+    const b = Math.floor(Math.random() * 256);
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  };
+
+  const generateNewPalette = () => {
+    const newColors = colors.map((color, index) => locked[index] ? color : generateRandomColor());
+    onColorChange && newColors.forEach((c,i) => onColorChange(i,c));
+  };
+
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-5 h-full overflow-hidden">
@@ -138,14 +126,13 @@ const handleColorChange = (index: number, value: string) => {
             <Button
               variant="secondary"
               size="icon"
-              className={`transition-opacity rounded-[8px] ${lockedColors[index] ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+              className={`transition-opacity rounded-[8px] ${locked[index] ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
               onClick={(e) => {
                 e.stopPropagation();
-                console.log('Lock button clicked for color index:', index);
-                onToggleLock?.(index);
+                toggleLock(index);
               }}
             >
-              {lockedColors[index] ? (
+              {locked[index] ? (
                 <LockIcon className="h-4 w-4" style={{ color: getContrastColor(color) }} />
               ) : (
                 <UnlockIcon className="h-4 w-4" style={{ color: getContrastColor(color) }} />
