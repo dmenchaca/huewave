@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from "react";
 import chroma from "chroma-js";
 
@@ -20,7 +19,7 @@ export function useColorPalette({
   initialColors?: string[];
   isDialogOpen?: boolean;
 } = {}): ColorPaletteHook {
-  const [colors, setColors] = useState(() => 
+  const [colors, setColors] = useState<string[]>(() => 
     initialColors?.length ? initialColors : generateRandomColors()
   );
   
@@ -36,10 +35,11 @@ export function useColorPalette({
     return false;
   });
 
-  // Sync colors and locks only when initialColors changes
+  // Only sync colors when initialColors changes
   useEffect(() => {
     if (initialColors?.length) {
       setColors(initialColors);
+      // Only reset locks if array length changes
       setLockedColors(prev => {
         if (prev.length !== initialColors.length) {
           return Array(initialColors.length).fill(false);
@@ -50,13 +50,12 @@ export function useColorPalette({
   }, [initialColors]);
 
   const toggleLock = useCallback((index: number) => {
-    console.log(`[ColorPalette] Attempting to toggle lock for color ${index}:`, colors[index]);
     setLockedColors(prev => {
       const newLocks = [...prev];
       newLocks[index] = !newLocks[index];
       return newLocks;
     });
-  }, []);
+  }, []); // No dependencies needed for toggle
 
   const generateNewPalette = useCallback(() => {
     setColors(prevColors => 
@@ -64,20 +63,15 @@ export function useColorPalette({
         lockedColors[index] ? color : chroma.random().hex()
       )
     );
-  }, [lockedColors]);
+  }, [lockedColors]); // Only depend on lockedColors
 
   const handleColorChange = useCallback((index: number, color: string) => {
-    console.log(`[ColorPalette] Manual color change at index ${index} to ${color}`);
     setColors(prev => {
       const updated = [...prev];
       updated[index] = color;
       return updated;
     });
-  }, []);
-
-  useEffect(() => {
-    console.log('[ColorPalette] Colors or locks updated:', { colors, lockedColors });
-  }, [colors, lockedColors]);
+  }, []); // No dependencies needed for direct updates
 
   const toggleDarkMode = useCallback(() => {
     setDarkMode(prev => {
