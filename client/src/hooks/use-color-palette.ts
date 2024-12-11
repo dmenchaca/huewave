@@ -64,6 +64,8 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
   const generateNewPalette = useCallback(() => {
     if (colors.length === 0) return;
 
+    console.log('Generating new palette. Current locked colors:', lockedColors);
+
     const themes = [
       { name: "nature", baseHues: [120, 60, 30] },
       { name: "muted-vintage", baseHues: [0, 15, 300] },
@@ -72,21 +74,21 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
 
     const theme = themes[Math.floor(Math.random() * themes.length)];
     const baseHue = theme.baseHues[Math.floor(Math.random() * theme.baseHues.length)];
+    console.log('Selected theme:', theme.name, 'with base hue:', baseHue);
 
     const generateColorForIndex = (index: number): string => {
       const sat = 0.4 + Math.random() * 0.4;
       const light = 0.1 + Math.random() * 0.8;
       
+      let hue: number;
       if (index === 0) {
-        return chroma.hsl(baseHue, sat, light).hex();
-      } 
-      
-      if (index === colors.length - 1) {
-        const neutralHue = (baseHue + Math.random() * 20 - 10 + 360) % 360;
-        return chroma.hsl(neutralHue, sat * 0.6, light).hex();
+        hue = baseHue;
+      } else if (index === colors.length - 1) {
+        hue = (baseHue + Math.random() * 20 - 10 + 360) % 360;
+      } else {
+        hue = (baseHue + index * 30 + Math.random() * 20 - 10 + 360) % 360;
       }
-
-      const hue = (baseHue + index * 30 + Math.random() * 20 - 10 + 360) % 360;
+      
       return chroma.hsl(hue, sat, light).hex();
     };
 
@@ -94,32 +96,34 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
       const newColors = prevColors.map((currentColor, index) => {
         // If color is locked, keep the current color
         if (lockedColors[index]) {
-          console.log(`Color at index ${index} is locked, keeping current color:`, currentColor);
+          console.log(`Color ${index} is locked. Keeping color:`, currentColor);
           return currentColor;
         }
 
         let newColor;
         let attempts = 0;
-        // Get the set of colors that are currently locked
         const lockedColorSet = new Set(prevColors.filter((_, i) => lockedColors[i]));
 
         do {
           newColor = generateColorForIndex(index);
           attempts++;
+          if (attempts === 1) {
+            console.log(`Generating new color for position ${index}. Current color:`, currentColor);
+          }
         } while (
           attempts < 10 && 
-          (lockedColorSet.has(newColor) || // Avoid duplicating locked colors
+          (lockedColorSet.has(newColor) || 
            newColor.toLowerCase() === '#ffffff' || 
            newColor.toLowerCase() === '#000000')
         );
 
-        console.log(`Generated new color for index ${index}:`, newColor);
+        console.log(`Position ${index}: Generated new color:`, newColor);
         return newColor;
       });
 
       return newColors;
     });
-  }, [colors.length, lockedColors, colors]); // Added colors to dependencies to ensure we have access to current colors
+  }, [colors.length, lockedColors]); // Removed colors from dependencies to prevent unnecessary rerenders
 
   useEffect(() => {
     if (colors.length === 0 && !initialColors?.length && process.env.NODE_ENV !== 'test') {
