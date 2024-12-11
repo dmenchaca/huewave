@@ -9,9 +9,17 @@ export interface ColorPaletteHook {
   generateNewPalette: () => void;
   toggleLock: (index: number) => void;
   handleColorChange: (index: number, color: string) => void;
+  darkMode: boolean;
+  toggleDarkMode: () => void;
 }
 
-export function useColorPalette({ initialColors }: { initialColors?: string[] } = {}): ColorPaletteHook {
+export function useColorPalette({ 
+  initialColors,
+  isDialogOpen 
+}: { 
+  initialColors?: string[];
+  isDialogOpen?: boolean;
+} = {}): ColorPaletteHook {
   const [colors, setColors] = useState(() => 
     initialColors?.length ? initialColors : generateRandomColors()
   );
@@ -19,6 +27,14 @@ export function useColorPalette({ initialColors }: { initialColors?: string[] } 
   const [lockedColors, setLockedColors] = useState<boolean[]>(() => 
     Array(initialColors?.length || 5).fill(false)
   );
+  
+  const [darkMode, setDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('darkMode');
+      return stored ? JSON.parse(stored) : false;
+    }
+    return false;
+  });
 
   // Sync colors and locks only when initialColors changes
   useEffect(() => {
@@ -76,13 +92,25 @@ export function useColorPalette({ initialColors }: { initialColors?: string[] } 
     console.log('[ColorPalette] Colors or locks updated:', { colors, lockedColors });
   }, [colors, lockedColors]);
 
+  const toggleDarkMode = useCallback(() => {
+    setDarkMode(prev => {
+      const newValue = !prev;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('darkMode', JSON.stringify(newValue));
+      }
+      return newValue;
+    });
+  }, []);
+
   return {
     colors,
     lockedColors,
     setColors,
     generateNewPalette,
     toggleLock,
-    handleColorChange
+    handleColorChange,
+    darkMode,
+    toggleDarkMode
   };
 }
 
