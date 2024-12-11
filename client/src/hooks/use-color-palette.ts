@@ -17,23 +17,41 @@ export interface ColorPaletteHook {
 
 export function useColorPalette({ initialColors }: { initialColors?: string[] } = {}): ColorPaletteHook {
   const [colors, setColors] = useState(initialColors?.length ? initialColors : generateRandomColors());
-  const [lockedColors, setLockedColors] = useState(() => Array(5).fill(false));
+  const [lockedColors, setLockedColors] = useState<boolean[]>(() => {
+    console.log('[ColorPalette] Initializing lock state...');
+    const initialState = Array(5).fill(false);
+    console.log('[ColorPalette] Initial lock state:', initialState);
+    return initialState;
+  });
 
   const toggleLock = useCallback((index: number) => {
-    setLockedColors(prev => {
-      const updated = [...prev];
-      updated[index] = !updated[index];
-      return updated;
+    console.log(`[ColorPalette] Attempting to toggle lock for color at index ${index}`);
+    setLockedColors((prev) => {
+      const newLocks = [...prev];
+      newLocks[index] = !newLocks[index];
+      console.log(`[ColorPalette] Color ${index} is now ${newLocks[index] ? 'LOCKED' : 'UNLOCKED'}`);
+      console.log('[ColorPalette] Updated lock state:', newLocks);
+      return newLocks;
     });
   }, []);
 
   const generateNewPalette = useCallback(() => {
-    setColors(prevColors => 
-      prevColors.map((color, index) => {
-        if (lockedColors[index]) return color;
-        return generateRandomColor();
-      })
-    );
+    console.log('[ColorPalette] Generating new palette...');
+    console.log('[ColorPalette] Current lock state:', lockedColors);
+
+    setColors((prevColors) => {
+      const newColors = prevColors.map((color, index) => {
+        if (lockedColors[index]) {
+          console.log(`[ColorPalette] Color ${index} is locked, keeping ${color}`);
+          return color;
+        }
+        const newColor = generateRandomColor();
+        console.log(`[ColorPalette] Generated new color for index ${index}: ${newColor}`);
+        return newColor;
+      });
+      console.log('[ColorPalette] New palette generated:', newColors);
+      return newColors;
+    });
   }, [lockedColors]);
 
   const handleColorChange = useCallback((index: number, color: string) => {
