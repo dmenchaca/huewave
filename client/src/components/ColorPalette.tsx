@@ -84,11 +84,16 @@ export default function ColorPalette({
       {colors.map((color, index) => (
         <div
           key={index}
-          className="relative group flex items-center justify-center cursor-pointer"
+          className="relative group flex items-center justify-center"
           style={{ backgroundColor: color }}
-          onClick={(e) => handleColorClick(e, index)}
         >
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors color-area-background" />
+          <div 
+            className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors color-area-background cursor-pointer" 
+            onClick={(e) => {
+              e.stopPropagation();
+              generateNewPalette?.();
+            }}
+          />
           
           <div className="absolute top-4 right-4 flex gap-2">
             <Button
