@@ -120,7 +120,7 @@ export default function ColorPalette({
             <Button
               variant="secondary"
               size="icon"
-              className={`transition-opacity rounded-[8px] ${locked[index] ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+              className={`transition-opacity rounded-[8px] ${lockedColors[index] ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
               onClick={(e) => {
                 e.stopPropagation();
                 toggleLock(index);
