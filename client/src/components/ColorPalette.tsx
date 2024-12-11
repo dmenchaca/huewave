@@ -123,7 +123,7 @@ const handleColorChange = (index: number, value: string) => {
             <Button
               variant="secondary"
               size="icon"
-              className="opacity-0 group-hover:opacity-100 transition-opacity rounded-md"
+              className="opacity-0 group-hover:opacity-100 transition-opacity rounded-[8px]"
               onClick={(e) => {
                 e.stopPropagation();
                 copyToClipboard(color, index);
@@ -138,7 +138,7 @@ const handleColorChange = (index: number, value: string) => {
             <Button
               variant="secondary"
               size="icon"
-              className={`transition-opacity rounded-md ${lockedColors[index] ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+              className={`transition-opacity rounded-[8px] ${lockedColors[index] ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
               onClick={(e) => {
                 e.stopPropagation();
                 console.log('Lock button clicked for color index:', index);
