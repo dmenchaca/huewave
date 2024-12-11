@@ -92,28 +92,34 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
 
     setColors(prevColors => {
       const newColors = prevColors.map((currentColor, index) => {
-        if (lockedColors[index]) return currentColor;
+        // If color is locked, keep the current color
+        if (lockedColors[index]) {
+          console.log(`Color at index ${index} is locked, keeping current color:`, currentColor);
+          return currentColor;
+        }
 
         let newColor;
         let attempts = 0;
-        const usedColors = new Set(prevColors.filter((_, i) => lockedColors[i]));
+        // Get the set of colors that are currently locked
+        const lockedColorSet = new Set(prevColors.filter((_, i) => lockedColors[i]));
 
         do {
           newColor = generateColorForIndex(index);
           attempts++;
         } while (
           attempts < 10 && 
-          (usedColors.has(newColor) || 
+          (lockedColorSet.has(newColor) || // Avoid duplicating locked colors
            newColor.toLowerCase() === '#ffffff' || 
            newColor.toLowerCase() === '#000000')
         );
 
+        console.log(`Generated new color for index ${index}:`, newColor);
         return newColor;
       });
 
       return newColors;
     });
-  }, [colors.length, lockedColors]);
+  }, [colors.length, lockedColors, colors]); // Added colors to dependencies to ensure we have access to current colors
 
   useEffect(() => {
     if (colors.length === 0 && !initialColors?.length && process.env.NODE_ENV !== 'test') {
