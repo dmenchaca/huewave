@@ -1,7 +1,11 @@
 import '@testing-library/jest-dom'
+import React from 'react'
 import { expect, afterEach, beforeAll, vi } from 'vitest'
 import { cleanup } from '@testing-library/react'
 import * as matchers from '@testing-library/jest-dom/matchers'
+
+// Set React globally for components
+window.React = React
 
 // Extends Vitest's expect method with methods from react-testing-library
 expect.extend(matchers)

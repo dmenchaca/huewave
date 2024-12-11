@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import AuthDialog from "@/components/AuthDialog";
 import { Button } from "@/components/ui/button";
@@ -69,28 +69,27 @@ export default function HomePage() {
   }, [user, generateNewPalette]);
 
   const handleKeyPress = useCallback((e: KeyboardEvent) => {
-    // Skip if any modal is open or there's no generator
-    if (isDialogOpen || isSaveAsNewDialogOpen || isAuthDialogOpen || !generateNewPalette || e.target instanceof HTMLInputElement) {
-      return;
-    }
+    // Skip if there's no generator function
+    if (!generateNewPalette) return;
 
-    // Skip if focus is on interactive elements
-    if (
-      document.activeElement instanceof HTMLInputElement || 
-      document.activeElement instanceof HTMLTextAreaElement ||
-      document.activeElement instanceof HTMLButtonElement
-    ) {
-      return;
-    }
+    // Skip if any dialog is open
+    if (isDialogOpen || isSaveAsNewDialogOpen || isAuthDialogOpen) return;
 
-    // Only generate new colors on spacebar press
-    if (e.code === "Space" && 
-        e.type === 'keydown' && 
-        !e.repeat && 
-        !(e.target instanceof HTMLInputElement) && 
-        !(e.target instanceof HTMLTextAreaElement) &&
-        !(e.target instanceof HTMLButtonElement)) {
+    // Skip repeated keypresses
+    if (e.repeat) return;
+
+    // Skip if event originated from or is focused on form elements
+    const isFormElement = (element: EventTarget | null): boolean => 
+      element instanceof HTMLInputElement || 
+      element instanceof HTMLTextAreaElement || 
+      element instanceof HTMLButtonElement;
+
+    if (isFormElement(e.target) || isFormElement(document.activeElement)) return;
+
+    // Only handle spacebar press
+    if (e.code === "Space" && e.type === 'keydown') {
       e.preventDefault();
+      e.stopPropagation();
       generateNewPalette();
     }
   }, [generateNewPalette, isDialogOpen, isSaveAsNewDialogOpen, isAuthDialogOpen]);

@@ -223,10 +223,11 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
   // Initialize palette on mount if needed
   useEffect(() => {
     // Only generate new palette if no colors exist (neither in cookies nor initialColors)
-    if (colors.length === 0 && !initialColors?.length) {
+    // and we're not in a test environment
+    if (colors.length === 0 && !initialColors?.length && process.env.NODE_ENV !== 'test') {
       generateNewPalette();
     }
-  }, [generateNewPalette, initialColors]); // Include dependencies
+  }, [colors.length, initialColors, generateNewPalette]);
 
   // Apply dark mode
   useEffect(() => {
