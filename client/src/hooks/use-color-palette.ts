@@ -42,72 +42,78 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
   });
 
   const generateNewPalette = useCallback(() => {
-  const themes = [
-    { name: "nature", baseHues: [120, 60, 30] }, // Greens, yellows, browns
-    { name: "muted-vintage", baseHues: [0, 15, 300] }, // Reds, purples
-    { name: "cool-blues", baseHues: [200, 210, 230] }, // Blues
-  ];
+    const themes = [
+      { name: "nature", baseHues: [120, 60, 30] }, // Greens, yellows, browns
+      { name: "muted-vintage", baseHues: [0, 15, 300] }, // Reds, purples
+      { name: "cool-blues", baseHues: [200, 210, 230] }, // Blues
+    ];
 
-  // Pick a random theme
-  const theme = themes[Math.floor(Math.random() * themes.length)];
-  const baseHue = theme.baseHues[Math.floor(Math.random() * theme.baseHues.length)];
-  const baseColor = chroma.hsl(baseHue, 0.6, 0.5); // Mid-saturation and mid-lightness
+    // Pick a random theme
+    const theme = themes[Math.floor(Math.random() * themes.length)];
+    const baseHue = theme.baseHues[Math.floor(Math.random() * theme.baseHues.length)];
+    const baseColor = chroma.hsl(baseHue, 0.6, 0.5); // Mid-saturation and mid-lightness
 
-  const randomLightness = () => 0.05 + Math.random() * 0.85; // Range from very dark to safe bright
-  const randomSaturation = () => Math.random() * 0.4 + 0.4; // Balanced saturation
+    const randomLightness = () => 0.05 + Math.random() * 0.9; // Range from very dark to bright
+    const randomSaturation = () => Math.random() * 0.4 + 0.4; // Balanced saturation
 
-  const newColors = [];
-  const colorSet = new Set();
+    const newColors = [];
+    const colorSet = new Set();
 
-  for (let i = 0; i < 5; i++) {
-    let newColor;
-    let attempts = 0;
+    for (let i = 0; i < 5; i++) {
+      let newColor;
+      let attempts = 0;
 
-    do {
-      if (i === 0) {
-        // Base color
-        newColor = baseColor.hex();
-      } else if (i === 4) {
-        // Add a neutral color (e.g., gray, off-white, or near black)
-        newColor = chroma.hsl(0, 0, randomLightness() * 0.8).hex(); // Narrower lightness for neutrals
-      } else {
-        // Generate theme-based colors
-        newColor = chroma.hsl(
-          (baseHue + i * 30 + Math.random() * 20 - 10) % 360, // Slight random shift
+      do {
+        if (i === 0) {
+          // Base color
+          newColor = baseColor.hex();
+        } else if (i === 4) {
+          // Generate a neutral or thematic color with moderate vibrancy
+          const neutralHue = baseHue + Math.random() * 20 - 10; // Slight hue variation
+          newColor = chroma.hsl(
+            (neutralHue + 360) % 360, // Wrap hue
+            randomSaturation() * 0.6, // Low to moderate saturation for neutral
+            randomLightness() * 0.7 + 0.1 // Broader lightness range
+          ).hex();
+        } else {
+          // Generate theme-based colors
+          newColor = chroma.hsl(
+            (baseHue + i * 30 + Math.random() * 20 - 10) % 360, // Slight random shift
+            randomSaturation(),
+            randomLightness()
+          ).hex();
+        }
+        attempts++;
+      } while (
+        (colorSet.has(newColor) || newColor.toLowerCase() === '#ffffff' || newColor.toLowerCase() === '#000000') &&
+        attempts < 10
+      );
+
+      colorSet.add(newColor);
+      newColors.push(newColor);
+    }
+
+    // Ensure no duplicates and no whites in the final palette
+    const adjustedColors = newColors.map(color => {
+      let adjustedColor = color;
+      let attempts = 0;
+
+      while (adjustedColor.toLowerCase() === '#ffffff' && attempts < 10) {
+        // Regenerate if the color is white
+        adjustedColor = chroma.hsl(
+          Math.random() * 360,
           randomSaturation(),
           randomLightness()
         ).hex();
+        attempts++;
       }
-      attempts++;
-    } while (
-      (colorSet.has(newColor) || newColor.toLowerCase() === '#ffffff') && attempts < 10
-    );
 
-    colorSet.add(newColor);
-    newColors.push(newColor);
-  }
+      return adjustedColor;
+    });
 
-  // Ensure no duplicates and no whites in the final palette
-  const adjustedColors = newColors.map(color => {
-    let adjustedColor = color;
-    let attempts = 0;
-
-    while (adjustedColor.toLowerCase() === '#ffffff' && attempts < 10) {
-      // Regenerate if the color is white
-      adjustedColor = chroma.hsl(
-        Math.random() * 360,
-        randomSaturation(),
-        randomLightness()
-      ).hex();
-      attempts++;
-    }
-
-    return adjustedColor;
-  });
-
-  // Update the state with the new palette
-  setColors(adjustedColors);
-}, []);
+    // Update the state with the new palette
+    setColors(adjustedColors);
+  }, []);
 
   useEffect(() => {
     if (colors.length === 0 && !initialColors?.length && process.env.NODE_ENV !== 'test') {
