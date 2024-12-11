@@ -149,7 +149,7 @@ export default function HomePage() {
                     selectedPalette={selectedPalette}
                     onSaveSuccess={handlePaletteSave}
                     triggerContent={
-                      <Button variant="default" className="flex items-center gap-2">
+                      <Button variant="default" className="flex items-center gap-2 rounded-[8px]">
                         <SaveIcon className="h-4 w-4" />
                         Update
                       </Button>
@@ -161,7 +161,7 @@ export default function HomePage() {
                     onOpenChange={setIsSaveAsNewDialogOpen}
                     onSaveSuccess={handlePaletteSave}
                     triggerContent={
-                      <Button variant="outline" className="flex items-center gap-2">
+                      <Button variant="outline" className="flex items-center gap-2 rounded-[8px]">
                         <SaveIcon className="h-4 w-4" />
                         Save as new
                       </Button>
