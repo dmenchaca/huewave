@@ -1,5 +1,5 @@
 
-import { CopyIcon, CheckIcon } from "lucide-react";
+import { CopyIcon, CheckIcon, LockIcon, UnlockIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -87,6 +87,21 @@ export default function ColorPalette({
           />
           
           <div className="absolute top-4 right-4 flex gap-2">
+            <Button
+              variant="secondary"
+              size="icon"
+              className="opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleLock?.(index);
+              }}
+            >
+              {lockedColors?.[index] ? (
+                <LockIcon className="h-4 w-4" />
+              ) : (
+                <UnlockIcon className="h-4 w-4" />
+              )}
+            </Button>
             <Button
               variant="secondary"
               size="icon"
