@@ -230,7 +230,7 @@ export default function HomePage() {
                   }}
                   onSaveAttempt={() => setIsAuthDialogOpen(true)}
                   triggerContent={
-                    <Button variant="default" className="flex items-center gap-2">
+                    <Button variant="default" className="flex items-center gap-2 rounded-[8px]">
                       <SaveIcon className="h-4 w-4" />
                       Save palette
                     </Button>
