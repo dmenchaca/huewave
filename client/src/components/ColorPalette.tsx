@@ -43,8 +43,8 @@ export default function ColorPalette({
 
   const handleColorClick = (e: React.MouseEvent, index: number) => {
     const target = e.target as HTMLElement;
-    // Only generate new palette if clicking directly on the color area
-    if (target.closest('button') === null && generateNewPalette) {
+    // Only generate new palette if clicking the background area
+    if (target.classList.contains('color-area-background') && generateNewPalette) {
       generateNewPalette();
     }
   };
@@ -88,7 +88,7 @@ export default function ColorPalette({
           style={{ backgroundColor: color }}
           onClick={(e) => handleColorClick(e, index)}
         >
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors color-area-background" />
           
           <div className="absolute top-4 right-4 flex gap-2">
             <Button
