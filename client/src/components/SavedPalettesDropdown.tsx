@@ -63,7 +63,7 @@ export default function SavedPalettesDropdown({
             <SearchIcon className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search palettes..."
-              className="pl-8"
+              className="pl-8 rounded-md"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -88,7 +88,7 @@ export default function SavedPalettesDropdown({
                   {palette.name}
                   {selectedPalette?.id === palette.id && " (selected)"}
                 </span>
-                <div className="flex w-full gap-1 h-4 mt-1 rounded-sm overflow-hidden">
+                <div className="flex w-full gap-1 h-4 mt-1 rounded-md overflow-hidden">
                   {palette.colors.map((color, index) => (
                     <div
                       key={index}

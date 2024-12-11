@@ -241,7 +241,7 @@ export default function AuthDialog({ isOpen, onOpenChange, triggerContent, custo
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input type="email" {...field} placeholder="Enter your email" />
+                    <Input type="email" {...field} placeholder="Enter your email" className="rounded-md" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -255,7 +255,7 @@ export default function AuthDialog({ isOpen, onOpenChange, triggerContent, custo
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input type="password" {...field} />
+                    <Input type="password" {...field} className="rounded-md" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
