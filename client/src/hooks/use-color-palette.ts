@@ -129,6 +129,16 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
     if (colors.length === 0 && !initialColors?.length && process.env.NODE_ENV !== 'test') {
       generateNewPalette();
     }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === " " || event.code === "Space") {
+        event.preventDefault();
+        generateNewPalette();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [colors.length, generateNewPalette, initialColors]);
 
   useEffect(() => {

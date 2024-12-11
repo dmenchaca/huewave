@@ -41,10 +41,7 @@ export default function ColorPalette({
   };
 
   const handleColorClick = (e: React.MouseEvent, index: number) => {
-    const target = e.target as HTMLElement;
-    if (target.classList.contains('color-area-background') && generateNewPalette) {
-      generateNewPalette();
-    }
+    e.stopPropagation();
   };
 
   const getContrastColor = (hexColor: string): string => {
