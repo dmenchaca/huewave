@@ -113,7 +113,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen bg-background overflow-hidden">
       <header className="mx-auto px-4 py-2 md:h-16 flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-0">
         <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4 w-full md:w-auto">
           <div className="inline-flex items-center gap-2">
@@ -280,8 +280,8 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="">
-        <div className="grid gap-8 min-h-screen">
+      <main className="h-[calc(100vh-4rem)]">
+        <div className="grid gap-8 h-full">
           <ColorPalette 
             colors={colors}
             lockedColors={lockedColors}
