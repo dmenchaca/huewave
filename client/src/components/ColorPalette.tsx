@@ -78,10 +78,18 @@ export default function ColorPalette({
     <div className="grid grid-cols-1 md:grid-cols-5 h-full overflow-hidden pointer-events-none">
       {colors.map((color, index) => (
         <div
-          key={index}
-          className="relative group flex items-center justify-center"
-          style={{ backgroundColor: color }}
-        >
+            key={index}
+            className="relative group flex items-center justify-center"
+            style={{ backgroundColor: color }}
+            onClick={(e) => {
+              // Only trigger generateNewPalette if not clicking a button
+              if (!(e.target instanceof HTMLButtonElement) && 
+                  !(e.target instanceof SVGElement) && 
+                  generateNewPalette) {
+                generateNewPalette();
+              }
+            }}
+          >
           {/* Background overlay */}
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
           
