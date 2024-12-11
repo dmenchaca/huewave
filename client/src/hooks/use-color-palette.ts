@@ -145,11 +145,13 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
   }, [colors.length, lockedColors.length]);
 
   const toggleLock = useCallback((index: number) => {
+    console.log('toggleLock called with index:', index);
     if (index < 0 || index >= colors.length) return;
     
     setLockedColors(prev => {
       const next = [...prev];
       next[index] = !next[index];
+      console.log('New locked colors state:', next);
       return next;
     });
   }, [colors.length]);
