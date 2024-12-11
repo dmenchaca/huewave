@@ -1,3 +1,4 @@
+
 import { LockIcon, UnlockIcon, CopyIcon, CheckIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -40,8 +41,12 @@ export default function ColorPalette({
     }
   };
 
-  const handleLockToggle = (index: number) => {
-    onToggleLock(index);
+  const handleColorClick = (e: React.MouseEvent, index: number) => {
+    const target = e.target as HTMLElement;
+    // Only generate new palette if clicking directly on the color area
+    if (target.closest('button') === null && generateNewPalette) {
+      generateNewPalette();
+    }
   };
 
   const getContrastColor = (hexColor: string): string => {
@@ -75,33 +80,22 @@ export default function ColorPalette({
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-5 h-full overflow-hidden pointer-events-none">
+    <div className="grid grid-cols-1 md:grid-cols-5 h-full overflow-hidden">
       {colors.map((color, index) => (
         <div
-            key={index}
-            className="relative group flex items-center justify-center"
-            style={{ backgroundColor: color }}
-            onClick={(e) => {
-              // Only trigger generateNewPalette if not clicking a button
-              if (!(e.target instanceof HTMLButtonElement) && 
-                  !(e.target instanceof SVGElement) && 
-                  generateNewPalette) {
-                generateNewPalette();
-              }
-            }}
-          >
-          {/* Background overlay */}
+          key={index}
+          className="relative group flex items-center justify-center cursor-pointer"
+          style={{ backgroundColor: color }}
+          onClick={(e) => handleColorClick(e, index)}
+        >
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
           
-          {/* Controls container */}
-          <div className="absolute top-4 right-4 flex gap-2 pointer-events-auto">
-            {/* Lock button */}
+          <div className="absolute top-4 right-4 flex gap-2">
             <Button
               variant="secondary"
               size="icon"
               className="opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={(e: React.MouseEvent) => {
-                e.preventDefault();
+              onClick={(e) => {
                 e.stopPropagation();
                 onToggleLock(index);
               }}
@@ -114,13 +108,11 @@ export default function ColorPalette({
               )}
             </Button>
             
-            {/* Copy button */}
             <Button
               variant="secondary"
               size="icon"
               className="opacity-0 group-hover:opacity-100 transition-opacity"
               onClick={(e) => {
-                e.preventDefault();
                 e.stopPropagation();
                 copyToClipboard(color, index);
               }}
@@ -134,7 +126,7 @@ export default function ColorPalette({
           </div>
 
           <div 
-            className="flex flex-col items-center gap-2 relative z-10 min-h-[80px] pointer-events-auto"
+            className="flex flex-col items-center gap-2 relative z-10 min-h-[80px]"
             style={{ color: getContrastColor(color) }}
           >
             <input
@@ -150,12 +142,11 @@ export default function ColorPalette({
               }}
               onBlur={() => {
                 setEditingIndex(null);
-                // Revert to valid hex if invalid
                 if (!/^#[0-9A-Fa-f]{6}$/.test(color)) {
                   onColorChange?.(index, '#000000');
                 }
               }}
-              className="bg-transparent text-lg font-mono text-center uppercase w-24 focus:outline-none cursor-text relative z-50"
+              className="bg-transparent text-lg font-mono text-center uppercase w-24 focus:outline-none cursor-text"
               style={{
                 color: getContrastColor(color),
                 caretColor: getContrastColor(color),
