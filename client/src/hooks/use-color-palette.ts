@@ -38,10 +38,14 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
   });
 
   const [lockedColors, setLockedColors] = useState<boolean[]>(new Array(5).fill(false));
-  const [darkMode, setDarkMode] = useState(() => {
+  const [darkMode, setDarkMode] = useState<boolean>(false);
+
+  useEffect(() => {
     const saved = localStorage.getItem("darkMode");
-    return saved ? JSON.parse(saved) : false;
-  });
+    if (saved) {
+      setDarkMode(JSON.parse(saved));
+    }
+  }, []);
 
   const generateNewPalette = useCallback(() => {
     const themes = [
