@@ -50,20 +50,30 @@ export function useColorPalette({
   }, [initialColors]);
 
   const toggleLock = useCallback((index: number) => {
+    console.log(`[ColorPalette] Toggling lock for index ${index}`);
     setLockedColors(prev => {
       const newLocks = [...prev];
       newLocks[index] = !newLocks[index];
+      console.log(`[ColorPalette] New lock state for index ${index}:`, newLocks[index]);
       return newLocks;
     });
-  }, []); // No dependencies needed for toggle
+  }, []); // No dependencies to prevent unintended regeneration
 
   const generateNewPalette = useCallback(() => {
-    setColors(prevColors => 
-      prevColors.map((color, index) => 
-        lockedColors[index] ? color : chroma.random().hex()
-      )
-    );
-  }, [lockedColors]); // Only depend on lockedColors
+    console.log('[ColorPalette] Generating new palette via spacebar');
+    setColors(prevColors => {
+      const newColors = prevColors.map((color, index) => {
+        if (lockedColors[index]) {
+          console.log(`[ColorPalette] Color ${index} is locked, keeping ${color}`);
+          return color;
+        }
+        const newColor = chroma.random().hex();
+        console.log(`[ColorPalette] Generated new color for index ${index}: ${newColor}`);
+        return newColor;
+      });
+      return newColors;
+    });
+  }, [lockedColors]); // Only depend on lockedColors for lock state checking
 
   const handleColorChange = useCallback((index: number, color: string) => {
     setColors(prev => {

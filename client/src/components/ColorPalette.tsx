@@ -81,11 +81,7 @@ export default function ColorPalette({
     }
   };
 
-  const handlePaletteGeneration = () => {
-    if (generateNewPalette) {
-      generateNewPalette();
-    }
-  };
+  
 
 
   return (
