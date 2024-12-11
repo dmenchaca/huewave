@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from "react";
 import chroma from "chroma-js";
 import Cookies from 'js-cookie';
@@ -18,10 +17,7 @@ export interface ColorPaletteHook {
 
 export function useColorPalette({ initialColors }: { initialColors?: string[] } = {}): ColorPaletteHook {
   const [colors, setColors] = useState(initialColors?.length ? initialColors : generateRandomColors());
-  const [lockedColors, setLockedColors] = useState(() => {
-    const saved = localStorage.getItem(LOCKED_COLORS_KEY);
-    return saved ? JSON.parse(saved) : Array(5).fill(false);
-  });
+  const [lockedColors, setLockedColors] = useState(() => Array(5).fill(false));
 
   const toggleLock = useCallback((index: number) => {
     setLockedColors(prev => {
@@ -48,9 +44,6 @@ export function useColorPalette({ initialColors }: { initialColors?: string[] } 
     });
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem(LOCKED_COLORS_KEY, JSON.stringify(lockedColors));
-  }, [lockedColors]);
 
   return {
     colors,
