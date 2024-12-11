@@ -1,4 +1,3 @@
-
 import { CopyIcon, CheckIcon, LockIcon, UnlockIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -59,8 +58,6 @@ export default function ColorPalette({
   };
 
   const handleColorChange = (index: number, value: string) => {
-    onColorChange?.(index, value);
-    
     if (value.length >= 7) {
       let hex = value.replace('#', '');
       
@@ -83,8 +80,9 @@ export default function ColorPalette({
       {colors.map((color, index) => (
         <div
           key={index}
-          className="relative group flex items-center justify-center"
+          className="relative group flex items-center justify-center min-h-[200px]"
           style={{ backgroundColor: color }}
+          onClick={(e) => handleColorClick(e, index)}
         >
           <div 
             className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors color-area-background"
@@ -101,9 +99,9 @@ export default function ColorPalette({
               }}
             >
               {copiedIndex === index ? (
-                <CheckIcon className="h-4 w-4" />
+                <CheckIcon className="h-4 w-4" style={{ color: getContrastColor(color) }} />
               ) : (
-                <CopyIcon className="h-4 w-4" />
+                <CopyIcon className="h-4 w-4" style={{ color: getContrastColor(color) }} />
               )}
             </Button>
             <Button
@@ -124,7 +122,7 @@ export default function ColorPalette({
           </div>
 
           <div 
-            className="flex flex-col items-center gap-2 relative z-10 min-h-[80px]"
+            className="flex flex-col items-center gap-2 relative z-10"
             style={{ color: getContrastColor(color) }}
           >
             <input
