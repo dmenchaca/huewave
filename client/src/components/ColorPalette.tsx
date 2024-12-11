@@ -8,7 +8,6 @@ interface ColorPaletteProps {
   lockedColors: boolean[];
   onToggleLock: (index: number) => void;
   onColorChange?: (index: number, color: string) => void;
-  generateNewPalette?: () => void;
 }
 
 export default function ColorPalette({ 
