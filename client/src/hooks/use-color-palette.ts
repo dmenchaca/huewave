@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import chroma from "chroma-js";
 
 export interface ColorPaletteHook {
@@ -27,6 +27,9 @@ export function useColorPalette({
     Array(initialColors?.length || 5).fill(false)
   );
   
+  // Use ref to avoid regeneration cycles
+  const lockedColorsRef = useRef(lockedColors);
+  
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('darkMode');
@@ -34,6 +37,11 @@ export function useColorPalette({
     }
     return false;
   });
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    lockedColorsRef.current = lockedColors;
+  }, [lockedColors]);
 
   // Only sync colors when initialColors changes
   useEffect(() => {
@@ -65,12 +73,11 @@ export function useColorPalette({
   const generateNewPalette = useCallback(() => {
     console.log('[ColorPalette] Generating new palette via spacebar');
     setColors(prevColors => {
-      // Get current locked state when generating
-      const currentLockedColors = lockedColors;
-      console.log('[ColorPalette] Current locked states:', currentLockedColors);
+      const currentLocks = lockedColorsRef.current;
+      console.log('[ColorPalette] Current locked states:', currentLocks);
       
       return prevColors.map((color, index) => {
-        if (currentLockedColors[index]) {
+        if (currentLocks[index]) {
           console.log(`[ColorPalette] Color ${index} is locked, keeping ${color}`);
           return color;
         }
@@ -79,7 +86,7 @@ export function useColorPalette({
         return newColor;
       });
     });
-  }, [lockedColors]); // Include lockedColors in dependencies to ensure latest state
+  }, []); // No dependencies needed since we use ref
 
   const handleColorChange = useCallback((index: number, color: string) => {
     setColors(prev => {
