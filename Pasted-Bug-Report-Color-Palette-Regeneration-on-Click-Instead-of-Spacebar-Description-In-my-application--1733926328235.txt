@@ -1,0 +1,52 @@
+Bug Report: Color Palette Regeneration on Click Instead of Spacebar
+Description: In my application, the color palette should regenerate only when the spacebar is pressed. However, clicking on individual colors in the palette also triggers the regeneration of the entire palette. This unintended behavior disrupts the user experience, as clicking a color should not cause any changes to the rest of the palette.
+
+Expected Behavior:
+
+Colors in the palette regenerate only when the spacebar is pressed.
+Clicking on individual colors should not regenerate the palette.
+Actual Behavior:
+
+Clicking on a color in the palette triggers a full regeneration of the palette, despite no spacebar input.
+Steps to Reproduce:
+
+Load the application.
+Observe the color palette.
+Click on any individual color in the palette.
+Notice that the entire palette regenerates instead of staying unchanged.
+Potential Cause: This bug is likely caused by an event listener that improperly listens for click events (onClick) on the color elements or a parent container. The event listener for the spacebar (onKeyDown) might not be correctly isolated from other user interactions.
+
+Suggested Fix:
+
+Restrict Palette Regeneration to Spacebar Events:
+
+Ensure the regeneration logic is tied exclusively to the onKeyDown event for the spacebar key (event.key === " " || event.code === "Space").
+Verify that click events (onClick) are not triggering the same regeneration function.
+Check Event Propagation:
+
+Ensure that clicking on a color does not propagate to a parent element that might have the palette regeneration logic.
+Use event.stopPropagation() if necessary to isolate click events.
+Debugging Suggestions:
+
+Log all triggered events to confirm whether unintended events (e.g., onClick) are firing the regeneration function.
+Review the event listeners attached to the palette container and individual color elements.
+Implementation Example for Spacebar Handling:
+
+tsx
+Copy code
+useEffect(() => {
+    const handleKeyDown = (event) => {
+        if (event.key === " " || event.code === "Space") {
+            regeneratePalette();
+        }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+        window.removeEventListener("keydown", handleKeyDown);
+    };
+}, []);
+Ensure onClick Events Are Isolated:
+
+Remove any onClick handlers tied to palette regeneration.
+Use specific handlers for user interactions like color selection without affecting the regeneration logic.

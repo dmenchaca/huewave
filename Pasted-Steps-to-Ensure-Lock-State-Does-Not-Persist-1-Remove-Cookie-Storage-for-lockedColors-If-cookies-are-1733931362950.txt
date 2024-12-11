@@ -1,0 +1,59 @@
+Steps to Ensure Lock State Does Not Persist
+1. Remove Cookie Storage for lockedColors
+If cookies are currently being used to store lockedColors, remove the code that saves or retrieves them.
+Remove This Code:
+
+tsx
+Copy code
+useEffect(() => {
+    document.cookie = `locked_colors=${JSON.stringify(lockedColors)}; path=/;`;
+}, [lockedColors]);
+
+const getCookieValue = (name: string): string | undefined => {
+    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    return match ? decodeURIComponent(match[2]) : undefined;
+};
+
+const savedLockedColors = getCookieValue('locked_colors');
+Replace Initialization:
+
+Use useState to initialize lockedColors as a non-persistent state:
+tsx
+Copy code
+const [lockedColors, setLockedColors] = useState<boolean[]>(() => Array(5).fill(false));
+2. Use In-Memory State Only
+Ensure that lockedColors is only managed via React’s useState or context.
+Example:
+
+tsx
+Copy code
+const [lockedColors, setLockedColors] = useState<boolean[]>(() => Array(5).fill(false));
+
+const toggleLock = (index: number) => {
+    setLockedColors((prev) => {
+        const updated = [...prev];
+        updated[index] = !updated[index];
+        console.log(
+            updated[index]
+                ? `Color at index ${index} is now LOCKED.`
+                : `Color at index ${index} is now UNLOCKED.`
+        );
+        return updated;
+    });
+};
+3. Test Behavior
+Lock a few colors and refresh the page.
+Verify that all colors return to the unlocked state after the refresh.
+Optional: Inform the User
+If users might expect locks to persist, consider showing a notice explaining that locks are session-based and do not persist after a refresh.
+
+Example Message:
+
+Note: Locked colors are only remembered during this session. Refreshing the page will reset all locks.
+
+Summary
+To prevent lockedColors from persisting:
+
+Remove any code that saves or retrieves lockedColors from cookies, localStorage, or any other persistent storage.
+Use React’s useState or similar in-memory state management.
+Test to confirm the state resets on page refresh.
