@@ -108,7 +108,7 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
     if (colors.length === 0 && !initialColors?.length && process.env.NODE_ENV !== 'test') {
       generateNewPalette();
     }
-  }, [colors.length, initialColors, generateNewPalette]);
+  }, [colors.length, generateNewPalette, initialColors]);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
@@ -138,8 +138,6 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
     }
   }, [colors]);
 
-  const toggleDarkMode = () => setDarkMode(prev => !prev);
-
   useEffect(() => {
     if (colors.length > 0 && colors.length !== lockedColors.length) {
       setLockedColors(new Array(colors.length).fill(false));
@@ -155,6 +153,8 @@ export function useColorPalette({ isDialogOpen = false, initialColors }: UseColo
       return next;
     });
   }, [colors.length]);
+
+  const toggleDarkMode = () => setDarkMode(prev => !prev);
 
   return {
     colors,

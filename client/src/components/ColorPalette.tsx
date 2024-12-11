@@ -106,23 +106,21 @@ export default function ColorPalette({
                 <CopyIcon className="h-4 w-4" />
               )}
             </Button>
-            {onToggleLock && (
-              <Button
-                variant="secondary"
-                size="icon"
-                className={`transition-opacity ${lockedColors[index] ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleLock(index);
-                }}
-              >
-                {lockedColors[index] ? (
-                  <LockIcon className="h-4 w-4" />
-                ) : (
-                  <UnlockIcon className="h-4 w-4" />
-                )}
-              </Button>
-            )}
+            <Button
+              variant="secondary"
+              size="icon"
+              className={`transition-opacity ${lockedColors[index] ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleLock?.(index);
+              }}
+            >
+              {lockedColors[index] ? (
+                <LockIcon className="h-4 w-4" style={{ color: getContrastColor(color) }} />
+              ) : (
+                <UnlockIcon className="h-4 w-4" style={{ color: getContrastColor(color) }} />
+              )}
+            </Button>
           </div>
 
           <div 
