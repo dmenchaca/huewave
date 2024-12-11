@@ -284,8 +284,6 @@ export default function HomePage() {
         <div className="grid gap-8 h-full">
           <ColorPalette 
             colors={colors}
-            lockedColors={lockedColors}
-            onToggleLock={toggleLock}
             onColorChange={handleColorChange}
             generateNewPalette={generateNewPalette}
           />
