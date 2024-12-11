@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +9,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { EditIcon, RefreshCwIcon } from "lucide-react";
+import { RefreshCwIcon } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import ColorPalette from "./ColorPalette";
@@ -24,12 +25,7 @@ interface EditPaletteDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export default function EditPaletteDialog({ 
-  palette,
-  isOpen, 
-  onOpenChange 
-}: EditPaletteDialogProps) {
-  // Separate state for name to prevent color updates
+export default function EditPaletteDialog({ palette, isOpen, onOpenChange }: EditPaletteDialogProps) {
   const [name, setName] = useState(palette.name);
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -44,7 +40,6 @@ export default function EditPaletteDialog({
     initialColors: palette.colors 
   });
 
-  // Reset name when dialog opens or palette changes
   useEffect(() => {
     setName(palette.name);
   }, [palette.name]);
@@ -58,10 +53,7 @@ export default function EditPaletteDialog({
         body: JSON.stringify(data),
       });
       
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
-      
+      if (!response.ok) throw new Error(await response.text());
       return response.json();
     },
     onSuccess: () => {
@@ -90,17 +82,13 @@ export default function EditPaletteDialog({
       });
       return;
     }
-
     editPaletteMutation.mutate({ name, colors });
   };
 
-  // Handle spacebar only when dialog is open
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      // Only handle space key when dialog is open and not from a button
       if (e.code === "Space" && 
           isOpen && 
-          e.type === 'keydown' && 
           !e.repeat && 
           e.isTrusted && 
           !(e.target instanceof HTMLInputElement) && 
@@ -119,27 +107,27 @@ export default function EditPaletteDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent 
-        className="max-w-3xl focus:outline-none"
-        style={{ outline: 'none' }}
-      >
+      <DialogContent className="max-w-3xl focus:outline-none">
         <DialogHeader>
           <DialogTitle>Edit palette</DialogTitle>
           <DialogDescription>
             Modify your palette colors and name. Press spacebar to generate new colors or lock individual colors to keep them.
           </DialogDescription>
         </DialogHeader>
+
         <div className="grid gap-4 py-4">
           <Input
             placeholder="Palette name"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
+          
           <ColorPalette 
             colors={colors}
             lockedColors={lockedColors}
             onToggleLock={toggleLock}
           />
+          
           <div className="flex justify-between gap-4">
             <Button
               variant="outline"
@@ -149,10 +137,14 @@ export default function EditPaletteDialog({
               <RefreshCwIcon className="h-4 w-4" />
               Generate new colors
             </Button>
-            <Button onClick={handleSave} disabled={editPaletteMutation.isPending}>
+            <Button 
+              onClick={handleSave} 
+              disabled={editPaletteMutation.isPending}
+            >
               {editPaletteMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </div>
+
           <div className="text-sm text-muted-foreground text-center">
             Press spacebar to generate new colors
           </div>
