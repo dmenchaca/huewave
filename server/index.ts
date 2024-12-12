@@ -28,15 +28,40 @@ const app = express();
 // Basic security configuration
 app.disable('x-powered-by');
 
-// Configure for Replit's proxy environment
-app.set('trust proxy', true);
+// Always trust the reverse proxy in Replit environment
 app.enable('trust proxy');
+app.set('trust proxy', true);
+
+// Add proxy-aware middleware early in the stack
+app.use((req, res, next) => {
+  if (req.secure) {
+    // Request was via https, so do no special handling
+    next();
+  } else {
+    // Redirect to https
+    res.redirect('https://' + req.headers.host + req.url);
+  }
+});
 
 // Environment-specific configuration
 const isProduction = process.env.NODE_ENV === 'production';
-// Standardize on port 8080 for Replit
-const PORT = 8080;
+
+// Port configuration standardized for Replit
+const DEFAULT_PORT = 8080;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : DEFAULT_PORT;
+
+if (isNaN(PORT)) {
+  console.error(`[Server] Invalid PORT value: ${process.env.PORT}`);
+  process.exit(1);
+}
+
+// Ensure PORT environment variable is set consistently
 process.env.PORT = PORT.toString();
+
+// Log port configuration
+log(`Server starting in ${isProduction ? 'production' : 'development'} mode`);
+log(`Port configured: ${PORT}`);
+log(`Trust proxy: ${app.get('trust proxy')}`);
 
 // Enhanced environment logging for debugging
 console.log('\n[Environment Configuration]', {
@@ -293,11 +318,55 @@ async function startServer() {
             log('='.repeat(50));
             log(`Environment: ${process.env.NODE_ENV || 'development'}`);
             log(`Port: ${PORT}`);
-            log(`Health Check: http://0.0.0.0:${PORT}/health`);
-            log(`Process ID: ${process.pid}`);
-            log(`Memory Usage: ${JSON.stringify(process.memoryUsage())}`);
+            log(`Server URL: ${isProduction ? 
+              `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co` : 
+              `http://0.0.0.0:${PORT}`}`);
+            log(`Health Check: /health`);
             log('='.repeat(50));
+
+            const address = serverInstance.address();
+            log(`Server listening on: ${typeof address === 'string' ? address : JSON.stringify(address)}`);
+            
             resolve(serverInstance);
+          });
+
+          serverInstance.on('listening', () => {
+            const address = serverInstance.address();
+            if (!address) {
+              log('Warning: Could not determine server address');
+              return;
+            }
+            if (typeof address === 'string') {
+              log(`Server bound to pipe/socket: ${address}`);
+            } else {
+              log(`Server bound to ${address.address}:${address.port}`);
+            }
+          });
+
+          // Enhanced error handling for common Replit scenarios
+          serverInstance.on('error', (error: NodeJS.ErrnoException) => {
+            console.error('\n[Server Error]', new Date().toISOString());
+            console.error('Error details:', {
+              code: error.code,
+              message: error.message,
+              stack: error.stack,
+              port: PORT,
+              pid: process.pid,
+              env: process.env.NODE_ENV
+            });
+
+            if (error.code === 'EADDRINUSE') {
+              log(`Port ${PORT} is already in use. Attempting to close existing connections...`);
+              if (retries > 0) {
+                serverInstance.close();
+                log(`Retrying server start... (${retries} attempts remaining)`);
+                setTimeout(() => {
+                  startServerWithRetry(retries - 1).then(resolve).catch(reject);
+                }, 1000);
+                return;
+              }
+            }
+            reject(error);
           });
 
           // Enhanced error handling for server startup
