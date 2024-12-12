@@ -1,4 +1,3 @@
-
 import express from "express";
 import { eq, and } from "drizzle-orm";
 import { setupAuth } from "./auth";
