@@ -2,8 +2,10 @@ import type { Express } from "express";
 import { eq, and } from "drizzle-orm";
 import { setupAuth } from "./auth";
 import { db } from "../db";
-import { palettes, insertPaletteSchema } from "../db/schema";
+import { palettes, insertPaletteSchema, users } from "../db/schema";
 import { z } from "zod";
+import { generateConfirmationCode, sendConfirmationEmail } from "./email-utils"; // Assumed functions
+
 
 export function registerRoutes(app: Express) {
   setupAuth(app);
@@ -230,3 +232,72 @@ export function registerStorePaletteRoute(app: Express) {
     res.json({ message: "Stored palette cleared" });
   });
 }
+
+app.post('/api/auth/verify-email', async (req, res) => {
+  try {
+    const { email, code } = req.body;
+    
+    const user = await db.query.users.findFirst({
+      where: eq(users.email, email)
+    });
+
+    if (!user || user.confirmationCode !== code || !user.confirmationExpiry || new Date() > user.confirmationExpiry) {
+      return res.status(400).json({ error: 'Invalid or expired confirmation code' });
+    }
+
+    await db.update(users)
+      .set({ 
+        emailConfirmed: true,
+        confirmationCode: null,
+        confirmationExpiry: null 
+      })
+      .where(eq(users.id, user.id));
+
+    res.json({ message: 'Email confirmed successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to verify email' });
+  }
+});
+
+app.post('/api/auth/resend-code', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    const code = generateConfirmationCode();
+    const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+    await db.update(users)
+      .set({ 
+        confirmationCode: code,
+        confirmationExpiry: expiry 
+      })
+      .where(eq(users.email, email));
+
+    await sendConfirmationEmail(email, code);
+    res.json({ message: 'New confirmation code sent' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to resend confirmation code' });
+  }
+});
+
+app.post('/api/auth/register', async (req, res) => {
+  const { email, password } = req.body;
+  const hashedPassword = await bcrypt.hash(password, 10); // Assumed bcrypt import
+
+  try {
+    const code = generateConfirmationCode();
+    const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+    await db.insert(users).values({
+      email,
+      password: hashedPassword,
+      confirmationCode: code,
+      confirmationExpiry: expiry,
+    });
+
+    await sendConfirmationEmail(email, code);
+    res.json({ message: 'Registration successful. Check your email for confirmation.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to register user' });
+  }
+});
