@@ -1,0 +1,59 @@
+Yes, please proceed with creating the unified AppButton component to standardize button styling across authentication states. I want all buttons to have rounded edges, as specified in the task: "Ensure All Buttons, Dialogs, Input Fields, and Dropdown Menus Have Rounded Corners."
+
+Detailed Styling Requirements
+Rounded Edges:
+
+All buttons should use rounded-md (medium border radius).
+For a larger emphasis, you can use rounded-lg. This should be consistent across all buttons.
+Styling Variants:
+
+The button should support the following variants:
+Default: A primary button style for main actions.
+Outline: A border-only style for secondary actions.
+Destructive: A red background or outline for actions like "Delete."
+Ghost: Minimal styling for non-emphasized actions.
+State Styles:
+
+Ensure proper styling for hover, active, and focus states.
+Example: On hover, apply a slightly darker shade for the background or border.
+Padding and Sizing:
+
+Padding should be consistent across buttons (e.g., px-4 py-2 or similar).
+Buttons should scale well for different text lengths.
+Icons:
+
+Buttons should support leading and trailing icons.
+Icons should have a consistent size (e.g., h-4 w-4).
+Accessibility:
+
+All buttons should be accessible, with appropriate ARIA attributes and keyboard focus styles.
+Proposed Tailwind Classes
+Here’s how the button might look:
+
+tsx
+Copy code
+<Button
+  variant="default"
+  className="rounded-md bg-primary text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring"
+/>
+Specific Preferences
+Unified Look Across States:
+
+Both logged-in and logged-out states should use the same AppButton component for consistency.
+Ensure there are no styling deviations between the two states.
+Maintain Consistency with Other Elements:
+
+The AppButton styling should align with dialogs, input fields, and dropdown menus, all of which use rounded-md or rounded-lg.
+No Functional Changes:
+
+This is purely a visual update. The functionality of buttons should remain unchanged.
+Avoid Hardcoding Variants:
+
+Make the button reusable by allowing the variant (default, outline, etc.) to be passed as a prop.
+Expected Outcome
+Visual Consistency:
+All buttons have rounded corners and a unified look across the app.
+Ease of Maintenance:
+Future changes to button styles can be made in one place, reducing duplication and errors.
+Improved User Experience:
+Consistent styling enhances the app’s visual appeal and usability.
