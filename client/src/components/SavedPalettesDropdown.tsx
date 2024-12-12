@@ -63,7 +63,7 @@ export default function SavedPalettesDropdown({
             <SearchIcon className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search palettes..."
-              className="pl-8 rounded-md"
+              className="pl-8 rounded-[8px]"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
