@@ -30,20 +30,36 @@ app.disable('x-powered-by');
 
 // Configure for Replit's proxy environment
 app.set('trust proxy', 1);
-
-// Health check endpoint (before any middleware)
-app.get('/health', (_req, res) => {
-  res.status(200).json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString(),
-    env: process.env.NODE_ENV || 'development',
-    uptime: process.uptime()
-  });
-});
+app.enable('trust proxy');
 
 // Basic middleware with proper ordering
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Health check endpoint (before any middleware)
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    env: process.env.NODE_ENV || 'development',
+    uptime: process.uptime(),
+    headers: req.headers,
+    proxy: app.get('trust proxy')
+  });
+});
+
+// Add CORS headers for development
+if (process.env.NODE_ENV !== 'production') {
+  app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(200);
+    }
+    next();
+  });
+}
 
 // Add request timing middleware
 app.use((req, res, next) => {
@@ -63,19 +79,6 @@ app.use((req, res, next) => {
   res.setHeader('X-XSS-Protection', '1; mode=block');
   next();
 });
-
-// Add CORS headers for development
-if (process.env.NODE_ENV !== 'production') {
-  app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    if (req.method === 'OPTIONS') {
-      return res.sendStatus(200);
-    }
-    next();
-  });
-}
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -108,9 +111,12 @@ app.use((req, res, next) => {
   next();
 });
 
-(async () => {
+// Main server initialization function
+async function startServer() {
   try {
-    // Global error handlers
+    log('\n[Server] Starting initialization...');
+    
+    // Global error handlers with proper categorization
     process.on('uncaughtException', (err) => {
       console.error('\n[Uncaught Exception]', new Date().toISOString());
       console.error('Error:', err);
@@ -119,10 +125,14 @@ app.use((req, res, next) => {
         pid: process.pid,
         platform: process.platform,
         version: process.version,
-        memory: process.memoryUsage()
+        memory: process.memoryUsage(),
+        env: process.env.NODE_ENV,
+        time: new Date().toISOString()
       });
-      // Give time for logs to flush
-      setTimeout(() => process.exit(1), 1000);
+      // Log error and exit after ensuring logs are flushed
+      setTimeout(() => {
+        process.exit(1);
+      }, 1000);
     });
 
     process.on('unhandledRejection', (reason, promise) => {
@@ -132,19 +142,47 @@ app.use((req, res, next) => {
       if (reason instanceof Error) {
         console.error('Stack:', reason.stack);
       }
-      // Log additional context
+      // Log detailed process state
       console.error('Process state:', {
         uptime: process.uptime(),
         memory: process.memoryUsage(),
+        env: process.env.NODE_ENV,
+        time: new Date().toISOString(),
         activeHandles: (process as any)._getActiveHandles?.().length,
         activeRequests: (process as any)._getActiveRequests?.().length
       });
     });
 
-    // Verify database connection with retries
+    // Monitor event loop for potential issues
+    setInterval(() => {
+      const used = process.memoryUsage();
+      if (used.heapUsed > 500 * 1024 * 1024) { // 500MB
+        console.warn('\n[Memory Warning]', new Date().toISOString());
+        console.warn('High memory usage detected:', {
+          heapUsed: `${Math.round(used.heapUsed / 1024 / 1024)}MB`,
+          heapTotal: `${Math.round(used.heapTotal / 1024 / 1024)}MB`,
+          rss: `${Math.round(used.rss / 1024 / 1024)}MB`
+        });
+      }
+    }, 30000); // Check every 30 seconds
+
+    // Register shutdown handlers early
+    const shutdown = (signal: string) => {
+      log(`\n[Server] Received ${signal}, shutting down gracefully...`);
+      setTimeout(() => {
+        log('[Server] Force closing after timeout');
+        process.exit(1);
+      }, 10000);
+    };
+
+    process.on('SIGTERM', () => shutdown('SIGTERM'));
+    process.on('SIGINT', () => shutdown('SIGINT'));
+
+    // Verify database connection with retries and proper error handling
     log('\n[Database] Verifying connection...');
-    let retries = 3;
+    let retries = 5; // Increased retries for Replit environment
     let connected = false;
+    let lastError: Error | null = null;
     
     while (retries > 0 && !connected) {
       try {
@@ -152,19 +190,35 @@ app.use((req, res, next) => {
         if (result) {
           log('[Database] Connection verified successfully');
           connected = true;
+          
+          // Additional connection pool diagnostics
+          const poolStatus = await db.execute(sql`SELECT COUNT(*) as connections FROM pg_stat_activity`);
+          log(`[Database] Active connections: ${JSON.stringify(poolStatus)}`);
         }
       } catch (dbError) {
+        lastError = dbError as Error;
         retries--;
         console.error('\n[Database Error]', new Date().toISOString());
-        console.error('Error:', dbError);
-        console.error(`Retries remaining: ${retries}`);
+        console.error('Error:', {
+          message: lastError.message,
+          stack: lastError.stack,
+          retries_remaining: retries
+        });
         
         if (retries > 0) {
-          log(`Retrying database connection in 5 seconds...`);
-          await new Promise(resolve => setTimeout(resolve, 5000));
+          const delay = (6 - retries) * 5000; // Exponential backoff
+          log(`Retrying database connection in ${delay/1000} seconds...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
         } else {
-          console.error('Database connection attempts exhausted');
-          throw new Error(`Database connection failed after multiple attempts: ${(dbError as Error).message}`);
+          console.error('[Database] Connection attempts exhausted');
+          console.error('Last error:', lastError);
+          console.error('Environment:', {
+            DATABASE_URL: process.env.DATABASE_URL ? 'Set' : 'Not set',
+            NODE_ENV: process.env.NODE_ENV,
+            PGHOST: process.env.PGHOST,
+            PGPORT: process.env.PGPORT
+          });
+          throw new Error(`Database connection failed after multiple attempts: ${lastError.message}`);
         }
       }
     }
@@ -173,22 +227,12 @@ app.use((req, res, next) => {
       throw new Error('Failed to establish database connection after multiple attempts');
     }
 
-    // Health check endpoint (before any other routes)
-    app.get('/health', (_req, res) => {
-      res.status(200).json({ 
-        status: 'OK', 
-        timestamp: new Date().toISOString(),
-        env: process.env.NODE_ENV,
-        db: 'connected'
-      });
-    });
-
     // Setup routes and middleware
     const apiRouter = registerRoutes(app);
     app.use('/api', apiRouter);
     registerStorePaletteRoute(app);
 
-    // Global error handling middleware (before catch-all routes)
+    // Global error handling middleware
     app.use((err: Error & { status?: number; statusCode?: number }, _req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;
       const message = err.message || "Internal Server Error";
@@ -203,19 +247,72 @@ app.use((req, res, next) => {
     const port = 8080;
     log(`\n[Server] Configuring server to use port: ${port}`);
 
-    // Handle server-specific errors
-    server.on('error', (error: NodeJS.ErrnoException) => {
-      if (error.code === 'EADDRINUSE') {
-        console.error(`\n[Server Error] Port ${port} is already in use`);
-      } else {
-        console.error('\n[Server Error]', error);
+    // Initialize server with retry mechanism
+    const startServerWithRetry = async (retries = 3): Promise<any> => {
+      try {
+        return new Promise((resolve, reject) => {
+          const serverInstance = app.listen(port, '0.0.0.0', () => {
+            log('\n[Server] Started successfully');
+            log('='.repeat(50));
+            log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+            log(`Port: ${port}`);
+            log(`Health Check: http://0.0.0.0:${port}/health`);
+            log(`Process ID: ${process.pid}`);
+            log(`Memory Usage: ${JSON.stringify(process.memoryUsage())}`);
+            log('='.repeat(50));
+            resolve(serverInstance);
+          });
+
+          // Enhanced error handling for server startup
+          serverInstance.on('error', async (error: NodeJS.ErrnoException) => {
+            if (error.code === 'EADDRINUSE') {
+              log(`Port ${port} is already in use. Attempting to close existing connections...`);
+              if (retries > 0) {
+                serverInstance.close();
+                log(`Retrying server start... (${retries} attempts remaining)`);
+                setTimeout(async () => {
+                  try {
+                    const newInstance = await startServerWithRetry(retries - 1);
+                    resolve(newInstance);
+                  } catch (retryError) {
+                    reject(retryError);
+                  }
+                }, 1000);
+              } else {
+                reject(new Error(`Failed to start server after multiple attempts: ${error.message}`));
+              }
+            } else {
+              console.error('\n[Server Error]', new Date().toISOString());
+              console.error('Error details:', {
+                code: error.code,
+                message: error.message,
+                stack: error.stack,
+                port: port,
+                pid: process.pid,
+                env: process.env.NODE_ENV
+              });
+              reject(error);
+            }
+          });
+
+          // Monitor server health
+          serverInstance.on('listening', () => {
+            const address = serverInstance.address();
+            log(`Server listening on: ${typeof address === 'string' ? address : JSON.stringify(address)}`);
+          });
+
+          // Handle server close
+          serverInstance.on('close', () => {
+            log('Server closed');
+          });
+        });
+      } catch (error) {
+        console.error('[Server Start Error]:', error);
+        throw error;
       }
-      // Exit immediately on critical errors
-      process.exit(1);
-    });
+    };
 
     // Setup static file serving based on environment
-    // Default to development mode when NODE_ENV is not set
     const isDevelopment = process.env.NODE_ENV !== 'production';
     
     log(`Running in ${isDevelopment ? 'development' : 'production'} mode`);
@@ -233,19 +330,29 @@ app.use((req, res, next) => {
           log("Public directory not found, falling back to Vite development server");
           await setupVite(app, server);
         } else {
+          // Serve static files with proper caching headers
           app.use(express.static(distPath, {
             etag: true,
             lastModified: true,
-            setHeaders: (res) => {
-              res.set('Cache-Control', 'no-cache');
+            maxAge: '1h',
+            setHeaders: (res, path) => {
+              if (path.endsWith('.html')) {
+                // Never cache HTML files
+                res.setHeader('Cache-Control', 'no-cache');
+              } else {
+                // Cache other static assets
+                res.setHeader('Cache-Control', 'public, max-age=3600');
+              }
             }
           }));
           
           // Serve index.html for all routes (SPA fallback)
-          app.use("*", (_req, res, next) => {
+          app.use("*", (req, res, next) => {
             try {
+              log(`Serving index.html for path: ${req.originalUrl}`);
               res.sendFile(path.resolve(distPath, "index.html"));
             } catch (error) {
+              console.error('Error serving index.html:', error);
               next(error);
             }
           });
@@ -259,58 +366,26 @@ app.use((req, res, next) => {
       await setupVite(app, server);
     }
 
-    // Start server with enhanced error handling
-    try {
-      log('\n[Server] Starting server...');
-      
-      await new Promise<void>((resolve, reject) => {
-        // Start the server
-        const server = app.listen(port, '0.0.0.0', () => {
-          log('\n[Server] Started successfully');
-          log('='.repeat(50));
-          log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-          log(`Port: ${port}`);
-          log(`Health Check: http://0.0.0.0:${port}/health`);
-          log('='.repeat(50));
-          resolve();
-        });
-
-        // Handle specific server errors
-        server.on('error', (error: NodeJS.ErrnoException) => {
-          if (error.code === 'EADDRINUSE') {
-            log(`Port ${port} is already in use`);
-          }
-          reject(error);
-        });
-
-        // Graceful shutdown handler
-        const shutdown = () => {
-          log('\n[Server] Shutting down gracefully...');
-          server.close(() => {
-            log('[Server] Closed successfully');
-            process.exit(0);
-          });
-
-          // Force exit after 10s
-          setTimeout(() => {
-            log('[Server] Force closing after timeout');
-            process.exit(1);
-          }, 10000);
-        };
-
-        // Handle shutdown signals
-        process.on('SIGTERM', shutdown);
-        process.on('SIGINT', shutdown);
-      });
-    } catch (error) {
-      console.error('\n[Server Error]', new Date().toISOString());
-      console.error('Failed to start server:', error);
-      console.error('Stack trace:', (error as Error).stack);
-      process.exit(1);
-    }
-  } catch (outerError) {
-    log(`Critical error during server setup: ${(outerError as Error).message}`);
-    console.error('Stack trace:', (outerError as Error).stack);
+    // Start the server
+    await startServerWithRetry();
+    
+  } catch (error) {
+    console.error('\n[Server Error]', new Date().toISOString());
+    console.error('Failed to start server:', error);
+    console.error('Stack trace:', (error as Error).stack);
+    console.error('Process state:', {
+      env: process.env.NODE_ENV,
+      port: 8080,
+      pid: process.pid,
+      uptime: process.uptime(),
+      memory: process.memoryUsage()
+    });
     process.exit(1);
   }
-})();
+}
+
+// Start the server
+startServer().catch((error) => {
+  console.error('Critical error during server start:', error);
+  process.exit(1);
+});
