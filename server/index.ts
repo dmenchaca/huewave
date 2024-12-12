@@ -48,7 +48,7 @@ app.use((req, res, next) => {
 const isProduction = process.env.NODE_ENV === 'production';
 
 // Port configuration standardized for Replit
-const DEFAULT_PORT = isProduction ? 8080 : 3000;
+const DEFAULT_PORT = 3000;
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : DEFAULT_PORT;
 
 // Validate port configuration
