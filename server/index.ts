@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes, registerStorePaletteRoute } from "./routes";
 import { setupVite, serveStatic } from "./vite";
 import { createServer } from "http";
+import path from "path";
 
 function log(message: string) {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
