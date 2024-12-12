@@ -1,0 +1,63 @@
+Updated Instructions for Replit:
+Issue 1: Input Field Does Not Have Rounded Edges
+Ensure rounded-md is Not Overridden:
+
+Inspect the input field using browser developer tools to check if the rounded-md class is being overridden by inline styles or other CSS rules.
+If an override is found, remove or adjust the conflicting styles.
+Explicitly Add Border Radius:
+
+To ensure rounded corners, explicitly define the border radius using Tailwind's utility classes or inline styles.
+Example:
+html
+Copy code
+<input 
+  type="text" 
+  class="bg-transparent text-lg font-mono text-center uppercase w-24 focus:outline-none cursor-text rounded-md px-2 py-1" 
+  value="#76d881" 
+  style="color: rgb(0, 0, 0); caret-color: rgb(0, 0, 0); background-color: rgba(0, 0, 0, 0.1); border-radius: 0.375rem;" 
+>
+Verify Parent Styling:
+
+Check the parent <div> or containing elements to ensure they do not have styles like overflow: hidden; or masking borders that could affect the visibility of rounded edges.
+Test Styling:
+
+Confirm that the input field visually appears rounded in both light and dark modes.
+Ensure the style is consistent with other UI elements such as buttons and dropdowns.
+Issue 2: Input Field Appears to Remain in Focus
+Understand the Issue:
+
+When clicking outside the input, the field appears to remain in a focused or active state, even though the cursor isn't blinking.
+Clicking on another hex value input transfers the active state to the new field.
+Update Focus and Blur Handling:
+
+Add an onBlur event handler to ensure the input loses its active or focus state when the user clicks outside the field:
+jsx
+Copy code
+<input 
+  type="text" 
+  class="bg-transparent text-lg font-mono text-center uppercase w-24 focus:outline-none cursor-text rounded-md px-2 py-1" 
+  value="#76d881" 
+  style="color: rgb(0, 0, 0); caret-color: rgb(0, 0, 0); background-color: rgba(0, 0, 0, 0.1);"
+  onBlur={(e) => e.target.blur()}
+>
+Ensure Accessibility Compliance:
+
+Test with keyboard navigation to confirm the active state transitions properly between fields when using Tab or Shift + Tab.
+Remove Visual Effects for Unfocused Inputs:
+
+Ensure that the CSS for the focus state is not mistakenly applied to inactive fields. For example:
+css
+Copy code
+input:focus {
+  outline: 2px solid var(--focus-color);
+}
+input:not(:focus) {
+  outline: none;
+}
+Test Behavior Across Scenarios:
+
+Verify that:
+Clicking outside the field removes the focus state.
+Clicking on another input transfers focus correctly.
+The input behaves correctly with keyboard navigation and accessibility tools.
+By addressing these issues, the input fields will have consistent styling with proper focus behavior across all interaction scenarios.

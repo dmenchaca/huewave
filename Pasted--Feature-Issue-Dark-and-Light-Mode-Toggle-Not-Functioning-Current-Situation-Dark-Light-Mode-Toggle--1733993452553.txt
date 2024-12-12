@@ -1,0 +1,104 @@
+
+Feature Issue: Dark and Light Mode Toggle Not Functioning
+Current Situation
+Dark/Light Mode Toggle Behavior:
+
+The toggle button for dark and light mode is present and updates its state visually when clicked.
+The app, however, remains in light mode regardless of the toggle state.
+Expected Behavior:
+
+When the toggle is clicked:
+If the mode is set to "dark," the app's theme should update to dark mode.
+If the mode is set to "light," the app's theme should update to light mode.
+Possible Causes
+CSS Class Application:
+
+The dark mode implementation may rely on a dark class applied to the html or body element.
+This class is likely not being toggled correctly based on the state.
+State Management:
+
+The dark mode state might not be propagating correctly through the app.
+The darkMode variable may not be properly synchronized with the toggle.
+CSS Variables/Styles:
+
+If the app uses CSS variables to control light/dark modes, these variables may not be updating based on the toggle state.
+Persistence:
+
+The toggle state might not be stored or retrieved properly (e.g., from localStorage).
+Instructions to Fix
+Check State Management:
+Verify that the darkMode state is correctly toggled when the button is clicked.
+Ensure the darkMode state is passed to the relevant components or triggers global changes (e.g., toggling a dark class on the root element).
+Example:
+
+tsx
+Copy code
+const toggleDarkMode = useCallback(() => {
+  setDarkMode((prev) => {
+    const nextMode = !prev;
+    localStorage.setItem("darkMode", JSON.stringify(nextMode));
+    return nextMode;
+  });
+}, []);
+Apply the dark Class:
+Ensure that the dark class is applied to the html element when dark mode is active.
+Example:
+
+tsx
+Copy code
+useEffect(() => {
+  if (darkMode) {
+    document.documentElement.classList.add("dark");
+  } else {
+    document.documentElement.classList.remove("dark");
+  }
+}, [darkMode]);
+Ensure Tailwind Configuration Supports Dark Mode:
+
+Verify that Tailwind CSS is configured for dark mode.
+In tailwind.config.js, ensure this configuration exists:
+javascript
+Copy code
+module.exports = {
+  darkMode: "class", // Enables class-based dark mode
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
+Verify CSS Variables (if used):
+
+If CSS variables control the color scheme, ensure they update dynamically with the mode.
+Example:
+
+tsx
+Copy code
+useEffect(() => {
+  const root = document.documentElement;
+  if (darkMode) {
+    root.style.setProperty("--background-color", "#121212");
+    root.style.setProperty("--text-color", "#ffffff");
+  } else {
+    root.style.setProperty("--background-color", "#ffffff");
+    root.style.setProperty("--text-color", "#000000");
+  }
+}, [darkMode]);
+Persist State:
+Ensure the dark mode state is loaded correctly when the app starts.
+Example:
+
+tsx
+Copy code
+const [darkMode, setDarkMode] = useState(() => {
+  const savedMode = localStorage.getItem("darkMode");
+  return savedMode ? JSON.parse(savedMode) : false;
+});
+Test the Implementation:
+Toggle between light and dark mode and verify:
+The UI updates immediately.
+The mode persists across page refreshes.
+Test both logged-in and logged-out states.
+Expected Outcome
+Clicking the toggle switches between dark and light modes.
+The app visually reflects the chosen mode immediately.
+The mode persists until changed, but resets to the default mode if the user clears local storage.
