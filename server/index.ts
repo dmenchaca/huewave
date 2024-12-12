@@ -70,9 +70,9 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // Use port 8080 by default for Replit compatibility
+  // ALWAYS serve the app on port 5000
   // this serves both the API and the client
-  const PORT = process.env.PORT || 8080;
+  const PORT = process.env.PORT || 5000;
   
   const port = Number(PORT);
   if (isNaN(port)) {
@@ -82,7 +82,7 @@ app.use((req, res, next) => {
 
   server.on('error', (error: NodeJS.ErrnoException) => {
     if (error.code === 'EADDRINUSE') {
-      log(`Error: Port ${port} is already in use. Please ensure no other services are using this port.`);
+      log(`Error: Port ${port} is already in use`);
     } else {
       log(`Server error: ${error.message}`);
     }

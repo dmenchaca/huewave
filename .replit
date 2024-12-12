@@ -14,10 +14,6 @@ run = ["sh", "-c", "npm run dev"]
 localPort = 5000
 externalPort = 80
 
-[[ports]]
-localPort = 8080
-externalPort = 8080
-
 [workflows]
 runButton = "Project"
 
@@ -32,11 +28,11 @@ args = "Start Application"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Run Tests"
+args = "Development Server"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Development Server"
+args = "Run Tests"
 
 [[workflows.workflow]]
 name = "Start Application"
@@ -54,20 +50,6 @@ args = "npm run dev"
 waitForPort = 5000
 
 [[workflows.workflow]]
-name = "Run Tests"
-author = "agent"
-
-[workflows.workflow.metadata]
-agentRequireRestartOnSave = false
-
-[[workflows.workflow.tasks]]
-task = "packager.installForAll"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npx vitest client/src/pages/__tests__/HomePage.test.tsx --environment=jsdom --run --no-watch"
-
-[[workflows.workflow]]
 name = "Development Server"
 author = "agent"
 
@@ -80,4 +62,18 @@ task = "packager.installForAll"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "npm run dev"
-waitForPort = 8080
+waitForPort = 3000
+
+[[workflows.workflow]]
+name = "Run Tests"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npx vitest client/src/pages/__tests__/HomePage.test.tsx --environment=jsdom --run --no-watch"
