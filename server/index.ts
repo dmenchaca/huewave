@@ -44,12 +44,18 @@ app.use((req, res, next) => {
 });
 
 // Environment-specific configuration
-const isProduction = true; // Force production mode for deployment
-process.env.NODE_ENV = 'production';
+// Environment-specific configuration
+const isProduction = process.env.NODE_ENV === 'production';
 
 // Port configuration standardized for Replit
-const DEFAULT_PORT = 8080;
+const DEFAULT_PORT = isProduction ? 8080 : 3000;
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : DEFAULT_PORT;
+
+// Validate port configuration
+if (isNaN(PORT)) {
+  console.error(`Invalid PORT value: ${process.env.PORT}`);
+  process.exit(1);
+}
 
 if (isNaN(PORT)) {
   console.error(`[Server] Invalid PORT value: ${process.env.PORT}`);
@@ -59,10 +65,17 @@ if (isNaN(PORT)) {
 // Ensure PORT environment variable is set consistently
 process.env.PORT = PORT.toString();
 
-// Log port configuration
-log(`Server starting in ${isProduction ? 'production' : 'development'} mode`);
-log(`Port configured: ${PORT}`);
-log(`Trust proxy: ${app.get('trust proxy')}`);
+// Enhanced logging for server configuration
+log('\n[Server Configuration]');
+log('='.repeat(50));
+log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+log(`Port: ${PORT}`);
+log(`Process ID: ${process.pid}`);
+log(`Trust Proxy: ${app.get('trust proxy')}`);
+log(`Server URL: ${isProduction ? 
+  `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co` : 
+  `http://0.0.0.0:${PORT}`}`);
+log('='.repeat(50));
 
 // Enhanced environment logging for debugging
 console.log('\n[Environment Configuration]', {
@@ -82,15 +95,6 @@ console.log('\n[Environment Configuration]', {
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Add CORS configuration for development
-if (!isProduction) {
-  app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    next();
-  });
-}
 
 // Health check endpoint (before any middleware)
 app.get('/health', (req, res) => {
@@ -104,29 +108,6 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Add CORS headers for development
-if (process.env.NODE_ENV !== 'production') {
-  app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    if (req.method === 'OPTIONS') {
-      return res.sendStatus(200);
-    }
-    next();
-  });
-}
-
-// Add request timing middleware
-app.use((req, res, next) => {
-  const start = process.hrtime();
-  res.on('finish', () => {
-    const [seconds, nanoseconds] = process.hrtime(start);
-    const ms = seconds * 1000 + nanoseconds / 1000000;
-    log(`${req.method} ${req.url} ${res.statusCode} - ${ms.toFixed(2)}ms`);
-  });
-  next();
-});
 
 // Add security headers
 app.use((req, res, next) => {
@@ -198,7 +179,6 @@ async function startServer() {
       if (reason instanceof Error) {
         console.error('Stack:', reason.stack);
       }
-      // Log detailed process state
       console.error('Process state:', {
         uptime: process.uptime(),
         memory: process.memoryUsage(),
@@ -220,9 +200,9 @@ async function startServer() {
           rss: `${Math.round(used.rss / 1024 / 1024)}MB`
         });
       }
-    }, 30000); // Check every 30 seconds
+    }, 30000);
 
-    // Register shutdown handlers early
+    // Register shutdown handlers
     const shutdown = (signal: string) => {
       log(`\n[Server] Received ${signal}, shutting down gracefully...`);
       setTimeout(() => {
@@ -234,20 +214,21 @@ async function startServer() {
     process.on('SIGTERM', () => shutdown('SIGTERM'));
     process.on('SIGINT', () => shutdown('SIGINT'));
 
-    // Verify database connection with enhanced retry logic and detailed error reporting
+    // Verify database connection
     log('\n[Database] Verifying connection...');
-    let retries = 5; // Increased retries for Replit environment
+    let retries = 5;
     let connected = false;
     let lastError: Error | null = null;
     
     // Log database configuration (without sensitive data)
-    log('[Database] Configuration:', {
+    log('[Database] Configuration:');
+    log(JSON.stringify({
       host: process.env.PGHOST || 'default',
       port: process.env.PGPORT || '5432',
       database: process.env.PGDATABASE || 'default',
       ssl: isProduction ? 'enabled' : 'disabled',
       max_connections: 20
-    });
+    }));
     
     while (retries > 0 && !connected) {
       try {
@@ -256,7 +237,6 @@ async function startServer() {
           log('[Database] Connection verified successfully');
           connected = true;
           
-          // Additional connection pool diagnostics
           const poolStatus = await db.execute(sql`SELECT COUNT(*) as connections FROM pg_stat_activity`);
           log(`[Database] Active connections: ${JSON.stringify(poolStatus)}`);
         }
@@ -271,7 +251,7 @@ async function startServer() {
         });
         
         if (retries > 0) {
-          const delay = (6 - retries) * 5000; // Exponential backoff
+          const delay = (6 - retries) * 5000;
           log(`Retrying database connection in ${delay/1000} seconds...`);
           await new Promise(resolve => setTimeout(resolve, delay));
         } else {
@@ -311,7 +291,7 @@ async function startServer() {
     log(`\n[Server] Configuring server to use port: ${PORT}`);
 
     // Initialize server with retry mechanism
-    const startServerWithRetry = async (retries = 3): Promise<any> => {
+    const startServerWithRetry = async (retries = 3) => {
       try {
         return new Promise((resolve, reject) => {
           const serverInstance = app.listen(PORT, '0.0.0.0', async () => {
@@ -331,21 +311,8 @@ async function startServer() {
             resolve(serverInstance);
           });
 
-          serverInstance.on('listening', () => {
-            const address = serverInstance.address();
-            if (!address) {
-              log('Warning: Could not determine server address');
-              return;
-            }
-            if (typeof address === 'string') {
-              log(`Server bound to pipe/socket: ${address}`);
-            } else {
-              log(`Server bound to ${address.address}:${address.port}`);
-            }
-          });
-
-          // Enhanced error handling for common Replit scenarios
-          serverInstance.on('error', (error: NodeJS.ErrnoException) => {
+          // Enhanced error handling for server startup
+          serverInstance.on('error', async (error: NodeJS.ErrnoException) => {
             console.error('\n[Server Error]', new Date().toISOString());
             console.error('Error details:', {
               code: error.code,
@@ -356,47 +323,18 @@ async function startServer() {
               env: process.env.NODE_ENV
             });
 
-            if (error.code === 'EADDRINUSE') {
+            if (error.code === 'EADDRINUSE' && retries > 0) {
               log(`Port ${PORT} is already in use. Attempting to close existing connections...`);
-              if (retries > 0) {
-                serverInstance.close();
-                log(`Retrying server start... (${retries} attempts remaining)`);
-                setTimeout(() => {
-                  startServerWithRetry(retries - 1).then(resolve).catch(reject);
-                }, 1000);
-                return;
-              }
-            }
-            reject(error);
-          });
-
-          // Enhanced error handling for server startup
-          serverInstance.on('error', async (error: NodeJS.ErrnoException) => {
-            if (error.code === 'EADDRINUSE') {
-              log(`Port ${PORT} is already in use. Attempting to close existing connections...`);
-              if (retries > 0) {
-                serverInstance.close();
-                log(`Retrying server start... (${retries} attempts remaining)`);
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                try {
-                  const newInstance = await startServerWithRetry(retries - 1);
-                  resolve(newInstance);
-                } catch (retryError) {
-                  reject(retryError);
-                }
-              } else {
-                reject(new Error(`Failed to start server after multiple attempts: ${error.message}`));
+              serverInstance.close();
+              log(`Retrying server start... (${retries} attempts remaining)`);
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              try {
+                const newInstance = await startServerWithRetry(retries - 1);
+                resolve(newInstance);
+              } catch (retryError) {
+                reject(retryError);
               }
             } else {
-              console.error('\n[Server Error]', new Date().toISOString());
-              console.error('Error details:', {
-                code: error.code,
-                message: error.message,
-                stack: error.stack,
-                port: PORT,
-                pid: process.pid,
-                env: process.env.NODE_ENV
-              });
               reject(error);
             }
           });
@@ -406,11 +344,6 @@ async function startServer() {
             const address = serverInstance.address();
             log(`Server listening on: ${typeof address === 'string' ? address : JSON.stringify(address)}`);
           });
-
-          // Handle server close
-          serverInstance.on('close', () => {
-            log('Server closed');
-          });
         });
       } catch (error) {
         console.error('[Server Start Error]:', error);
@@ -418,7 +351,7 @@ async function startServer() {
       }
     };
 
-    // Setup static file serving based on environment
+    // Setup static file serving
     const isDevelopment = process.env.NODE_ENV !== 'production';
     
     log(`Running in ${isDevelopment ? 'development' : 'production'} mode`);
@@ -432,7 +365,7 @@ async function startServer() {
         log("Vite development server setup complete");
       } else {
         log("Setting up production static file serving...");
-        // Try multiple possible build output directories with enhanced logging
+        // Try multiple possible build output directories
         const possiblePaths = [
           path.resolve(process.cwd(), "dist"),
           path.resolve(process.cwd(), "dist/client"),
