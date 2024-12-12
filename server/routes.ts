@@ -4,7 +4,7 @@ import { setupAuth } from "./auth";
 import { db } from "../db";
 import { palettes, insertPaletteSchema, users } from "../db/schema";
 import { z } from "zod";
-import { generateConfirmationCode, sendConfirmationEmail } from "./email-utils"; // Assumed functions
+import { generateConfirmationCode, sendConfirmationEmail } from "./email"; // Assumed functions
 
 
 export function registerRoutes(app: Express) {
