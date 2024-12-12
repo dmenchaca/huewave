@@ -44,7 +44,8 @@ app.use((req, res, next) => {
 });
 
 // Environment-specific configuration
-const isProduction = process.env.NODE_ENV === 'production';
+const isProduction = true; // Force production mode for deployment
+process.env.NODE_ENV = 'production';
 
 // Port configuration standardized for Replit
 const DEFAULT_PORT = 8080;
@@ -421,6 +422,8 @@ async function startServer() {
     const isDevelopment = process.env.NODE_ENV !== 'production';
     
     log(`Running in ${isDevelopment ? 'development' : 'production'} mode`);
+    log(`Current directory: ${process.cwd()}`);
+    log(`__dirname: ${__dirname}`);
     
     try {
       if (isDevelopment) {
@@ -429,17 +432,33 @@ async function startServer() {
         log("Vite development server setup complete");
       } else {
         log("Setting up production static file serving...");
-        // Try multiple possible build output directories
+        // Try multiple possible build output directories with enhanced logging
         const possiblePaths = [
+          path.resolve(process.cwd(), "dist"),
+          path.resolve(process.cwd(), "dist/client"),
           path.resolve(__dirname, "..", "dist"),
+          path.resolve(__dirname, "..", "dist/client"),
           path.resolve(__dirname, "..", "build"),
           path.resolve(__dirname, "..", "public")
         ];
         
+        log("Checking possible dist paths:");
+        possiblePaths.forEach(p => {
+          log(`- ${p} (exists: ${fs.existsSync(p)})`);
+        });
+        
         let distPath = null;
-        for (const path of possiblePaths) {
-          if (fs.existsSync(path)) {
-            distPath = path;
+        for (const p of possiblePaths) {
+          if (fs.existsSync(p)) {
+            distPath = p;
+            log(`Found valid dist path: ${p}`);
+            // Additional check for index.html
+            const indexPath = path.resolve(p, "index.html");
+            if (fs.existsSync(indexPath)) {
+              log(`Found index.html at ${indexPath}`);
+            } else {
+              log(`Warning: index.html not found at ${indexPath}`);
+            }
             break;
           }
         }
