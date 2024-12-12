@@ -241,7 +241,7 @@ export default function AuthDialog({ isOpen, onOpenChange, triggerContent, custo
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input type="email" {...field} placeholder="Enter your email" className="rounded-md" />
+                    <Input type="email" {...field} placeholder="Enter your email" className="rounded-[8px]" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -255,7 +255,7 @@ export default function AuthDialog({ isOpen, onOpenChange, triggerContent, custo
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input type="password" {...field} className="rounded-md" />
+                    <Input type="password" {...field} className="rounded-[8px]" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -302,6 +302,7 @@ export default function AuthDialog({ isOpen, onOpenChange, triggerContent, custo
                     <Input
                       type="email"
                       placeholder="Enter your email"
+                      className="rounded-[8px]"
                       value={resetEmail}
                       onChange={(e) => setResetEmail(e.target.value)}
                     />
