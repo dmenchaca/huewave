@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useHistory } from "../hooks/use-history";
 import { useQueryClient } from "@tanstack/react-query";
 import AuthDialog from "@/components/AuthDialog";
 import { Button } from "@/components/ui/button";
@@ -74,6 +75,8 @@ export default function HomePage() {
     }
   }, [user, generateNewPalette, isDialogOpen, isSaveAsNewDialogOpen, isAuthDialogOpen]);
 
+  const { pushToHistory, undo, redo, canUndo, canRedo } = useHistory(colors);
+
   const handleKeyPress = useCallback((e: KeyboardEvent) => {
     // Skip if any dialog is open or no generator function
     if (!generateNewPalette || isDialogOpen || isSaveAsNewDialogOpen || isAuthDialogOpen) {
@@ -98,14 +101,35 @@ export default function HomePage() {
       return;
     }
 
-    // Only handle spacebar press
+    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    const isUndo = (isMac && e.metaKey && !e.shiftKey && e.key.toLowerCase() === 'z') ||
+                  (!isMac && e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === 'z');
+    const isRedo = (isMac && e.metaKey && e.shiftKey && e.key.toLowerCase() === 'z') ||
+                  (!isMac && e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === 'y');
+
+    if (isUndo || isRedo) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const result = isUndo ? undo(colors) : redo(colors);
+      if (result) {
+        const newColors = result.map((color, index) => 
+          lockedColors[index] ? colors[index] : color
+        );
+        setColors(newColors);
+      }
+      return;
+    }
+
+    // Handle spacebar press
     if (e.code === "Space" && e.type === 'keydown') {
       console.log('[HomePage] Spacebar pressed - generating new palette');
       e.preventDefault();
       e.stopPropagation();
+      pushToHistory(colors);
       generateNewPalette();
     }
-  }, [generateNewPalette, isDialogOpen, isSaveAsNewDialogOpen, isAuthDialogOpen]);
+  }, [generateNewPalette, isDialogOpen, isSaveAsNewDialogOpen, isAuthDialogOpen, colors, lockedColors, undo, redo, pushToHistory, setColors]);
 
   // Register keypress listener
   useEffect(() => {
