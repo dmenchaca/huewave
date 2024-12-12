@@ -34,12 +34,14 @@ app.enable('trust proxy');
 
 // Environment-specific configuration
 const isProduction = process.env.NODE_ENV === 'production';
-const port = process.env.PORT || 8080;
+// Standardize on port 8080 for Replit
+const PORT = 8080;
+process.env.PORT = PORT.toString();
 
 // Enhanced environment logging for debugging
 console.log('\n[Environment Configuration]', {
   NODE_ENV: process.env.NODE_ENV,
-  PORT: port,
+  PORT: PORT,
   REPL_ID: process.env.REPL_ID,
   REPL_OWNER: process.env.REPL_OWNER,
   REPL_SLUG: process.env.REPL_SLUG,
@@ -280,20 +282,18 @@ async function startServer() {
     // Create HTTP server
     const server = createServer(app);
 
-    // Server configuration - using environment port or fallback
-    const serverPort = process.env.PORT || 8080;
-    log(`\n[Server] Configuring server to use port: ${serverPort}`);
+    log(`\n[Server] Configuring server to use port: ${PORT}`);
 
     // Initialize server with retry mechanism
     const startServerWithRetry = async (retries = 3): Promise<any> => {
       try {
         return new Promise((resolve, reject) => {
-          const serverInstance = app.listen(serverPort, '0.0.0.0', () => {
+          const serverInstance = app.listen(PORT, '0.0.0.0', async () => {
             log('\n[Server] Started successfully');
             log('='.repeat(50));
             log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-            log(`Port: ${serverPort}`);
-            log(`Health Check: http://0.0.0.0:${serverPort}/health`);
+            log(`Port: ${PORT}`);
+            log(`Health Check: http://0.0.0.0:${PORT}/health`);
             log(`Process ID: ${process.pid}`);
             log(`Memory Usage: ${JSON.stringify(process.memoryUsage())}`);
             log('='.repeat(50));
@@ -303,18 +303,17 @@ async function startServer() {
           // Enhanced error handling for server startup
           serverInstance.on('error', async (error: NodeJS.ErrnoException) => {
             if (error.code === 'EADDRINUSE') {
-              log(`Port ${port} is already in use. Attempting to close existing connections...`);
+              log(`Port ${PORT} is already in use. Attempting to close existing connections...`);
               if (retries > 0) {
                 serverInstance.close();
                 log(`Retrying server start... (${retries} attempts remaining)`);
-                setTimeout(async () => {
-                  try {
-                    const newInstance = await startServerWithRetry(retries - 1);
-                    resolve(newInstance);
-                  } catch (retryError) {
-                    reject(retryError);
-                  }
-                }, 1000);
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                try {
+                  const newInstance = await startServerWithRetry(retries - 1);
+                  resolve(newInstance);
+                } catch (retryError) {
+                  reject(retryError);
+                }
               } else {
                 reject(new Error(`Failed to start server after multiple attempts: ${error.message}`));
               }
@@ -324,7 +323,7 @@ async function startServer() {
                 code: error.code,
                 message: error.message,
                 stack: error.stack,
-                port: port,
+                port: PORT,
                 pid: process.pid,
                 env: process.env.NODE_ENV
               });
@@ -446,7 +445,7 @@ async function startServer() {
     console.error('Stack trace:', (error as Error).stack);
     console.error('Process state:', {
       env: process.env.NODE_ENV,
-      port: 8080,
+      port: PORT,
       pid: process.pid,
       uptime: process.uptime(),
       memory: process.memoryUsage()
