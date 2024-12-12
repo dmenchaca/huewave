@@ -10,7 +10,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import { Loader2 } from "lucide-react";
 import { useUser } from "./hooks/use-user";
 
-function Router() {
+function AppRoutes() {
   const { user, isLoading } = useUser();
 
   if (isLoading) {
@@ -32,15 +32,16 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <Router />
-      <Toaster />
-    </QueryClientProvider>
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <AppRoutes />
+        <Toaster />
+      </QueryClientProvider>
+    </StrictMode>
   );
 }
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+const rootElement = document.getElementById("root");
+if (!rootElement) throw new Error("Failed to find the root element");
+
+createRoot(rootElement).render(<App />);

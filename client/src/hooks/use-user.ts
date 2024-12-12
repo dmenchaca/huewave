@@ -62,30 +62,22 @@ export function useUser() {
   const { data: user, error, isLoading, isFetching } = useQuery<User | null, Error>({
     queryKey: ['user'],
     queryFn: fetchUser,
-    staleTime: 0, // Always consider data stale
+    staleTime: Infinity,
     gcTime: 24 * 60 * 60 * 1000, // Keep unused data in cache for 24 hours
     retry: (failureCount, error) => {
-      console.log('[useUser] Retry attempt:', failureCount, 'Error:', error);
       // Don't retry on auth errors (401)
       if (error instanceof Error && error.message.includes('401')) {
         console.log('[useUser] Not retrying 401 error');
         return false;
       }
-      // Only retry network or 5xx errors
-      if (error instanceof Error && error.message.includes('5')) {
-        console.log('[useUser] Retrying 5xx error');
-        return failureCount < 3;
-      }
-      return false;
+      // Only retry network or 5xx errors up to 3 times
+      return failureCount < 3;
     },
-    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 10000),
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
     refetchOnWindowFocus: true,
-    refetchOnMount: 'always', // Always refetch on mount
+    refetchOnMount: true,
     refetchOnReconnect: true,
-    refetchInterval: false, // Disable automatic refetching
-    refetchIntervalInBackground: false,
-    initialData: null,
-    enabled: true
+    initialData: null
   });
 
   const loginMutation = useMutation<RequestResult, Error, InsertUser>({
