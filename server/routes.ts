@@ -233,71 +233,74 @@ export function registerStorePaletteRoute(app: Express) {
   });
 }
 
-app.post('/api/auth/verify-email', async (req, res) => {
-  try {
-    const { email, code } = req.body;
-    
-    const user = await db.query.users.findFirst({
-      where: eq(users.email, email)
-    });
+// Email verification endpoint
+  app.post('/api/auth/verify-email', async (req, res) => {
+    try {
+      const { email, code } = req.body;
+      
+      const user = await db.query.users.findFirst({
+        where: eq(users.email, email)
+      });
 
-    if (!user || user.confirmationCode !== code || !user.confirmationExpiry || new Date() > user.confirmationExpiry) {
-      return res.status(400).json({ error: 'Invalid or expired confirmation code' });
+      if (!user || user.confirmationCode !== code || !user.confirmationExpiry || new Date() > user.confirmationExpiry) {
+        return res.status(400).json({ error: 'Invalid or expired confirmation code' });
+      }
+
+      await db.update(users)
+        .set({ 
+          emailConfirmed: true,
+          confirmationCode: null,
+          confirmationExpiry: null 
+        })
+        .where(eq(users.id, user.id));
+
+      res.json({ message: 'Email confirmed successfully' });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to verify email' });
     }
+  });
 
-    await db.update(users)
-      .set({ 
-        emailConfirmed: true,
-        confirmationCode: null,
-        confirmationExpiry: null 
-      })
-      .where(eq(users.id, user.id));
+  // Resend confirmation code endpoint
+  app.post('/api/auth/resend-code', async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      const code = generateConfirmationCode();
+      const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
-    res.json({ message: 'Email confirmed successfully' });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to verify email' });
-  }
-});
+      await db.update(users)
+        .set({ 
+          confirmationCode: code,
+          confirmationExpiry: expiry 
+        })
+        .where(eq(users.email, email));
 
-app.post('/api/auth/resend-code', async (req, res) => {
-  try {
-    const { email } = req.body;
-    
-    const code = generateConfirmationCode();
-    const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+      await sendConfirmationEmail(email, code);
+      res.json({ message: 'New confirmation code sent' });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to resend confirmation code' });
+    }
+  });
 
-    await db.update(users)
-      .set({ 
+  // Register endpoint with email confirmation
+  app.post('/api/auth/register', async (req, res) => {
+    const { email, password } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    try {
+      const code = generateConfirmationCode();
+      const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+      await db.insert(users).values({
+        email,
+        password: hashedPassword,
         confirmationCode: code,
-        confirmationExpiry: expiry 
-      })
-      .where(eq(users.email, email));
+        confirmationExpiry: expiry,
+      });
 
-    await sendConfirmationEmail(email, code);
-    res.json({ message: 'New confirmation code sent' });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to resend confirmation code' });
-  }
-});
-
-app.post('/api/auth/register', async (req, res) => {
-  const { email, password } = req.body;
-  const hashedPassword = await bcrypt.hash(password, 10); // Assumed bcrypt import
-
-  try {
-    const code = generateConfirmationCode();
-    const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
-
-    await db.insert(users).values({
-      email,
-      password: hashedPassword,
-      confirmationCode: code,
-      confirmationExpiry: expiry,
-    });
-
-    await sendConfirmationEmail(email, code);
-    res.json({ message: 'Registration successful. Check your email for confirmation.' });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to register user' });
-  }
-});
+      await sendConfirmationEmail(email, code);
+      res.json({ message: 'Registration successful. Check your email for confirmation.' });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to register user' });
+    }
+  });
