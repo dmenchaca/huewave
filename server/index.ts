@@ -22,15 +22,59 @@ function log(message: string) {
   console.log(`${formattedTime} [express] ${message}`);
 }
 
-// Initialize express application
+// Initialize express application with enhanced logging
 const app = express();
 
-// Basic middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+// Configure express for proxy environment (Replit)
+app.set('trust proxy', true);
+app.enable('trust proxy');
+app.set('x-powered-by', false);
 
-// Enable trust proxy for Replit's environment
-app.set('trust proxy', 1);
+// Basic middleware with proper ordering
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true }));
+
+// Add health check endpoint before any other middleware
+app.get('/health', (_req, res) => {
+  res.status(200).json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    env: process.env.NODE_ENV,
+    db: 'connected'
+  });
+});
+
+// Add request timing middleware
+app.use((req, res, next) => {
+  const start = process.hrtime();
+  res.on('finish', () => {
+    const [seconds, nanoseconds] = process.hrtime(start);
+    const ms = seconds * 1000 + nanoseconds / 1000000;
+    log(`${req.method} ${req.url} ${res.statusCode} - ${ms.toFixed(2)}ms`);
+  });
+  next();
+});
+
+// Add security headers
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  next();
+});
+
+// Add CORS headers for development
+if (process.env.NODE_ENV !== 'production') {
+  app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(200);
+    }
+    next();
+  });
+}
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -115,73 +159,127 @@ app.use((req, res, next) => {
     const server = createServer(app);
 
     // Server configuration
-    const PORT = process.env.PORT || '8080';
-    const port = Number(PORT);
+    const port = Number(process.env.PORT || '8080');
+    
     if (isNaN(port)) {
-      throw new Error(`Invalid port number: ${PORT}`);
+      throw new Error(`Invalid port number: ${process.env.PORT}`);
     }
+    
+    log(`Configuring server to use port: ${port}`);
 
-    // Handle server-specific errors
+    // Handle server-specific errors with graceful shutdown
     server.on('error', (error: NodeJS.ErrnoException) => {
-      if (error.code === 'EADDRINUSE') {
-        log(`Error: Port ${port} is already in use`);
-      } else {
-        log(`Server error: ${error.message}`);
-      }
-      setTimeout(() => process.exit(1), 1000);
+      log(`Server error: ${error.message}`);
+      console.error('Server error details:', error);
+      
+      // Attempt graceful shutdown
+      server.close(() => {
+        log('Server closed due to error');
+        setTimeout(() => process.exit(1), 1000);
+      });
     });
 
     // Setup static file serving based on environment
     // Default to development mode when NODE_ENV is not set
     const isDevelopment = process.env.NODE_ENV !== 'production';
     
-    if (isDevelopment) {
-      log("Setting up Vite development server...");
-      try {
+    log(`Running in ${isDevelopment ? 'development' : 'production'} mode`);
+    
+    try {
+      if (isDevelopment) {
+        log("Setting up Vite development server...");
         await setupVite(app, server);
         log("Vite development server setup complete");
-      } catch (viteError) {
-        log("Failed to setup Vite development server: " + (viteError as Error).message);
-        console.error("Vite setup error details:", viteError);
-        throw viteError;
-      }
-    } else {
-      log("Setting up production static file serving...");
-      const distPath = path.resolve(__dirname, "..", "public");
-      try {
-        // Verify if the directory exists
+      } else {
+        log("Setting up production static file serving...");
+        const distPath = path.resolve(__dirname, "..", "public");
+        
         if (!fs.existsSync(distPath)) {
-          log(`Warning: Static files directory ${distPath} not found, falling back to Vite development server`);
+          log("Public directory not found, falling back to Vite development server");
           await setupVite(app, server);
         } else {
-          app.use(express.static(distPath));
-          app.use("*", (_req, res) => {
-            res.sendFile(path.resolve(distPath, "index.html"));
+          app.use(express.static(distPath, {
+            etag: true,
+            lastModified: true,
+            setHeaders: (res) => {
+              res.set('Cache-Control', 'no-cache');
+            }
+          }));
+          
+          // Serve index.html for all routes (SPA fallback)
+          app.use("*", (_req, res, next) => {
+            try {
+              res.sendFile(path.resolve(distPath, "index.html"));
+            } catch (error) {
+              next(error);
+            }
           });
+          
           log("Production static file serving setup complete");
         }
-      } catch (error) {
-        log(`Static file serving setup failed: ${(error as Error).message}`);
-        // Fall back to Vite development server if static serving fails
-        await setupVite(app, server);
       }
+    } catch (error) {
+      log(`Server setup failed: ${(error as Error).message}`);
+      log("Attempting to continue with Vite development server...");
+      await setupVite(app, server);
     }
 
-    // Start server
-    await new Promise<void>((resolve) => {
-      server.listen(port, "0.0.0.0", () => {
-        log("=".repeat(50));
-        log(`Environment: ${process.env.NODE_ENV}`);
-        log(`Database connection: Established`);
-        log(`Server started successfully on port ${port}`);
-        log(`Health check available at: http://0.0.0.0:${port}/health`);
-        log("=".repeat(50));
-        resolve();
+    // Start server with enhanced error handling and graceful shutdown
+    try {
+      const startServer = () => new Promise<void>((resolve, reject) => {
+        const serverInstance = server.listen(port, "0.0.0.0", () => {
+          log("=".repeat(50));
+          log(`Environment: ${process.env.NODE_ENV}`);
+          log(`Database connection: Established`);
+          log(`Server started successfully on port ${port}`);
+          log(`Health check available at: http://0.0.0.0:${port}/health`);
+          log("=".repeat(50));
+          resolve();
+        });
+
+        // Handle server-specific errors
+        serverInstance.on('error', (err: NodeJS.ErrnoException) => {
+          if (err.code === 'EADDRINUSE') {
+            log(`Error: Port ${port} is already in use`);
+          } else {
+            log(`Server error: ${err.message}`);
+          }
+          reject(err);
+        });
+
+        // Handle graceful shutdown
+        const shutdown = () => {
+          log('Received shutdown signal. Closing server...');
+          serverInstance.close((err) => {
+            if (err) {
+              log(`Error during server shutdown: ${err.message}`);
+              process.exit(1);
+            } else {
+              log('Server closed successfully');
+              process.exit(0);
+            }
+          });
+        };
+
+        // Listen for shutdown signals
+        process.on('SIGTERM', shutdown);
+        process.on('SIGINT', shutdown);
       });
-    });
-  } catch (error) {
-    log(`Failed to start server: ${(error as Error).message}`);
-    console.error('Stack trace:', (error as Error).stack);
-    setTimeout(() => process.exit(1), 1000);
+
+      await startServer();
+    } catch (error) {
+      log(`Failed to start server: ${(error as Error).message}`);
+      console.error('Stack trace:', (error as Error).stack);
+      
+      // Give time for logs to be written before exiting
+      setTimeout(() => {
+        log('Server initialization failed, shutting down...');
+        process.exit(1);
+      }, 1000);
+    }
+  } catch (outerError) {
+    log(`Critical error during server setup: ${(outerError as Error).message}`);
+    console.error('Stack trace:', (outerError as Error).stack);
+    process.exit(1);
   }
 })();
