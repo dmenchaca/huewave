@@ -46,11 +46,13 @@ app.use((req, res, next) => {
 // Environment-specific configuration
 // Environment-specific configuration
 const isProduction = process.env.NODE_ENV === 'production';
+if (isProduction) {
+  process.env.PORT = '3000';
+}
 
 // Port configuration standardized for Replit
-const DEFAULT_PORT = 3000;
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : DEFAULT_PORT;
-const HOST = '0.0.0.0'; // Ensure external accessibility
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+const HOST = '0.0.0.0';
 
 // Validate port configuration
 if (isNaN(PORT)) {
