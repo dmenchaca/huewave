@@ -108,9 +108,9 @@ export default function ColorPalette({
               }}
             >
               {copiedIndex === index ? (
-                <CheckIcon className="h-4 w-4" style={{ color: getContrastColor(color) }} />
+                <CheckIcon className="h-4 w-4 text-secondary-foreground" />
               ) : (
-                <CopyIcon className="h-4 w-4" style={{ color: getContrastColor(color) }} />
+                <CopyIcon className="h-4 w-4 text-secondary-foreground" />
               )}
             </Button>
             <Button
@@ -123,9 +123,9 @@ export default function ColorPalette({
               }}
             >
               {lockedColors[index] ? (
-                <LockIcon className="h-4 w-4" style={{ color: getContrastColor(color) }} />
+                <LockIcon className="h-4 w-4 text-secondary-foreground" />
               ) : (
-                <UnlockIcon className="h-4 w-4" style={{ color: getContrastColor(color) }} />
+                <UnlockIcon className="h-4 w-4 text-secondary-foreground" />
               )}
             </Button>
           </div>
