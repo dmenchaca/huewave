@@ -1,6 +1,6 @@
 
-import { useState, useCallback, useEffect } from 'react';
-import { generateAnalogousColors, generateComplementaryColors } from '../lib/color-utils';
+import { useState, useCallback, useEffect, useRef } from "react";
+import chroma from "chroma-js";
 
 interface ColorPaletteConfig {
   isDialogOpen?: boolean;
@@ -8,94 +8,8 @@ interface ColorPaletteConfig {
 }
 
 export function useColorPalette({ isDialogOpen, initialColors }: ColorPaletteConfig = {}) {
-  const [colors, setColors] = useState<string[]>(initialColors || ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF']);
-  const [lockedColors, setLockedColors] = useState<boolean[]>(Array(5).fill(false));
-  const [darkMode, setDarkMode] = useState(() => {
-    const savedMode = localStorage.getItem("darkMode");
-    return savedMode ? JSON.parse(savedMode) : false;
-  });
-
-  // Handle dark mode class on document root
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-    localStorage.setItem("darkMode", JSON.stringify(darkMode));
-  }, [darkMode]);
-
-  const toggleDarkMode = useCallback(() => {
-    setDarkMode(prev => !prev);
-  }, []);
-
-  const generateNewPalette = useCallback(() => {
-    console.log('[ColorPalette] Generating new palette via spacebar');
-    console.log('[ColorPalette] Current locked states:', lockedColors);
-
-    setColors(prevColors => {
-      return prevColors.map((color, index) => {
-        if (lockedColors[index]) {
-          return color;
-        }
-        const newColor = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
-        console.log(`[ColorPalette] Generated new color for index ${index}: ${newColor}`);
-        return newColor;
-      });
-    });
-  }, [lockedColors]);
-
-  const toggleLock = useCallback((index: number) => {
-    setLockedColors(prev => {
-      const newLocked = [...prev];
-      newLocked[index] = !newLocked[index];
-      return newLocked;
-    });
-  }, []);
-
-  const handleColorChange = useCallback((index: number, color: string) => {
-    setColors(prev => {
-      const newColors = [...prev];
-      newColors[index] = color;
-      return newColors;
-    });
-  }, []);
-
-  return {
-    colors,
-    setColors,
-    lockedColors,
-    darkMode,
-    toggleLock,
-    toggleDarkMode,
-    generateNewPalette,
-    handleColorChange
-  };
-}
-
-import { useState, useCallback, useEffect, useRef } from "react";
-import chroma from "chroma-js";
-
-export interface ColorPaletteHook {
-  colors: string[];
-  lockedColors: boolean[];
-  setColors: (colors: string[]) => void;
-  generateNewPalette: () => void;
-  toggleLock: (index: number) => void;
-  handleColorChange: (index: number, color: string) => void;
-  darkMode: boolean;
-  toggleDarkMode: () => void;
-}
-
-export function useColorPalette({ 
-  initialColors,
-  isDialogOpen 
-}: { 
-  initialColors?: string[];
-  isDialogOpen?: boolean;
-} = {}): ColorPaletteHook {
   const [colors, setColors] = useState<string[]>(() => 
-    initialColors?.length ? initialColors : generateRandomColors()
+    initialColors?.length ? initialColors : Array(5).fill(0).map(() => chroma.random().hex())
   );
   
   const [lockedColors, setLockedColors] = useState<boolean[]>(() => 
@@ -122,7 +36,6 @@ export function useColorPalette({
   useEffect(() => {
     if (initialColors?.length) {
       setColors(initialColors);
-      // Only reset locks if array length changes
       setLockedColors(prev => {
         if (prev.length !== initialColors.length) {
           return Array(initialColors.length).fill(false);
@@ -131,6 +44,16 @@ export function useColorPalette({
       });
     }
   }, [initialColors]);
+
+  // Handle dark mode class on document root
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+    localStorage.setItem("darkMode", JSON.stringify(darkMode));
+  }, [darkMode]);
 
   const toggleLock = useCallback((index: number) => {
     console.log(`[ColorPalette] Attempting to toggle lock for index ${index}`);
@@ -143,7 +66,7 @@ export function useColorPalette({
       });
       return newLocks;
     });
-  }, []); // No dependencies to prevent unintended regeneration
+  }, []);
 
   const generateNewPalette = useCallback(() => {
     console.log('[ColorPalette] Generating new palette via spacebar');
@@ -161,7 +84,7 @@ export function useColorPalette({
         return newColor;
       });
     });
-  }, []); // No dependencies needed since we use ref
+  }, []);
 
   const handleColorChange = useCallback((index: number, color: string) => {
     setColors(prev => {
@@ -169,7 +92,7 @@ export function useColorPalette({
       updated[index] = color;
       return updated;
     });
-  }, []); // No dependencies needed for direct updates
+  }, []);
 
   const toggleDarkMode = useCallback(() => {
     setDarkMode(prev => {
@@ -183,16 +106,12 @@ export function useColorPalette({
 
   return {
     colors,
-    lockedColors,
     setColors,
-    generateNewPalette,
-    toggleLock,
-    handleColorChange,
+    lockedColors,
     darkMode,
-    toggleDarkMode
+    toggleLock,
+    toggleDarkMode,
+    generateNewPalette,
+    handleColorChange
   };
-}
-
-function generateRandomColors(): string[] {
-  return Array(5).fill(0).map(() => chroma.random().hex());
 }
