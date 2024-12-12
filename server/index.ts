@@ -25,24 +25,25 @@ function log(message: string) {
 // Initialize express application with enhanced logging
 const app = express();
 
-// Configure express for proxy environment (Replit)
-app.set('trust proxy', true);
-app.enable('trust proxy');
-app.set('x-powered-by', false);
+// Basic security configuration
+app.disable('x-powered-by');
 
-// Basic middleware with proper ordering
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: true }));
+// Configure for Replit's proxy environment
+app.set('trust proxy', 1);
 
-// Add health check endpoint before any other middleware
+// Health check endpoint (before any middleware)
 app.get('/health', (_req, res) => {
   res.status(200).json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
-    env: process.env.NODE_ENV,
-    db: 'connected'
+    env: process.env.NODE_ENV || 'development',
+    uptime: process.uptime()
   });
 });
+
+// Basic middleware with proper ordering
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true }));
 
 // Add request timing middleware
 app.use((req, res, next) => {
@@ -109,28 +110,68 @@ app.use((req, res, next) => {
 
 (async () => {
   try {
-    // Verify database connection before proceeding
-    try {
-      const result = await db.execute(sql`SELECT 1`);
-      if (result) {
-        log("Database connection verified successfully");
-      }
-    } catch (dbError) {
-      log("Failed to connect to database: " + (dbError as Error).message);
-      console.error("Database connection error details:", dbError);
-      throw new Error("Database connection failed: " + (dbError as Error).message);
-    }
-
     // Global error handlers
     process.on('uncaughtException', (err) => {
-      console.error('Uncaught Exception:', err);
-      console.error(err.stack);
+      console.error('\n[Uncaught Exception]', new Date().toISOString());
+      console.error('Error:', err);
+      console.error('Stack:', err.stack);
+      console.error('Process info:', {
+        pid: process.pid,
+        platform: process.platform,
+        version: process.version,
+        memory: process.memoryUsage()
+      });
+      // Give time for logs to flush
       setTimeout(() => process.exit(1), 1000);
     });
 
     process.on('unhandledRejection', (reason, promise) => {
-      console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+      console.error('\n[Unhandled Rejection]', new Date().toISOString());
+      console.error('At:', promise);
+      console.error('Reason:', reason);
+      if (reason instanceof Error) {
+        console.error('Stack:', reason.stack);
+      }
+      // Log additional context
+      console.error('Process state:', {
+        uptime: process.uptime(),
+        memory: process.memoryUsage(),
+        activeHandles: (process as any)._getActiveHandles?.().length,
+        activeRequests: (process as any)._getActiveRequests?.().length
+      });
     });
+
+    // Verify database connection with retries
+    log('\n[Database] Verifying connection...');
+    let retries = 3;
+    let connected = false;
+    
+    while (retries > 0 && !connected) {
+      try {
+        const result = await db.execute(sql`SELECT 1`);
+        if (result) {
+          log('[Database] Connection verified successfully');
+          connected = true;
+        }
+      } catch (dbError) {
+        retries--;
+        console.error('\n[Database Error]', new Date().toISOString());
+        console.error('Error:', dbError);
+        console.error(`Retries remaining: ${retries}`);
+        
+        if (retries > 0) {
+          log(`Retrying database connection in 5 seconds...`);
+          await new Promise(resolve => setTimeout(resolve, 5000));
+        } else {
+          console.error('Database connection attempts exhausted');
+          throw new Error(`Database connection failed after multiple attempts: ${(dbError as Error).message}`);
+        }
+      }
+    }
+
+    if (!connected) {
+      throw new Error('Failed to establish database connection after multiple attempts');
+    }
 
     // Health check endpoint (before any other routes)
     app.get('/health', (_req, res) => {
@@ -159,24 +200,18 @@ app.use((req, res, next) => {
     const server = createServer(app);
 
     // Server configuration
-    const port = Number(process.env.PORT || '8080');
-    
-    if (isNaN(port)) {
-      throw new Error(`Invalid port number: ${process.env.PORT}`);
-    }
-    
-    log(`Configuring server to use port: ${port}`);
+    const port = 8080;
+    log(`\n[Server] Configuring server to use port: ${port}`);
 
-    // Handle server-specific errors with graceful shutdown
+    // Handle server-specific errors
     server.on('error', (error: NodeJS.ErrnoException) => {
-      log(`Server error: ${error.message}`);
-      console.error('Server error details:', error);
-      
-      // Attempt graceful shutdown
-      server.close(() => {
-        log('Server closed due to error');
-        setTimeout(() => process.exit(1), 1000);
-      });
+      if (error.code === 'EADDRINUSE') {
+        console.error(`\n[Server Error] Port ${port} is already in use`);
+      } else {
+        console.error('\n[Server Error]', error);
+      }
+      // Exit immediately on critical errors
+      process.exit(1);
     });
 
     // Setup static file serving based on environment
@@ -224,58 +259,54 @@ app.use((req, res, next) => {
       await setupVite(app, server);
     }
 
-    // Start server with enhanced error handling and graceful shutdown
+    // Start server with enhanced error handling
     try {
-      const startServer = () => new Promise<void>((resolve, reject) => {
-        const serverInstance = server.listen(port, "0.0.0.0", () => {
-          log("=".repeat(50));
-          log(`Environment: ${process.env.NODE_ENV}`);
-          log(`Database connection: Established`);
-          log(`Server started successfully on port ${port}`);
-          log(`Health check available at: http://0.0.0.0:${port}/health`);
-          log("=".repeat(50));
+      log('\n[Server] Starting server...');
+      
+      await new Promise<void>((resolve, reject) => {
+        // Start the server
+        const server = app.listen(port, '0.0.0.0', () => {
+          log('\n[Server] Started successfully');
+          log('='.repeat(50));
+          log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+          log(`Port: ${port}`);
+          log(`Health Check: http://0.0.0.0:${port}/health`);
+          log('='.repeat(50));
           resolve();
         });
 
-        // Handle server-specific errors
-        serverInstance.on('error', (err: NodeJS.ErrnoException) => {
-          if (err.code === 'EADDRINUSE') {
-            log(`Error: Port ${port} is already in use`);
-          } else {
-            log(`Server error: ${err.message}`);
+        // Handle specific server errors
+        server.on('error', (error: NodeJS.ErrnoException) => {
+          if (error.code === 'EADDRINUSE') {
+            log(`Port ${port} is already in use`);
           }
-          reject(err);
+          reject(error);
         });
 
-        // Handle graceful shutdown
+        // Graceful shutdown handler
         const shutdown = () => {
-          log('Received shutdown signal. Closing server...');
-          serverInstance.close((err) => {
-            if (err) {
-              log(`Error during server shutdown: ${err.message}`);
-              process.exit(1);
-            } else {
-              log('Server closed successfully');
-              process.exit(0);
-            }
+          log('\n[Server] Shutting down gracefully...');
+          server.close(() => {
+            log('[Server] Closed successfully');
+            process.exit(0);
           });
+
+          // Force exit after 10s
+          setTimeout(() => {
+            log('[Server] Force closing after timeout');
+            process.exit(1);
+          }, 10000);
         };
 
-        // Listen for shutdown signals
+        // Handle shutdown signals
         process.on('SIGTERM', shutdown);
         process.on('SIGINT', shutdown);
       });
-
-      await startServer();
     } catch (error) {
-      log(`Failed to start server: ${(error as Error).message}`);
+      console.error('\n[Server Error]', new Date().toISOString());
+      console.error('Failed to start server:', error);
       console.error('Stack trace:', (error as Error).stack);
-      
-      // Give time for logs to be written before exiting
-      setTimeout(() => {
-        log('Server initialization failed, shutting down...');
-        process.exit(1);
-      }, 1000);
+      process.exit(1);
     }
   } catch (outerError) {
     log(`Critical error during server setup: ${(outerError as Error).message}`);
