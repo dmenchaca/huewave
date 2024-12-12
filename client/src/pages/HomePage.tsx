@@ -24,6 +24,7 @@ import LoadingOverlay from "../components/LoadingOverlay";
 import { useColorPalette } from "../hooks/use-color-palette";
 import { useUser } from "../hooks/use-user";
 import { useToast } from "@/hooks/use-toast";
+import ShortcutGuideToast from "@/components/ShortcutGuideToast";
 
 interface Palette {
   id: number;
@@ -145,6 +146,7 @@ export default function HomePage() {
 
   return (
     <div className="h-screen bg-background overflow-hidden">
+      <ShortcutGuideToast />
       <header className="mx-auto px-4 py-2 md:h-16 flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-0">
         <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4 w-full md:w-auto">
           <div className="inline-flex items-center gap-2">
