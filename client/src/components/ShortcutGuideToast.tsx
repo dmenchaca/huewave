@@ -25,21 +25,27 @@ export default function ShortcutGuideToast() {
       toast({
         title: "Keyboard Shortcuts",
         description: (
-          <div className="grid gap-2 leading-relaxed">
-            <p className="text-sm">
-              Press <span className="bg-muted px-2 py-1 rounded mx-1">space</span> to generate color palettes. 
-              Undo with <span className="bg-muted px-2 py-1 rounded mx-1">{isMac ? 'Cmd + Z' : 'Ctrl + Z'}</span> and 
-              redo with <span className="bg-muted px-2 py-1 rounded mx-1">{isMac ? 'Cmd + Shift + Z' : 'Ctrl + Y'}</span>
-            </p>
-            <Button 
-              variant="secondary" 
-              className="w-full rounded-[12px] mt-2"
-              onClick={handleDismiss}
-            >
-              Got it
-            </Button>
+          <div className="grid grid-cols-2 gap-4 items-center w-full">
+            <div>
+              <p className="text-sm leading-relaxed">
+                Press <span className="bg-muted px-2 py-1 rounded mx-1">space</span> to generate color palettes. 
+                Undo with <span className="bg-muted px-2 py-1 rounded mx-1">{isMac ? 'Cmd + Z' : 'Ctrl + Z'}</span> and 
+                redo with <span className="bg-muted px-2 py-1 rounded mx-1">{isMac ? 'Cmd + Shift + Z' : 'Ctrl + Y'}</span>
+              </p>
+            </div>
+            <div className="flex justify-end">
+              <Button 
+                variant="secondary" 
+                className="rounded-lg"
+                onClick={handleDismiss}
+              >
+                Got it
+              </Button>
+            </div>
           </div>
         ),
+        duration: null,
+        className: "fixed bottom-4 left-1/2 transform -translate-x-1/2 max-w-[500px] rounded-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
         duration: null,
         className: "fixed bottom-4 left-1/2 transform -translate-x-1/2 max-w-[500px] rounded-[12px]",
         hideCloseButton: true,
