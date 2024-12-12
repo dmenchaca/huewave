@@ -29,12 +29,40 @@ const app = express();
 app.disable('x-powered-by');
 
 // Configure for Replit's proxy environment
-app.set('trust proxy', 1);
+app.set('trust proxy', true);
 app.enable('trust proxy');
+
+// Environment-specific configuration
+const isProduction = process.env.NODE_ENV === 'production';
+const port = process.env.PORT || 8080;
+
+// Enhanced environment logging for debugging
+console.log('\n[Environment Configuration]', {
+  NODE_ENV: process.env.NODE_ENV,
+  PORT: port,
+  REPL_ID: process.env.REPL_ID,
+  REPL_OWNER: process.env.REPL_OWNER,
+  REPL_SLUG: process.env.REPL_SLUG,
+  DATABASE_URL: process.env.DATABASE_URL ? 'Set' : 'Not set',
+  platform: process.platform,
+  arch: process.arch,
+  version: process.version,
+  cwd: process.cwd()
+});
 
 // Basic middleware with proper ordering
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Add CORS configuration for development
+if (!isProduction) {
+  app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    next();
+  });
+}
 
 // Health check endpoint (before any middleware)
 app.get('/health', (req, res) => {
@@ -178,11 +206,20 @@ async function startServer() {
     process.on('SIGTERM', () => shutdown('SIGTERM'));
     process.on('SIGINT', () => shutdown('SIGINT'));
 
-    // Verify database connection with retries and proper error handling
+    // Verify database connection with enhanced retry logic and detailed error reporting
     log('\n[Database] Verifying connection...');
     let retries = 5; // Increased retries for Replit environment
     let connected = false;
     let lastError: Error | null = null;
+    
+    // Log database configuration (without sensitive data)
+    log('[Database] Configuration:', {
+      host: process.env.PGHOST || 'default',
+      port: process.env.PGPORT || '5432',
+      database: process.env.PGDATABASE || 'default',
+      ssl: isProduction ? 'enabled' : 'disabled',
+      max_connections: 20
+    });
     
     while (retries > 0 && !connected) {
       try {
@@ -243,20 +280,20 @@ async function startServer() {
     // Create HTTP server
     const server = createServer(app);
 
-    // Server configuration
-    const port = 8080;
-    log(`\n[Server] Configuring server to use port: ${port}`);
+    // Server configuration - using environment port or fallback
+    const serverPort = process.env.PORT || 8080;
+    log(`\n[Server] Configuring server to use port: ${serverPort}`);
 
     // Initialize server with retry mechanism
     const startServerWithRetry = async (retries = 3): Promise<any> => {
       try {
         return new Promise((resolve, reject) => {
-          const serverInstance = app.listen(port, '0.0.0.0', () => {
+          const serverInstance = app.listen(serverPort, '0.0.0.0', () => {
             log('\n[Server] Started successfully');
             log('='.repeat(50));
             log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-            log(`Port: ${port}`);
-            log(`Health Check: http://0.0.0.0:${port}/health`);
+            log(`Port: ${serverPort}`);
+            log(`Health Check: http://0.0.0.0:${serverPort}/health`);
             log(`Process ID: ${process.pid}`);
             log(`Memory Usage: ${JSON.stringify(process.memoryUsage())}`);
             log('='.repeat(50));
@@ -324,35 +361,69 @@ async function startServer() {
         log("Vite development server setup complete");
       } else {
         log("Setting up production static file serving...");
-        const distPath = path.resolve(__dirname, "..", "public");
+        // Try multiple possible build output directories
+        const possiblePaths = [
+          path.resolve(__dirname, "..", "dist"),
+          path.resolve(__dirname, "..", "build"),
+          path.resolve(__dirname, "..", "public")
+        ];
         
-        if (!fs.existsSync(distPath)) {
-          log("Public directory not found, falling back to Vite development server");
+        let distPath = null;
+        for (const path of possiblePaths) {
+          if (fs.existsSync(path)) {
+            distPath = path;
+            break;
+          }
+        }
+        
+        if (!distPath) {
+          log("No build directory found, falling back to Vite development server");
           await setupVite(app, server);
         } else {
-          // Serve static files with proper caching headers
+          log(`Serving static files from: ${distPath}`);
+          // Enhanced static file serving with proper headers
           app.use(express.static(distPath, {
             etag: true,
             lastModified: true,
             maxAge: '1h',
-            setHeaders: (res, path) => {
-              if (path.endsWith('.html')) {
+            index: ['index.html'],
+            dotfiles: 'ignore',
+            fallthrough: true,
+            setHeaders: (res, filePath) => {
+              if (filePath.endsWith('.html')) {
                 // Never cache HTML files
-                res.setHeader('Cache-Control', 'no-cache');
-              } else {
-                // Cache other static assets
+                res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+                res.setHeader('Pragma', 'no-cache');
+                res.setHeader('Expires', '0');
+              } else if (filePath.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg)$/)) {
+                // Cache static assets
                 res.setHeader('Cache-Control', 'public, max-age=3600');
               }
             }
           }));
           
-          // Serve index.html for all routes (SPA fallback)
+          // Enhanced SPA fallback with better error handling
           app.use("*", (req, res, next) => {
             try {
-              log(`Serving index.html for path: ${req.originalUrl}`);
-              res.sendFile(path.resolve(distPath, "index.html"));
+              // Skip API routes
+              if (req.originalUrl.startsWith('/api')) {
+                return next();
+              }
+              
+              log(`[SPA] Serving index.html for path: ${req.originalUrl}`);
+              const indexPath = path.resolve(distPath, "index.html");
+              
+              if (!fs.existsSync(indexPath)) {
+                log(`[Warning] index.html not found at ${indexPath}`);
+                return next(new Error('index.html not found'));
+              }
+              
+              res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+              res.setHeader('Pragma', 'no-cache');
+              res.setHeader('Expires', '0');
+              res.sendFile(indexPath);
             } catch (error) {
-              console.error('Error serving index.html:', error);
+              console.error('[SPA Fallback Error]:', error);
               next(error);
             }
           });
