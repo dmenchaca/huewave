@@ -156,7 +156,7 @@ export default function HomePage() {
                     selectedPalette={selectedPalette}
                     onSaveSuccess={handlePaletteSave}
                     triggerContent={
-                      <Button variant="default" className="flex items-center gap-2 rounded-lg">
+                      <Button variant="default" className="flex items-center gap-2 rounded-[8px]">
                         <SaveIcon className="h-4 w-4" />
                         Update
                       </Button>
@@ -168,7 +168,7 @@ export default function HomePage() {
                     onOpenChange={setIsSaveAsNewDialogOpen}
                     onSaveSuccess={handlePaletteSave}
                     triggerContent={
-                      <Button variant="outline" className="flex items-center gap-2 rounded-lg">
+                      <Button variant="outline" className="flex items-center gap-2 rounded-[8px]">
                         <SaveIcon className="h-4 w-4" />
                         Save as new
                       </Button>
@@ -177,7 +177,7 @@ export default function HomePage() {
                   {selectedPalette && (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="destructive" className="flex items-center gap-2">
+                        <Button variant="destructive" className="flex items-center gap-2 rounded-[8px]">
                           <Trash2Icon className="h-4 w-4" />
                           Delete
                         </Button>
@@ -190,9 +190,10 @@ export default function HomePage() {
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogCancel className="rounded-[8px]">Cancel</AlertDialogCancel>
                           <AlertDialogAction
                             variant="destructive"
+                            className="rounded-[8px]"
                             onClick={async () => {
                               try {
                                 const response = await fetch(`/api/palettes/${selectedPalette.id}`, {
