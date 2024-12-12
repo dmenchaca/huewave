@@ -34,36 +34,64 @@ app.set('trust proxy', true);
 
 // Add proxy-aware middleware early in the stack
 app.use((req, res, next) => {
+  // Skip HTTPS redirect for health check endpoint
+  if (req.path === '/health') {
+    return next();
+  }
+  
   if (req.secure) {
     // Request was via https, so do no special handling
     next();
   } else {
-    // Redirect to https
-    res.redirect('https://' + req.headers.host + req.url);
+    // Only redirect in production
+    if (process.env.NODE_ENV === 'production') {
+      res.redirect('https://' + req.headers.host + req.url);
+    } else {
+      next();
+    }
   }
 });
 
-// Environment-specific configuration
+// Log incoming requests for debugging
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  console.log('Headers:', req.headers);
+  next();
+});
+
 // Environment-specific configuration
 const isProduction = process.env.NODE_ENV === 'production';
 
 // Port configuration standardized for Replit
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 8080;
 const HOST = '0.0.0.0';
 
-// Ensure environment variables are set consistently
+// Validate port number
+if (isNaN(PORT) || PORT <= 0 || PORT > 65535) {
+  console.error(`Invalid port number: ${PORT}`);
+  process.exit(1);
+}
+
+// Log environment details
+console.log('\n[Environment Details]', {
+  NODE_ENV: process.env.NODE_ENV,
+  PORT: PORT,
+  REPL_SLUG: process.env.REPL_SLUG,
+  REPL_OWNER: process.env.REPL_OWNER,
+  isProduction
+});
+
+// Set environment variables consistently
 process.env.PORT = PORT.toString();
 
-// Validate port configuration
-if (isNaN(PORT)) {
-  console.error(`Invalid PORT value: ${process.env.PORT}`);
-  process.exit(1);
-}
-
-if (isNaN(PORT)) {
-  console.error(`[Server] Invalid PORT value: ${process.env.PORT}`);
-  process.exit(1);
-}
+// Enhanced port logging
+log('\n[Port Configuration]');
+log('='.repeat(50));
+log(`Configured Port: ${PORT}`);
+log(`Environment PORT: ${process.env.PORT}`);
+log(`Production Mode: ${isProduction}`);
+log(`Host: ${HOST}`);
+log('='.repeat(50));
 
 // Ensure PORT environment variable is set consistently
 process.env.PORT = PORT.toString();
@@ -288,8 +316,17 @@ async function startServer() {
       res.status(status).json({ message });
     });
     
-    // Create HTTP server
+    // Create HTTP server with proper error handling
     const server = createServer(app);
+    
+    // Handle server-level errors
+    server.on('error', (error: NodeJS.ErrnoException) => {
+      console.error('[Server Error]:', error);
+      if (error.code === 'EADDRINUSE') {
+        console.error(`Port ${PORT} is already in use`);
+      }
+      process.exit(1);
+    });
 
     log(`\n[Server] Configuring server to use port: ${PORT}`);
 
@@ -297,21 +334,38 @@ async function startServer() {
     const startServerWithRetry = async (retries = 3) => {
       try {
         return new Promise((resolve, reject) => {
-          const serverInstance = app.listen(PORT, HOST, async () => {
-            log('\n[Server] Started successfully');
-            log('='.repeat(50));
-            log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-            log(`Port: ${PORT}`);
-            log(`Server URL: ${isProduction ? 
-              `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co` : 
-              `http://0.0.0.0:${PORT}`}`);
-            log(`Health Check: /health`);
-            log('='.repeat(50));
+          const serverInstance = app.listen(PORT, HOST, () => {
+            try {
+              log('\n[Server] Started successfully');
+              log('='.repeat(50));
+              log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+              log(`Port: ${PORT}`);
+              log(`Process ID: ${process.pid}`);
+              log(`Host: ${HOST}`);
+              log(`Deployment URL: ${process.env.REPL_SLUG ? 
+                `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co` : 
+                `http://${HOST}:${PORT}`}`);
+              log(`Health Check URL: ${process.env.REPL_SLUG ? 
+                `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co/health` : 
+                `http://${HOST}:${PORT}/health`}`);
+              log('='.repeat(50));
 
-            const address = serverInstance.address();
-            log(`Server listening on: ${typeof address === 'string' ? address : JSON.stringify(address)}`);
-            
-            resolve(serverInstance);
+              const address = serverInstance.address();
+              log(`Server bound to: ${typeof address === 'string' ? address : JSON.stringify(address)}`);
+              
+              // Log successful server start
+              log('[Server] Successfully bound to port');
+              
+              // Set up server close handler
+              serverInstance.on('close', () => {
+                log('[Server] Server closed');
+              });
+
+              resolve(serverInstance);
+            } catch (error) {
+              console.error('[Server Start Error]:', error);
+              reject(error);
+            }
           });
 
           // Enhanced error handling for server startup
@@ -460,8 +514,14 @@ async function startServer() {
       await setupVite(app, server);
     }
 
-    // Start the server
-    await startServerWithRetry();
+    // Start the server with enhanced error logging
+    try {
+      await startServerWithRetry();
+      log('[Server] Application started successfully');
+    } catch (error) {
+      console.error('[Fatal Error] Failed to start server:', error);
+      process.exit(1);
+    }
     
   } catch (error) {
     console.error('\n[Server Error]', new Date().toISOString());
