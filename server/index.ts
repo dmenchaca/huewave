@@ -49,7 +49,8 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  registerRoutes(app);
+  const apiRouter = registerRoutes(app);
+  app.use('/api', apiRouter);
   registerStorePaletteRoute(app);
   const server = createServer(app);
 

@@ -1,17 +1,20 @@
-import type { Express } from "express";
+
+import express from "express";
 import { eq, and } from "drizzle-orm";
 import { setupAuth } from "./auth";
 import { db } from "../db";
 import { palettes, insertPaletteSchema, users } from "../db/schema";
 import { z } from "zod";
-import { generateConfirmationCode, sendConfirmationEmail } from "./email"; // Assumed functions
+import { generateConfirmationCode, sendConfirmationEmail } from "./email";
+import bcrypt from "bcrypt";
 
+const router = express.Router();
 
-export function registerRoutes(app: Express) {
+export function registerRoutes(app: express.Express) {
   setupAuth(app);
 
   // Get user's palettes
-  app.get("/api/palettes", async (req, res) => {
+  router.get("/palettes", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
     }
@@ -29,7 +32,7 @@ export function registerRoutes(app: Express) {
   });
 
   // Get user's latest palette
-  app.get("/api/palettes/latest", async (req, res) => {
+  router.get("/palettes/latest", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
     }
@@ -53,7 +56,7 @@ export function registerRoutes(app: Express) {
   });
 
   // Save a new palette
-  app.post("/api/palettes", async (req, res) => {
+  router.post("/palettes", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
     }
@@ -86,7 +89,7 @@ export function registerRoutes(app: Express) {
   });
 
   // Delete a palette
-  app.delete("/api/palettes/:id", async (req, res) => {
+  router.delete("/palettes/:id", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
     }
@@ -109,7 +112,7 @@ export function registerRoutes(app: Express) {
   });
 
   // Update a palette
-  app.put("/api/palettes/:id", async (req, res) => {
+  router.put("/palettes/:id", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
     }
@@ -131,7 +134,6 @@ export function registerRoutes(app: Express) {
         });
       }
 
-      // First verify the palette exists and belongs to the user
       const [existingPalette] = await db
         .select()
         .from(palettes)
@@ -147,7 +149,6 @@ export function registerRoutes(app: Express) {
         return res.status(404).send("Palette not found");
       }
 
-      // Update the palette with validated data
       const [updatedPalette] = await db
         .update(palettes)
         .set({
@@ -168,9 +169,83 @@ export function registerRoutes(app: Express) {
       res.status(500).send("Failed to update palette");
     }
   });
+
+  // Email verification endpoint
+  router.post('/auth/verify-email', async (req, res) => {
+    try {
+      const { email, code } = req.body;
+      
+      const user = await db.query.users.findFirst({
+        where: eq(users.email, email)
+      });
+
+      if (!user || user.confirmationCode !== code || !user.confirmationExpiry || new Date() > user.confirmationExpiry) {
+        return res.status(400).json({ error: 'Invalid or expired confirmation code' });
+      }
+
+      await db.update(users)
+        .set({ 
+          emailConfirmed: true,
+          confirmationCode: null,
+          confirmationExpiry: null 
+        })
+        .where(eq(users.id, user.id));
+
+      res.json({ message: 'Email confirmed successfully' });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to verify email' });
+    }
+  });
+
+  // Resend confirmation code endpoint
+  router.post('/auth/resend-code', async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      const code = generateConfirmationCode();
+      const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+      await db.update(users)
+        .set({ 
+          confirmationCode: code,
+          confirmationExpiry: expiry 
+        })
+        .where(eq(users.email, email));
+
+      await sendConfirmationEmail(email, code);
+      res.json({ message: 'New confirmation code sent' });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to resend confirmation code' });
+    }
+  });
+
+  // Register endpoint with email confirmation
+  router.post('/auth/register', async (req, res) => {
+    const { email, password } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    try {
+      const code = generateConfirmationCode();
+      const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+      await db.insert(users).values({
+        email,
+        password: hashedPassword,
+        confirmationCode: code,
+        confirmationExpiry: expiry,
+      });
+
+      await sendConfirmationEmail(email, code);
+      res.json({ message: 'Registration successful. Check your email for confirmation.' });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to register user' });
+    }
+  });
+
+  return router;
 }
 
-export function registerStorePaletteRoute(app: Express) {
+export function registerStorePaletteRoute(app: express.Express) {
   // Store palette in session
   app.post("/api/store-palette", (req, res) => {
     console.log('\n[Store Palette Request]', new Date().toISOString());
@@ -185,7 +260,6 @@ export function registerStorePaletteRoute(app: Express) {
     
     req.session.palette = { name, colors };
     
-    // Save session explicitly to ensure palette is stored
     req.session.save((err) => {
       if (err) {
         console.error('Error saving session with palette:', err);
@@ -232,75 +306,3 @@ export function registerStorePaletteRoute(app: Express) {
     res.json({ message: "Stored palette cleared" });
   });
 }
-
-// Email verification endpoint
-  app.post('/api/auth/verify-email', async (req, res) => {
-    try {
-      const { email, code } = req.body;
-      
-      const user = await db.query.users.findFirst({
-        where: eq(users.email, email)
-      });
-
-      if (!user || user.confirmationCode !== code || !user.confirmationExpiry || new Date() > user.confirmationExpiry) {
-        return res.status(400).json({ error: 'Invalid or expired confirmation code' });
-      }
-
-      await db.update(users)
-        .set({ 
-          emailConfirmed: true,
-          confirmationCode: null,
-          confirmationExpiry: null 
-        })
-        .where(eq(users.id, user.id));
-
-      res.json({ message: 'Email confirmed successfully' });
-    } catch (error) {
-      res.status(500).json({ error: 'Failed to verify email' });
-    }
-  });
-
-  // Resend confirmation code endpoint
-  app.post('/api/auth/resend-code', async (req, res) => {
-    try {
-      const { email } = req.body;
-      
-      const code = generateConfirmationCode();
-      const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
-
-      await db.update(users)
-        .set({ 
-          confirmationCode: code,
-          confirmationExpiry: expiry 
-        })
-        .where(eq(users.email, email));
-
-      await sendConfirmationEmail(email, code);
-      res.json({ message: 'New confirmation code sent' });
-    } catch (error) {
-      res.status(500).json({ error: 'Failed to resend confirmation code' });
-    }
-  });
-
-  // Register endpoint with email confirmation
-  app.post('/api/auth/register', async (req, res) => {
-    const { email, password } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    try {
-      const code = generateConfirmationCode();
-      const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
-
-      await db.insert(users).values({
-        email,
-        password: hashedPassword,
-        confirmationCode: code,
-        confirmationExpiry: expiry,
-      });
-
-      await sendConfirmationEmail(email, code);
-      res.json({ message: 'Registration successful. Check your email for confirmation.' });
-    } catch (error) {
-      res.status(500).json({ error: 'Failed to register user' });
-    }
-  });
