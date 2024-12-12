@@ -144,10 +144,12 @@ export default function ColorPalette({
                 }
               }}
               onBlur={(e) => {
+                setEditingIndex(null);
                 const newValue = e.target.value;
                 if (!/^#[0-9A-Fa-f]{6}$/.test(newValue)) {
                   onColorChange?.(index, color);
                 }
+                e.target.blur();
               }}
               onClick={(e) => {
                 e.stopPropagation();
@@ -156,11 +158,12 @@ export default function ColorPalette({
                   setEditingIndex(index);
                 }
               }}
-              className="bg-transparent text-lg font-mono text-center uppercase w-24 focus:outline-none cursor-text rounded-md px-2 py-1"
+              className="bg-transparent text-lg font-mono text-center uppercase w-24 focus:outline-none cursor-text rounded-md px-2 py-1 transition-colors"
               style={{
                 color: getContrastColor(color),
                 caretColor: getContrastColor(color),
-                backgroundColor: editingIndex === index ? 'rgba(0,0,0,0.1)' : 'transparent'
+                backgroundColor: editingIndex === index ? 'rgba(0,0,0,0.1)' : 'transparent',
+                borderRadius: '0.375rem'
               }}
             />
           </div>
