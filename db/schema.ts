@@ -1,11 +1,8 @@
-import { pgTable, text, integer, timestamp, jsonb, boolean, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const users = pgTable("users", {
-  emailConfirmed: boolean("email_confirmed").notNull().default(false),
-  confirmationCode: varchar("confirmation_code", { length: 6 }),
-  confirmationExpiry: timestamp("confirmation_expiry"),
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   email: text("email").unique().notNull(),
   password: text("password").notNull(),

@@ -1,18 +1,15 @@
-import express from "express";
+import type { Express } from "express";
 import { eq, and } from "drizzle-orm";
 import { setupAuth } from "./auth";
 import { db } from "../db";
-import { palettes, insertPaletteSchema, users } from "../db/schema";
+import { palettes, insertPaletteSchema } from "../db/schema";
 import { z } from "zod";
-import bcrypt from "bcrypt";
 
-const router = express.Router();
-
-export function registerRoutes(app: express.Express) {
+export function registerRoutes(app: Express) {
   setupAuth(app);
 
   // Get user's palettes
-  router.get("/palettes", async (req, res) => {
+  app.get("/api/palettes", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
     }
@@ -30,7 +27,7 @@ export function registerRoutes(app: express.Express) {
   });
 
   // Get user's latest palette
-  router.get("/palettes/latest", async (req, res) => {
+  app.get("/api/palettes/latest", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
     }
@@ -54,7 +51,7 @@ export function registerRoutes(app: express.Express) {
   });
 
   // Save a new palette
-  router.post("/palettes", async (req, res) => {
+  app.post("/api/palettes", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
     }
@@ -87,7 +84,7 @@ export function registerRoutes(app: express.Express) {
   });
 
   // Delete a palette
-  router.delete("/palettes/:id", async (req, res) => {
+  app.delete("/api/palettes/:id", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
     }
@@ -110,7 +107,7 @@ export function registerRoutes(app: express.Express) {
   });
 
   // Update a palette
-  router.put("/palettes/:id", async (req, res) => {
+  app.put("/api/palettes/:id", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
     }
@@ -132,6 +129,7 @@ export function registerRoutes(app: express.Express) {
         });
       }
 
+      // First verify the palette exists and belongs to the user
       const [existingPalette] = await db
         .select()
         .from(palettes)
@@ -147,6 +145,7 @@ export function registerRoutes(app: express.Express) {
         return res.status(404).send("Palette not found");
       }
 
+      // Update the palette with validated data
       const [updatedPalette] = await db
         .update(palettes)
         .set({
@@ -167,11 +166,9 @@ export function registerRoutes(app: express.Express) {
       res.status(500).send("Failed to update palette");
     }
   });
-
-  return router;
 }
 
-export function registerStorePaletteRoute(app: express.Express) {
+export function registerStorePaletteRoute(app: Express) {
   // Store palette in session
   app.post("/api/store-palette", (req, res) => {
     console.log('\n[Store Palette Request]', new Date().toISOString());
@@ -186,6 +183,7 @@ export function registerStorePaletteRoute(app: express.Express) {
     
     req.session.palette = { name, colors };
     
+    // Save session explicitly to ensure palette is stored
     req.session.save((err) => {
       if (err) {
         console.error('Error saving session with palette:', err);

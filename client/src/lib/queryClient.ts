@@ -3,23 +3,28 @@ import { QueryClient } from "@tanstack/react-query";
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: Infinity,
-      retry: (failureCount, error) => {
-        // Don't retry on auth errors (401)
-        if (error instanceof Error && error.message.includes('401')) {
-          console.log('[React Query] Not retrying 401 error');
-          return false;
+      queryFn: async ({ queryKey }) => {
+        const res = await fetch(queryKey[0] as string, {
+          credentials: "include",
+        });
+
+        if (!res.ok) {
+          if (res.status >= 500) {
+            throw new Error(`${res.status}: ${res.statusText}`);
+          }
+
+          throw new Error(`${res.status}: ${await res.text()}`);
         }
-        // Only retry network or 5xx errors up to 3 times
-        return failureCount < 3;
+
+        return res.json();
       },
-      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
-      refetchOnWindowFocus: true,
-      refetchOnMount: true,
-      refetchOnReconnect: true,
+      refetchInterval: false,
+      refetchOnWindowFocus: false,
+      staleTime: Infinity,
+      retry: false,
     },
     mutations: {
       retry: false,
-    },
+    }
   },
 });
