@@ -1,6 +1,5 @@
 
 import React, { useEffect, useState } from 'react';
-import { X } from 'lucide-react';
 import { Button } from './ui/button';
 import { useToast } from '@/hooks/use-toast';
 
@@ -26,7 +25,7 @@ export default function ShortcutGuideToast() {
       toast({
         title: "Keyboard Shortcuts",
         description: (
-          <div className="flex flex-col gap-3">
+          <div className="grid gap-2 leading-relaxed">
             <p className="text-sm">
               Press <span className="bg-muted px-2 py-1 rounded mx-1">space</span> to generate color palettes. 
               Undo with <span className="bg-muted px-2 py-1 rounded mx-1">{isMac ? 'Cmd + Z' : 'Ctrl + Z'}</span> and 
@@ -34,14 +33,16 @@ export default function ShortcutGuideToast() {
             </p>
             <Button 
               variant="secondary" 
-              className="w-full rounded-[8px]"
+              className="w-full rounded-[12px] mt-2"
               onClick={handleDismiss}
             >
               Got it
             </Button>
           </div>
         ),
-        duration: 10000,
+        duration: null,
+        className: "fixed bottom-4 left-1/2 transform -translate-x-1/2 max-w-[500px] rounded-[12px]",
+        hideCloseButton: true,
       });
     }
   }, [shouldShow, toast, isMac]);
