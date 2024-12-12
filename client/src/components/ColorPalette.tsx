@@ -136,8 +136,19 @@ export default function ColorPalette({
           >
             <input
               type="text"
-              value={color.toUpperCase()}
-              onChange={(e) => handleColorChange(index, e.target.value)}
+              value={color}
+              onChange={(e) => {
+                const newValue = e.target.value;
+                if (/^#[0-9A-Fa-f]{0,6}$/.test(newValue)) {
+                  onColorChange?.(index, newValue);
+                }
+              }}
+              onBlur={(e) => {
+                const newValue = e.target.value;
+                if (!/^#[0-9A-Fa-f]{6}$/.test(newValue)) {
+                  onColorChange?.(index, color);
+                }
+              }}
               onClick={(e) => {
                 e.stopPropagation();
                 if (e.target instanceof HTMLInputElement) {
@@ -145,13 +156,7 @@ export default function ColorPalette({
                   setEditingIndex(index);
                 }
               }}
-              onBlur={() => {
-                setEditingIndex(null);
-                if (!/^#[0-9A-Fa-f]{6}$/.test(color)) {
-                  onColorChange?.(index, '#000000');
-                }
-              }}
-              className="bg-transparent text-lg font-mono text-center uppercase w-24 focus:outline-none cursor-text"
+              className="bg-transparent text-lg font-mono text-center uppercase w-24 focus:outline-none cursor-text rounded-md px-2 py-1"
               style={{
                 color: getContrastColor(color),
                 caretColor: getContrastColor(color),
