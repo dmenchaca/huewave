@@ -128,9 +128,9 @@ export function setupAuth(app: Express) {
   const sessionConfig: session.SessionOptions = {
     cookie: {
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      secure: isProduction ? true : "auto", // Force secure in production, auto in dev
+      secure: true,
       httpOnly: true,
-      sameSite: isProduction ? 'none' as const : 'lax' as const,
+      sameSite: 'none' as const,
       path: '/',
     },
     secret: process.env.SESSION_SECRET || process.env.REPL_ID || "color-palette-secret",
