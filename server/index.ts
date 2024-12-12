@@ -50,6 +50,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 // Port configuration standardized for Replit
 const DEFAULT_PORT = 3000;
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : DEFAULT_PORT;
+const HOST = '0.0.0.0'; // Ensure external accessibility
 
 // Validate port configuration
 if (isNaN(PORT)) {
@@ -294,7 +295,7 @@ async function startServer() {
     const startServerWithRetry = async (retries = 3) => {
       try {
         return new Promise((resolve, reject) => {
-          const serverInstance = app.listen(PORT, '0.0.0.0', async () => {
+          const serverInstance = app.listen(PORT, HOST, async () => {
             log('\n[Server] Started successfully');
             log('='.repeat(50));
             log(`Environment: ${process.env.NODE_ENV || 'development'}`);
