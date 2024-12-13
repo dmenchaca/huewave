@@ -90,5 +90,6 @@ app.use((req, res, next) => {
 
   server.listen(port, "0.0.0.0", () => {
     log(`Server started successfully on port ${port}`);
+    log(`Server environment: ${app.get("env")}`);
   });
 })();
