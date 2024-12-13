@@ -1,0 +1,63 @@
+Feedback for Toast Implementation
+The current implementation of the toast works well, but here are some key adjustments to improve the functionality and styling:
+
+Functional Adjustments
+Close Only on "Got it" Button Click:
+Currently, the toast can be closed by clicking the close button in the corner. This should be disabled.
+Ensure the toast only dismisses if the user clicks on the "Got it" button.
+Styling Adjustments
+Add Border Radius:
+
+Increase the border radius for a smoother, more modern look. Suggested value: rounded-lg (e.g., rounded-[12px]).
+Align to Center Bottom:
+
+The toast should be aligned at the center bottom of the screen. Adjust the position with these Tailwind classes:
+css
+Copy code
+fixed bottom-4 left-1/2 transform -translate-x-1/2
+Max Width for Wider Aspect Ratio:
+
+Add a max-w-[500px] class to ensure the toast maintains a wider rectangular aspect ratio.
+Increase Line Height:
+
+Use leading-relaxed for improved readability and spacing between lines. This ensures that text with span elements doesn’t touch each other vertically.
+Updated Code Example
+html
+Copy code
+<li
+  role="status"
+  aria-live="off"
+  aria-atomic="true"
+  tabindex="0"
+  data-state="open"
+  data-swipe-direction="right"
+  class="fixed bottom-4 left-1/2 transform -translate-x-1/2 pointer-events-auto relative flex w-full max-w-[500px] items-center justify-between space-x-4 overflow-hidden rounded-lg p-6 pr-8 shadow-lg transition-all bg-background text-foreground"
+  style="user-select: none; touch-action: none;"
+>
+  <div class="grid gap-2 leading-relaxed">
+    <div class="text-sm font-semibold">Keyboard Shortcuts</div>
+    <div class="text-sm opacity-90">
+      <p class="text-sm">
+        Press <span class="bg-muted px-2 py-1 rounded mx-1">space</span> to generate color palettes. Undo with 
+        <span class="bg-muted px-2 py-1 rounded mx-1">Cmd + Z</span> and redo with 
+        <span class="bg-muted px-2 py-1 rounded mx-1">Cmd + Shift + Z</span>.
+      </p>
+    </div>
+    <button
+      class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 px-4 py-2 w-full rounded-lg"
+      onclick="dismissToast()"
+    >
+      Got it
+    </button>
+  </div>
+</li>
+Expected Behavior
+Dismissal:
+
+Remove the small close button from the toast and ensure it only closes when the "Got it" button is clicked.
+The onclick="dismissToast()" function should handle hiding the toast and setting the dismissed_shortcut_toast cookie.
+Visual Updates:
+
+A rounded toast centered at the bottom of the screen.
+Wider aspect ratio with a maximum width of 500px.
+Increased line height for better readability.

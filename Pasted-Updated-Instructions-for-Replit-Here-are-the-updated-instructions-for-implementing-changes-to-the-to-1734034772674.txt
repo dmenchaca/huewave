@@ -1,0 +1,68 @@
+Updated Instructions for Replit
+Here are the updated instructions for implementing changes to the toast functionality and layout:
+
+1. Change the Layout Inside the Toast
+Modify the toast's internal structure to use a grid layout with one row and two columns.
+The first column should contain the instructions (text and keyboard shortcuts).
+The second column should contain the "Got it" button.
+Use Tailwind's grid and grid-cols-2 classes to structure the layout.
+Adjust spacing and alignment for both columns to ensure the content looks balanced.
+2. Modify the Animation
+Currently, the toast slides in from the right of the screen. Change this animation so that the toast slides in from the bottom of the screen.
+Use Tailwind's animation utility classes or custom animations for the slide-in effect:
+Add data-[state=open]:slide-in-from-bottom for the opening animation.
+Use data-[state=closed]:slide-out-to-bottom for the closing animation.
+Ensure the animation is smooth and consistent with the rest of the app.
+3. Ensure the Toast Stays Visible Until Dismissed
+The toast is currently disappearing automatically after a timeout. Modify the behavior to:
+Keep this specific toast visible until the user clicks "Got it".
+Override the default timeout setting for this toast instance so it does not auto-dismiss.
+Other toast messages can retain the default behavior of auto-dismissing after a timeout.
+Updated Tailwind CSS Example Code
+Here is the updated structure for the toast:
+
+html
+Copy code
+<li
+  role="status"
+  aria-live="off"
+  aria-atomic="true"
+  tabindex="0"
+  data-state="open"
+  class="fixed bottom-4 left-1/2 transform -translate-x-1/2 pointer-events-auto relative flex w-full max-w-[500px] items-center overflow-hidden rounded-lg p-6 shadow-lg transition-all bg-background text-foreground"
+  style="user-select: none; touch-action: none;"
+>
+  <div class="grid grid-cols-2 gap-4 items-center w-full">
+    <!-- Instructions Column -->
+    <div>
+      <div class="text-sm font-semibold">Keyboard Shortcuts</div>
+      <div class="text-sm opacity-90 leading-relaxed">
+        Press <span class="bg-muted px-2 py-1 rounded mx-1">space</span> to generate color palettes. Undo with 
+        <span class="bg-muted px-2 py-1 rounded mx-1">Cmd + Z</span> and redo with 
+        <span class="bg-muted px-2 py-1 rounded mx-1">Cmd + Shift + Z</span>.
+      </div>
+    </div>
+
+    <!-- "Got it" Button Column -->
+    <div class="flex justify-end">
+      <button
+        class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 px-4 py-2 rounded-lg"
+        onclick="dismissToast()"
+      >
+        Got it
+      </button>
+    </div>
+  </div>
+</li>
+Expected Behavior
+Toast Layout:
+
+The toast should now display instructions on the left and the "Got it" button on the right, using a grid layout.
+Slide-In Animation:
+
+When the toast appears, it should slide in smoothly from the bottom of the screen.
+It should slide out toward the bottom when dismissed.
+Persistent Display:
+
+This specific toast must remain visible until the user clicks "Got it".
+All other toasts should retain their existing auto-dismiss behavior.

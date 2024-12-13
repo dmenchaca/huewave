@@ -1,0 +1,41 @@
+GET https://huewave.replit.app/src/index.css net::ERR_ABORTED 502 (Bad Gateway)Understand this errorAI
+main.tsx:20 
+        
+        
+       GET https://huewave.replit.app/@fs/home/runner/75da36d8-cff9-42cc-8f8c-68479c13cec8/node_modules/.vite/deps/@tanstack_react-query.js?v=bb8c1bd6 net::ERR_ABORTED 502 (Bad Gateway)Understand this errorAI
+main.tsx:17 
+        
+        
+       GET https://huewave.replit.app/@fs/home/runner/75da36d8-cff9-42cc-8f8c-68479c13cec8/node_modules/.vite/deps/react.js?v=f5718b93 net::ERR_ABORTED 502 (Bad Gateway)Understand this errorAI
+main.tsx:21 
+        
+        
+       GET https://huewave.replit.app/src/lib/queryClient.ts net::ERR_ABORTED 502 (Bad Gateway)Understand this errorAI
+main.tsx:25 
+        
+        
+       GET https://huewave.replit.app/src/pages/ResetPasswordPage.tsx net::ERR_ABORTED 502 (Bad Gateway)Understand this errorAI
+main.tsx:23 
+        
+        
+       GET https://huewave.replit.app/@fs/home/runner/75da36d8-cff9-42cc-8f8c-68479c13cec8/node_modules/.vite/deps/wouter.js?v=9bde28e0 net::ERR_ABORTED 502 (Bad Gateway)Understand this errorAI
+main.tsx:24 
+        
+        
+       GET https://huewave.replit.app/src/pages/HomePage.tsx net::ERR_ABORTED 502 (Bad Gateway)Understand this errorAI
+main.tsx:18 
+        
+        
+       GET https://huewave.replit.app/@fs/home/runner/75da36d8-cff9-42cc-8f8c-68479c13cec8/node_modules/.vite/deps/react-dom_client.js?v=ac76af27 net::ERR_ABORTED 502 (Bad Gateway)Understand this errorAI
+main.tsx:1 
+        
+        
+       GET https://huewave.replit.app/@fs/home/runner/75da36d8-cff9-42cc-8f8c-68479c13cec8/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=f5718b93 net::ERR_ABORTED 502 (Bad Gateway)Understand this errorAI
+huewave.replit.app/:12 
+        
+        
+       GET https://huewave.replit.app/@vite/client net::ERR_ABORTED 502 (Bad Gateway)Understand this errorAI
+main.tsx:22 
+        
+        
+       GET https://huewave.replit.app/src/components/ui/toaster.tsx net::ERR_ABORTED 502 (Bad Gateway)

@@ -1,0 +1,67 @@
+Instructions for Replit
+Please address the following issues with the toast implementation:
+
+1. Prevent Auto-Dismiss
+The toast is still auto-dismissing, which is a bug. This specific toast should not auto-dismiss and must remain visible until the user explicitly clicks the "Got it" button.
+Ensure that this behavior overrides any default toast timeout settings applied to other toasts.
+2. Adjust Toast Column Layout
+Modify the grid layout of the toast:
+The first column (instructions) should occupy 1fr of the available space.
+The second column (with the "Got it" button) should have a width that only fits the button.
+Use Tailwind CSS classes:
+For the grid container: grid grid-cols-[1fr_auto] gap-4.
+3. Fix Slide-In Animation
+The toast is currently sliding in from the bottom-right corner. Change the animation so that this specific toast slides in from the bottom-center of the screen.
+Ensure that:
+This override applies only to this particular toast.
+All other toasts maintain their usual slide-in-from-right animation.
+Suggested Tailwind animation updates:
+Add data-[state=open]:slide-in-from-bottom-center for this toast.
+Use a custom @keyframes or Tailwind plugin to center the animation.
+Example Updated Toast Structure
+Here’s the adjusted structure for the toast:
+
+html
+Copy code
+<li
+  role="status"
+  aria-live="off"
+  aria-atomic="true"
+  tabindex="0"
+  data-state="open"
+  class="fixed bottom-4 left-1/2 transform -translate-x-1/2 pointer-events-auto relative flex w-full max-w-[500px] items-center overflow-hidden rounded-lg p-6 shadow-lg transition-all bg-background text-foreground"
+  style="user-select: none; touch-action: none;"
+>
+  <div class="grid grid-cols-[1fr_auto] gap-4 items-center w-full">
+    <!-- Instructions Column -->
+    <div>
+      <div class="text-sm font-semibold">Keyboard Shortcuts</div>
+      <div class="text-sm opacity-90 leading-relaxed">
+        Press <span class="bg-muted px-2 py-1 rounded mx-1">space</span> to generate color palettes. Undo with 
+        <span class="bg-muted px-2 py-1 rounded mx-1">Cmd + Z</span> and redo with 
+        <span class="bg-muted px-2 py-1 rounded mx-1">Cmd + Shift + Z</span>.
+      </div>
+    </div>
+
+    <!-- "Got it" Button Column -->
+    <div>
+      <button
+        class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 px-4 py-2 rounded-lg"
+        onclick="dismissToast()"
+      >
+        Got it
+      </button>
+    </div>
+  </div>
+</li>
+Expected Behavior
+Persistent Toast:
+
+The toast will remain visible until the user clicks the "Got it" button, overriding any default timeout settings.
+Correct Column Layout:
+
+The instructions will occupy most of the space (1fr), and the "Got it" button will be sized appropriately in its own column (auto).
+Slide-In Animation:
+
+This toast will slide in from the bottom-center of the screen.
+Other toasts will continue to slide in as they do currently (e.g., from the right).

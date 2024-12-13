@@ -1,0 +1,92 @@
+Feature Request: Shortcut Guide Toast
+Feature Overview
+When users open the web app for the first time, they should see a toast message at the bottom center of the screen. The toast introduces them to key shortcuts for generating color palettes and undo/redo functionality. The message adapts to the user’s operating system, provides a clear explanation, and has a dismissal option.
+
+Toast Message
+The toast should display the following message:
+
+"Press the space to generate color palettes. Undo with [shortcut] and redo with [shortcut]."
+
+Replace [shortcut] dynamically based on the user's operating system:
+For Mac:
+Undo: Cmd + Z
+Redo: Cmd + Shift + Z
+For Windows:
+Undo: Ctrl + Z
+Redo: Ctrl + Y
+Toast Design
+The toast should:
+
+Be visually appealing with rounded corners, a shadow, and responsive to light/dark themes.
+Contain the shortcuts wrapped in a styled box with padding (similar to the example in the screenshot provided).
+Include a "Got it" button for dismissal.
+Example HTML and Tailwind Styling:
+
+html
+Copy code
+<div
+  class="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white dark:bg-white dark:text-gray-900 rounded-lg shadow-md p-4 flex flex-col items-center gap-3 max-w-md"
+>
+  <p class="text-sm">
+    Press the space to generate color palettes. Undo with 
+    <span class="inline-flex items-center bg-gray-700 text-white px-2 py-1 rounded dark:bg-gray-300 dark:text-black mx-1">
+      <span id="undo-shortcut">Cmd + Z</span>
+    </span>
+    and redo with 
+    <span class="inline-flex items-center bg-gray-700 text-white px-2 py-1 rounded dark:bg-gray-300 dark:text-black mx-1">
+      <span id="redo-shortcut">Cmd + Shift + Z</span>
+    </span>.
+  </p>
+  <button
+    id="dismiss-toast"
+    class="bg-primary text-white px-4 py-2 rounded shadow-md hover:bg-primary/90 dark:bg-primary-dark dark:hover:bg-primary-dark/80 text-sm"
+  >
+    Got it
+  </button>
+</div>
+Feature Behavior
+Dynamic Shortcut Display:
+
+Detect the user's OS and dynamically update the shortcuts.
+javascript
+Copy code
+const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+
+document.getElementById('undo-shortcut').textContent = isMac ? 'Cmd + Z' : 'Ctrl + Z';
+document.getElementById('redo-shortcut').textContent = isMac ? 'Cmd + Shift + Z' : 'Ctrl + Y';
+Dismissal:
+
+Clicking the "Got it" button will dismiss the toast and set a cookie named dismissed_shortcut_toast that prevents it from being shown again.
+Cookie Behavior:
+
+The dismissed_shortcut_toast cookie should never expire.
+If the cookie exists, the toast will not display.
+Theming:
+
+The toast should respond to the current light/dark theme of the app. Use Tailwind’s dark classes to apply the appropriate styles.
+Development Plan
+Backend (if needed):
+
+No backend changes are required, as this is a frontend-only feature.
+Frontend:
+
+Add the toast HTML structure.
+Implement JavaScript for:
+Detecting the user’s OS.
+Setting and checking the dismissed_shortcut_toast cookie.
+Dynamically updating the shortcut text.
+Styling:
+
+Use the provided Tailwind CSS classes for the toast, button, and shortcut boxes.
+Ensure proper padding, spacing, and responsiveness across devices.
+Testing:
+
+Test the toast behavior for:
+Light and dark themes.
+Mac and Windows platforms (ensure correct shortcuts).
+Cookie functionality to prevent repeat displays after dismissal.
+Key Notes
+The toast must display only on the first visit and not reappear after dismissal.
+The shortcuts must update dynamically for Mac and Windows users.
+The visual design must follow the provided example (refer to the screenshot).
+The feature should not interfere with existing functionality.
