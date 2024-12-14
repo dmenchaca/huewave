@@ -17,6 +17,7 @@ export default function ShortcutGuideToast() {
   const handleDismiss = () => {
     localStorage.setItem('dismissed_shortcut_toast', 'true');
     setShouldShow(false);
+    toast.dismiss();
   };
 
   useEffect(() => {
