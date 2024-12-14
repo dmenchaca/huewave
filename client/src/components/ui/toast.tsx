@@ -26,14 +26,24 @@ const ToastViewport = React.forwardRef<
 ToastViewport.displayName = ToastPrimitives.Viewport.displayName
 
 const toastVariants = cva(
-  "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border shadow-lg transition-all transform-gpu",
+  "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border shadow-lg transition-all transform-gpu data-[swipe=move]:transition-none",
   {
     variants: {
       variant: {
-        default: "border bg-background text-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full",
-        destructive:
-          "destructive group border-destructive bg-destructive text-destructive-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full",
-        shortcut: "border bg-background text-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-80 data-[state=open]:slide-in-from-bottom-center data-[state=closed]:slide-out-to-bottom-center duration-300"
+        default: [
+          "border bg-background text-foreground",
+          "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-80",
+          "data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full",
+          "data-[state=open]:sm:slide-in-from-bottom-full"
+        ].join(" "),
+        destructive: "destructive group border-destructive bg-destructive text-destructive-foreground",
+        shortcut: [
+          "border bg-background text-foreground",
+          "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-80",
+          "data-[state=closed]:animate-slide-out-to-bottom data-[state=open]:animate-slide-in-from-bottom",
+          "data-[swipe=end]:!translate-y-full data-[swipe=move]:!translate-y-[var(--radix-toast-swipe-move-y)]",
+          "data-[swipe=cancel]:!translate-y-0 data-[swipe=end]:!transition-[transform_200ms_ease-out]"
+        ].join(" ")
       },
     },
     defaultVariants: {
@@ -52,12 +62,10 @@ const Toast = React.forwardRef<
       ref={ref}
       aria-live="polite"
       className={cn(
-        "group pointer-events-auto relative flex w-full items-center justify-between space-x-2 overflow-hidden rounded-md border p-4 pr-6 shadow-lg transition-all select-none touch-action-none",
-        "data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)]",
-        "data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out",
-        "data-[state=closed]:fade-out-80",
-        variant === 'shortcut' ? "data-[state=closed]:slide-out-to-bottom-center data-[state=open]:slide-in-from-bottom-center" : "data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full",
-        "w-full sm:max-w-[500px]",
+        toastVariants({ variant }),
+        "relative flex w-full items-center justify-between space-x-2 overflow-hidden p-4 pr-6 select-none touch-action-none",
+        variant === 'shortcut' ? 'max-w-[500px]' : 'w-full sm:max-w-[500px]',
+        variant === 'shortcut' ? '!data-[state=closed]:!translate-y-full !data-[state=open]:!translate-y-0' : '',
         className
       )}
       {...props}
