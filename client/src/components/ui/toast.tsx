@@ -31,7 +31,7 @@ const toastVariants = cva(
     variants: {
       variant: {
         default: [
-          "relative w-full flex items-center justify-between space-x-4",
+          "relative flex items-center justify-between space-x-4",
           "group pointer-events-auto border bg-background text-foreground",
           "motion-safe:transform-gpu motion-safe:transition-all motion-safe:duration-300 motion-safe:ease-out",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
@@ -44,7 +44,7 @@ const toastVariants = cva(
           "motion-reduce:transition-none motion-reduce:transform-none"
         ].join(" "),
         destructive: [
-          "relative w-full flex items-center justify-between space-x-4",
+          "relative flex items-center justify-between space-x-4",
           "group pointer-events-auto destructive border-destructive bg-destructive text-destructive-foreground",
           "motion-safe:transform-gpu motion-safe:transition-all motion-safe:duration-300 motion-safe:ease-out",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
