@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Button } from './ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -25,7 +24,7 @@ export default function ShortcutGuideToast() {
       toast({
         variant: "shortcut",
         title: "Keyboard Shortcuts",
-        duration: null,
+        duration: Infinity,
         description: (
           <div className="grid grid-cols-[1fr_auto] gap-4 items-center w-full">
             <p className="text-sm leading-relaxed">
@@ -42,7 +41,7 @@ export default function ShortcutGuideToast() {
             </Button>
           </div>
         ),
-        className: "fixed bottom-4 left-1/2 transform -translate-x-1/2 max-w-[500px] rounded-lg",
+        className: "rounded-lg",
       });
     }
   }, [shouldShow, toast, isMac]);
