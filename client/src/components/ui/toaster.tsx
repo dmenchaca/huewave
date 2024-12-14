@@ -27,7 +27,12 @@ export function Toaster() {
           </Toast>
         )
       })}
-      <ToastViewport isCentered={toasts.some((toast) => toast.variant === 'shortcut')} />
+      <ToastViewport 
+        className={toasts.some((toast) => toast.variant === 'shortcut') 
+          ? "fixed bottom-0 left-1/2 transform -translate-x-1/2 flex flex-col gap-2 w-[90vw] md:max-w-[500px] m-0 list-none z-[100] outline-none"
+          : undefined
+        } 
+      />
     </ToastProvider>
   )
 }
