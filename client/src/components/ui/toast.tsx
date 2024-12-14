@@ -41,6 +41,7 @@ const toastVariants = cva(
           "data-[swipe=cancel]:translate-x-0",
           "data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)]",
           "data-[state=open]:duration-300 data-[state=closed]:duration-300",
+          "w-auto max-w-[420px] right-0",
           "motion-reduce:transition-none motion-reduce:transform-none"
         ].join(" "),
         destructive: [
