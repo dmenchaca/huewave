@@ -23,6 +23,7 @@ export default function ShortcutGuideToast() {
   useEffect(() => {
     if (shouldShow) {
       toast({
+        variant: "shortcut",
         title: "Keyboard Shortcuts",
         description: (
           <div className="grid grid-cols-2 gap-4 items-center w-full">

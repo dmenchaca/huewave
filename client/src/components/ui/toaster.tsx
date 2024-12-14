@@ -27,7 +27,7 @@ export function Toaster() {
           </Toast>
         )
       })}
-      <ToastViewport />
+      <ToastViewport isCentered={toasts.some((toast) => toast.variant === 'shortcut')} />
     </ToastProvider>
   )
 }
