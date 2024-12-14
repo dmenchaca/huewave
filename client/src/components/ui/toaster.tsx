@@ -1,4 +1,3 @@
-
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 import {
@@ -18,37 +17,6 @@ export function Toaster() {
 
   return (
     <ToastProvider>
-      {/* Regular notification toasts */}
-      {regularToasts.map(function ({ id, title, description, action, ...props }) {
-        return (
-          <Toast key={id} {...props}>
-            <div className="grid gap-1">
-              {title && <ToastTitle>{title}</ToastTitle>}
-              {description && (
-                <ToastDescription>{description}</ToastDescription>
-              )}
-            </div>
-            {action}
-            <ToastClose />
-          </Toast>
-        )
-      })}
-
-      {/* Shortcut guide toasts */}
-      {shortcutToasts.map(function ({ id, title, description, action, ...props }) {
-        return (
-          <Toast key={id} {...props}>
-            <div className="grid gap-1">
-              {title && <ToastTitle>{title}</ToastTitle>}
-              {description && (
-                <ToastDescription>{description}</ToastDescription>
-              )}
-            </div>
-            {action}
-          </Toast>
-        )
-      })}
-
       {/* Default notification viewport - top right */}
       <ToastViewport 
         className={cn(
@@ -57,7 +25,20 @@ export function Toaster() {
           "max-w-[420px] z-[100]"
         )}
       >
-        {regularToasts.map(toast => null)}
+        {regularToasts.map(function ({ id, title, description, action, ...props }) {
+          return (
+            <Toast key={id} {...props}>
+              <div className="grid gap-1">
+                {title && <ToastTitle>{title}</ToastTitle>}
+                {description && (
+                  <ToastDescription>{description}</ToastDescription>
+                )}
+              </div>
+              {action}
+              <ToastClose />
+            </Toast>
+          )
+        })}
       </ToastViewport>
 
       {/* Shortcut toast viewport - centered bottom */}
@@ -71,7 +52,19 @@ export function Toaster() {
           "motion-reduce:transition-none motion-reduce:transform-none"
         )}
       >
-        {shortcutToasts.map(toast => null)}
+        {shortcutToasts.map(function ({ id, title, description, action, ...props }) {
+          return (
+            <Toast key={id} {...props}>
+              <div className="grid gap-1">
+                {title && <ToastTitle>{title}</ToastTitle>}
+                {description && (
+                  <ToastDescription>{description}</ToastDescription>
+                )}
+              </div>
+              {action}
+            </Toast>
+          )
+        })}
       </ToastViewport>
     </ToastProvider>
   )
