@@ -33,7 +33,7 @@ export function Toaster() {
       {/* Default notification viewport - top right */}
       <ToastViewport 
         className={cn(
-          "fixed flex flex-col gap-2 list-none outline-none p-4",
+          "fixed flex flex-col-reverse gap-2 outline-none p-4",
           "top-0 right-0 sm:bottom-0 sm:right-0 sm:top-auto",
           "w-[90vw] md:max-w-[420px] z-[100]"
         )}
@@ -44,7 +44,9 @@ export function Toaster() {
         className={cn(
           "fixed left-1/2 -translate-x-1/2 bottom-4",
           "flex flex-col gap-2 w-[90vw] md:max-w-[500px]",
-          "outline-none list-none z-[100] p-4"
+          "outline-none z-[100] p-4",
+          "motion-safe:transform-gpu",
+          "motion-reduce:transition-none motion-reduce:transform-none"
         )}
       />
     </ToastProvider>

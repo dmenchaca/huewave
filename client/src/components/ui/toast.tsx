@@ -33,28 +33,36 @@ const toastVariants = cva(
         default: [
           "relative w-full flex items-center justify-between space-x-4",
           "group pointer-events-auto border bg-background text-foreground",
-          "data-[swipe=move]:transition-none",
-          "transition-all duration-300",
+          "motion-safe:transform-gpu motion-safe:transition-all motion-safe:duration-300 motion-safe:ease-out",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=open]:slide-in-from-right-full data-[state=closed]:slide-out-to-right-full",
-          "data-[state=closed]:fade-out-80",
+          "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0",
+          "data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)]",
+          "data-[swipe=cancel]:translate-x-0",
+          "data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)]",
+          "data-[state=open]:duration-300 data-[state=closed]:duration-300",
+          "motion-reduce:transition-none motion-reduce:transform-none"
         ].join(" "),
         destructive: [
           "relative w-full flex items-center justify-between space-x-4",
           "group pointer-events-auto destructive border-destructive bg-destructive text-destructive-foreground",
-          "transition-all duration-300",
+          "motion-safe:transform-gpu motion-safe:transition-all motion-safe:duration-300 motion-safe:ease-out",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=open]:slide-in-from-right-full data-[state=closed]:slide-out-to-right-full",
-          "data-[state=closed]:fade-out-80",
+          "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0",
+          "data-[state=open]:duration-300 data-[state=closed]:duration-300",
+          "motion-reduce:transition-none motion-reduce:transform-none"
         ].join(" "),
         shortcut: [
-          "flex items-center justify-between space-x-4 w-full",
+          "relative flex items-center justify-between space-x-4 w-full",
           "pointer-events-auto border bg-background text-foreground",
-          "transform transition-all duration-500 ease-in-out",
-          "data-[state=open]:animate-none data-[state=closed]:animate-none",
-          "data-[state=closed]:translate-y-full data-[state=closed]:opacity-0",
-          "data-[state=open]:translate-y-0 data-[state=open]:opacity-100",
-          "touch-none select-none"
+          "select-none",
+          "motion-safe:transform-gpu motion-safe:transition-all motion-safe:duration-500 motion-safe:ease-out",
+          "data-[state=open]:slide-in-from-bottom-full data-[state=closed]:slide-out-to-bottom-full",
+          "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0",
+          "data-[state=open]:animate-in data-[state=closed]:animate-out",
+          "data-[state=open]:duration-500 data-[state=closed]:duration-300",
+          "motion-reduce:transition-none motion-reduce:transform-none"
         ].join(" ")
       },
     },
