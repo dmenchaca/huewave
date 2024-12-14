@@ -33,7 +33,7 @@ const toastVariants = cva(
         default: "border bg-background text-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full",
         destructive:
           "destructive group border-destructive bg-destructive text-destructive-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full",
-        shortcut: "border bg-muted text-muted-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-bottom-center data-[state=open]:slide-in-from-bottom-center transform-gpu transition-all duration-300"
+        shortcut: "border bg-background text-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-bottom-center data-[state=open]:slide-in-from-bottom-center transform-gpu transition-all duration-300"
       },
     },
     defaultVariants: {
