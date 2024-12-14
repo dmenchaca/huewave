@@ -23,15 +23,17 @@ export function Toaster() {
               )}
             </div>
             {action}
-            <ToastClose />
+            {props.variant !== 'shortcut' && <ToastClose />}
           </Toast>
         )
       })}
       <ToastViewport 
-        className={toasts.some((toast) => toast.variant === 'shortcut') 
-          ? "fixed bottom-0 left-1/2 transform -translate-x-1/2 flex flex-col gap-2 w-[90vw] md:max-w-[500px] m-0 list-none z-[100] outline-none"
-          : undefined
-        } 
+        className={cn(
+          "fixed flex flex-col gap-2 w-[90vw] md:max-w-[420px] list-none z-[100] outline-none p-4",
+          toasts.some((toast) => toast.variant === 'shortcut')
+            ? "bottom-4 left-1/2 -translate-x-1/2"
+            : "top-0 right-0 sm:bottom-0 sm:right-0 sm:top-auto"
+        )}
       />
     </ToastProvider>
   )
