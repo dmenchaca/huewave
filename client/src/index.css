@@ -71,7 +71,7 @@
   }
 
   * {
-    @apply border-border;
+    @apply border-neutral-200 dark:border-neutral-800;
   }
 
   body {
