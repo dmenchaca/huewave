@@ -26,23 +26,29 @@ const ToastViewport = React.forwardRef<
 ToastViewport.displayName = ToastPrimitives.Viewport.displayName
 
 const toastVariants = cva(
-  "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border shadow-lg transition-all transform-gpu data-[swipe=move]:transition-none",
+  "relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border shadow-lg",
   {
     variants: {
       variant: {
         default: [
-          "border bg-background text-foreground",
-          "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-80",
-          "data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full",
-          "data-[state=open]:sm:slide-in-from-bottom-full"
+          "group pointer-events-auto border bg-background text-foreground",
+          "data-[swipe=move]:transition-none",
+          "data-[state=open]:animate-in data-[state=closed]:animate-out",
+          "data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full",
+          "data-[state=open]:slide-in-from-top-full sm:data-[state=open]:slide-in-from-bottom-full"
         ].join(" "),
-        destructive: "destructive group border-destructive bg-destructive text-destructive-foreground",
+        destructive: [
+          "group pointer-events-auto destructive border-destructive bg-destructive text-destructive-foreground"
+        ].join(" "),
         shortcut: [
-          "border bg-background text-foreground",
-          "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-80",
-          "data-[state=closed]:animate-slide-out-to-bottom data-[state=open]:animate-slide-in-from-bottom",
-          "data-[swipe=end]:!translate-y-full data-[swipe=move]:!translate-y-[var(--radix-toast-swipe-move-y)]",
-          "data-[swipe=cancel]:!translate-y-0 data-[swipe=end]:!transition-[transform_200ms_ease-out]"
+          "pointer-events-auto border bg-background text-foreground",
+          "transition-transform duration-300 ease-out",
+          "data-[state=open]:animate-in data-[state=closed]:animate-out",
+          "data-[state=open]:slide-in-from-bottom-full data-[state=closed]:slide-out-to-bottom-full",
+          "data-[state=closed]:fade-out-80 data-[state=open]:fade-in-80",
+          "data-[swipe=move]:translate-y-[var(--radix-toast-swipe-move-y)]",
+          "data-[swipe=cancel]:translate-y-0",
+          "data-[swipe=end]:translate-y-[80vh]"
         ].join(" ")
       },
     },
@@ -63,9 +69,8 @@ const Toast = React.forwardRef<
       aria-live="polite"
       className={cn(
         toastVariants({ variant }),
-        "relative flex w-full items-center justify-between space-x-2 overflow-hidden p-4 pr-6 select-none touch-action-none",
-        variant === 'shortcut' ? 'max-w-[500px]' : 'w-full sm:max-w-[500px]',
-        variant === 'shortcut' ? '!data-[state=closed]:!translate-y-full !data-[state=open]:!translate-y-0' : '',
+        "p-4 pr-6 select-none",
+        variant === 'shortcut' ? 'max-w-[500px] touch-none' : 'w-full sm:max-w-[500px] touch-action-none',
         className
       )}
       {...props}
