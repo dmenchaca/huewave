@@ -53,8 +53,8 @@ export function Toaster() {
       <ToastViewport 
         className={cn(
           "fixed flex flex-col-reverse gap-2 outline-none p-4",
-          "top-0 right-0 sm:bottom-0 sm:right-0 sm:top-auto",
-          "w-[90vw] md:max-w-[420px] z-[100]"
+          "top-0 right-0 sm:right-4 sm:top-4",
+          "max-w-[420px] z-[100]"
         )}
       >
         {regularToasts.map(toast => null)}
@@ -65,7 +65,7 @@ export function Toaster() {
         isCentered
         className={cn(
           "fixed left-1/2 -translate-x-1/2 bottom-4",
-          "flex flex-col gap-2 w-[90vw] md:max-w-[500px]",
+          "flex flex-col gap-2 max-w-[500px]",
           "outline-none z-[100] p-4",
           "motion-safe:transform-gpu",
           "motion-reduce:transition-none motion-reduce:transform-none"

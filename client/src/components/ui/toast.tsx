@@ -84,7 +84,7 @@ const Toast = React.forwardRef<
       className={cn(
         toastVariants({ variant }),
         "p-4 pr-6",
-        variant === 'shortcut' ? 'max-w-[500px]' : 'w-full sm:max-w-[500px]',
+        variant === 'shortcut' ? 'max-w-[500px]' : 'max-w-[420px]',
         className
       )}
       {...props}
