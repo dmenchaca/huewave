@@ -4,7 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 
 export default function ShortcutGuideToast() {
   const [shouldShow, setShouldShow] = useState(false);
-  const { toast } = useToast();
+  const { toast, dismiss } = useToast();
   const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
 
   useEffect(() => {
@@ -17,7 +17,7 @@ export default function ShortcutGuideToast() {
   const handleDismiss = () => {
     localStorage.setItem('dismissed_shortcut_toast', 'true');
     setShouldShow(false);
-    toast.dismiss();
+    dismiss();
   };
 
   useEffect(() => {
