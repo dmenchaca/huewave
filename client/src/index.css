@@ -1,3 +1,15 @@
+
+@layer base {
+  input,
+  select,
+  textarea,
+  button,
+  .rounded-default {
+    @apply rounded-lg;
+  }
+}
+
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

@@ -89,4 +89,11 @@ export default {
     },
   },
   plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
+  theme: {
+    extend: {
+      borderRadius: {
+        DEFAULT: '0.5rem',
+      },
+    },
+  },
 } satisfies Config;
