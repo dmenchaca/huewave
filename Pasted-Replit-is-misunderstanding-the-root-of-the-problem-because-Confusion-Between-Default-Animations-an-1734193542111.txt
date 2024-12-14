@@ -1,0 +1,92 @@
+Replit is misunderstanding the root of the problem because:
+
+Confusion Between Default Animations and the Custom Shortcut Toast:
+
+Replit assumes the shortcut variant is overriding the default animation correctly (slide-in-from-bottom-center and slide-out-to-bottom-center), but this behavior is still being influenced by default Radix Toast configurations or possibly other toast variants (e.g., the default variant animations).
+Global vs. Variant-Specific Configurations:
+
+The ToastViewport and toastVariants classes are not fully decoupled for the shortcut toast. The viewport configuration or animation classes may still be applying global behavior (like sliding from the bottom-right) instead of respecting the custom center animation for the shortcut toast.
+Animation Overlap or Improper Prioritization:
+
+The toast animations (data-[state=open]:animate-in, data-[state=closed]:animate-out) are shared across variants. If these animations are improperly scoped, the "shortcut" variant may inadvertently inherit animations from the default variant or global viewport configuration.
+What Replit Is Missing
+ToastViewport Animation Priority:
+
+If ToastViewport does not explicitly prioritize the shortcut animation, the toast's position (bottom-center) may still adhere to the default sliding behavior from the bottom-right or right.
+Scoping the shortcut Variant:
+
+The animations for the shortcut toast (e.g., slide-in-from-bottom-center) are not properly scoped or enforced as a priority for this specific variant. Global classes applied to the ToastViewport may conflict with or override the specific "shortcut" toast behavior.
+Radix's Default Animation Behavior:
+
+Radix Toast animations (data-[state=open], data-[state=closed]) might still apply to all toasts if the custom configuration for "shortcut" is not overriding them effectively.
+How to Fix This
+Here’s how Replit should ensure the shortcut toast behaves as expected:
+
+Explicitly Scope the shortcut Variant Animations:
+
+Modify the toastVariants for shortcut to explicitly apply unique animations. Avoid relying on shared global animations.
+
+Update toastVariants:
+
+tsx
+Copy code
+const toastVariants = cva(
+  "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border p-6 pr-8 shadow-lg transition-all transform-gpu",
+  {
+    variants: {
+      variant: {
+        default: "border bg-background text-foreground data-[state=open]:animate-in data-[state=closed]:animate-out",
+        destructive: "border bg-destructive text-destructive-foreground",
+        shortcut: "border bg-background text-foreground data-[state=open]:slide-in-from-bottom-center data-[state=closed]:slide-out-to-bottom-center",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+);
+Viewport Configuration for Shortcut Toast:
+
+Ensure ToastViewport explicitly supports center alignment only for the shortcut variant without affecting other toasts:
+
+tsx
+Copy code
+<ToastViewport 
+  className={
+    toasts.some((toast) => toast.variant === "shortcut")
+      ? "fixed bottom-4 left-1/2 transform -translate-x-1/2 flex flex-col gap-2 w-[90vw] md:max-w-[500px] m-0 list-none z-[100] outline-none"
+      : "fixed top-0 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]"
+  }
+/>
+Prioritize the Shortcut Variant:
+
+Ensure the shortcut variant is explicitly passed and prioritized in the toast function:
+
+tsx
+Copy code
+toast({
+  variant: "shortcut",
+  title: "Keyboard Shortcuts",
+  duration: null,
+  description: (
+    <div className="grid grid-cols-[1fr_auto] gap-4 items-center w-full">
+      <p className="text-sm leading-relaxed">
+        Press <span className="bg-muted px-2 py-1 rounded mx-1">space</span> to generate color palettes. Undo with <span className="bg-muted px-2 py-1 rounded mx-1">{isMac ? 'Cmd + Z' : 'Ctrl + Z'}</span> and redo with <span className="bg-muted px-2 py-1 rounded mx-1">{isMac ? 'Cmd + Shift + Z' : 'Ctrl + Y'}</span>
+      </p>
+      <Button 
+        variant="secondary" 
+        className="whitespace-nowrap"
+        onClick={handleDismiss}
+      >
+        Got it
+      </Button>
+    </div>
+  ),
+  className: "fixed bottom-4 left-1/2 transform -translate-x-1/2 max-w-[500px] rounded-lg",
+});
+Inspect for Conflicts in Radix UI Defaults:
+
+Check if Radix's default ToastViewport or ToastPrimitives styles/behaviors are interfering with the custom settings. Explicitly define toast-specific behaviors for the "shortcut" variant.
+Verify Output:
+
+Ensure the shortcut toast slides in from the bottom-center while other toasts retain their existing animations. Use browser dev tools to verify styles applied to the shortcut toast and the ToastViewport.

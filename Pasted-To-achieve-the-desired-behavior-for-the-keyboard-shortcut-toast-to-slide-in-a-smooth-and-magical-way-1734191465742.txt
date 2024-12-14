@@ -1,0 +1,172 @@
+To achieve the desired behavior for the keyboard shortcut toast to slide in a smooth and magical way from the bottom center of the screen instead of the bottom right corner, here's an explanation and step-by-step instructions tailored to the existing Radix UI setup and the toast component structure:
+
+Issue Explanation
+Viewport Placement: The ToastViewport in toast.tsx currently places all toasts in the bottom right corner by default (sm:right-0).
+Global Animation: The data-[state=open]:sm:slide-in-from-bottom-full animation defined in toastVariants is causing the sliding effect to originate from the bottom-right corner for all toasts.
+Override for Specific Toasts: Toasts don't currently differentiate animation or viewport placement based on their type, which is required for the keyboard shortcut toast.
+Steps for Implementation
+Modify the ToastViewport:
+
+Introduce conditional positioning logic within the ToastViewport component to place the keyboard shortcut toast at the center-bottom.
+Update toast.tsx to support dynamic positioning based on toast type.
+Customize Animations for Specific Toasts:
+
+Create a custom animation for the keyboard shortcut toast to slide in from the bottom center.
+Update the toastVariants or introduce a new class specifically for this animation.
+Update use-toast.tsx to Handle the Keyboard Shortcut Toast:
+
+Use a unique identifier (e.g., isKeyboardShortcutToast) to distinguish this toast from others.
+Ensure it overrides the default viewport and animation behavior.
+Refactor Toaster Component:
+
+Dynamically assign different viewports or styles based on the toast type.
+Ensure the keyboard shortcut toast respects the desired placement and animation.
+Code Implementation
+1. Modify ToastViewport
+In toast.tsx, adjust the ToastViewport to handle conditional placement:
+
+tsx
+Copy code
+const ToastViewport = React.forwardRef<
+  React.ElementRef<typeof ToastPrimitives.Viewport>,
+  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Viewport> & { isCentered?: boolean }
+>(({ className, isCentered, ...props }, ref) => (
+  <ToastPrimitives.Viewport
+    ref={ref}
+    className={cn(
+      "fixed z-[100] flex max-h-screen w-full flex-col-reverse p-4 rounded-lg",
+      isCentered
+        ? "bottom-4 left-1/2 transform -translate-x-1/2 md:max-w-[500px]"
+        : "sm:bottom-0 sm:right-0 sm:top-auto md:max-w-[420px]",
+      className
+    )}
+    {...props}
+  />
+));
+2. Update toastVariants
+Add a variant for the keyboard shortcut toast with a center-bottom sliding animation:
+
+tsx
+Copy code
+const toastVariants = cva(
+  "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border p-6 pr-8 shadow-lg transition-all",
+  {
+    variants: {
+      variant: {
+        default: "border bg-background text-foreground",
+        destructive:
+          "destructive group border-destructive bg-destructive text-destructive-foreground",
+        shortcut: "border bg-muted text-muted-foreground", // Shortcut-specific styling
+      },
+      animation: {
+        default:
+          "data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full",
+        center:
+          "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-bottom-center-full data-[state=closed]:slide-out-to-bottom-center-full",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      animation: "default",
+    },
+  }
+);
+Add new keyframes in your tailwind.config.js:
+
+js
+Copy code
+module.exports = {
+  theme: {
+    extend: {
+      keyframes: {
+        "slide-in-from-bottom-center-full": {
+          "0%": { opacity: 0, transform: "translateY(100%) translateX(-50%)" },
+          "100%": { opacity: 1, transform: "translateY(0) translateX(-50%)" },
+        },
+        "slide-out-to-bottom-center-full": {
+          "0%": { opacity: 1, transform: "translateY(0) translateX(-50%)" },
+          "100%": { opacity: 0, transform: "translateY(100%) translateX(-50%)" },
+        },
+      },
+      animation: {
+        "slide-in-from-bottom-center-full":
+          "slide-in-from-bottom-center-full 0.3s ease-out",
+        "slide-out-to-bottom-center-full":
+          "slide-out-to-bottom-center-full 0.3s ease-out",
+      },
+    },
+  },
+};
+3. Update use-toast.tsx
+Add a flag for the keyboard shortcut toast to control its viewport and animation:
+
+tsx
+Copy code
+function toast({ ...props }: Toast & { isKeyboardShortcutToast?: boolean }) {
+  const id = genId();
+
+  const update = (props: ToasterToast) =>
+    dispatch({
+      type: "UPDATE_TOAST",
+      toast: { ...props, id },
+    });
+
+  const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id });
+
+  dispatch({
+    type: "ADD_TOAST",
+    toast: {
+      ...props,
+      id,
+      open: true,
+      isKeyboardShortcutToast: props.isKeyboardShortcutToast || false,
+      onOpenChange: (open) => {
+        if (!open) dismiss();
+      },
+    },
+  });
+
+  return {
+    id: id,
+    dismiss,
+    update,
+  };
+}
+4. Update Toaster Component
+Handle the dynamic placement and animation:
+
+tsx
+Copy code
+export function Toaster() {
+  const { toasts } = useToast();
+
+  return (
+    <ToastProvider>
+      {toasts.map(function ({ id, title, description, action, isKeyboardShortcutToast, ...props }) {
+        return (
+          <Toast
+            key={id}
+            {...props}
+            className={isKeyboardShortcutToast ? "data-[state=open]:center" : ""}
+          >
+            <div className="grid grid-cols-[1fr_auto] items-center gap-4">
+              <div>
+                {title && <ToastTitle>{title}</ToastTitle>}
+                {description && <ToastDescription>{description}</ToastDescription>}
+              </div>
+              {action}
+            </div>
+            <ToastClose />
+          </Toast>
+        );
+      })}
+      <ToastViewport isCentered={toasts.some((toast) => toast.isKeyboardShortcutToast)} />
+    </ToastProvider>
+  );
+}
+Summary
+ToastViewport now supports dynamic positioning.
+toastVariants includes a new animation for sliding from the bottom center.
+use-toast.tsx allows specifying whether a toast is the keyboard shortcut toast.
+Toaster dynamically assigns viewport and animations for the shortcut toast.
+Let me know if you need further assistance refining or debugging this!

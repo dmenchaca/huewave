@@ -1,0 +1,45 @@
+It seems there may still be an issue with the configuration of the toast animations and viewport positioning, preventing the toast from sliding up from the bottom center of the screen. Let's go through and ensure everything is configured correctly.
+
+Steps to Fix the Sliding Issue:
+Revisit the toastVariants Configuration:
+Ensure that the data-state attributes are correctly applied to facilitate the desired animations.
+
+Double-check the ToastViewport Positioning:
+Confirm that the ToastViewport has a proper class structure to allow it to be centered correctly when invoking the shortcut variant.
+
+Here are the code updates that might solve this problem:
+
+1. Update toastVariants to ensure animations are explicitly stated:
+
+// In client/src/components/ui/toast.tsx
+const toastVariants = cva(
+  "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border p-6 pr-8 shadow-lg transition-all transform-gpu",
+  {
+    variants: {
+      variant: {
+        default: "border bg-background text-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full",
+        destructive:
+          "destructive group border-destructive bg-destructive text-destructive-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full",
+        shortcut: "border bg-background text-foreground data-[state=open]:slide-in-from-bottom-center data-[state=closed]:slide-out-to-bottom-center duration-300"
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+);
+2. Ensure the ToastViewport handles positioning correctly:
+
+// In client/src/components/ui/toaster.tsx
+<ToastViewport 
+  className={cn(
+    "fixed flex flex-col gap-2 list-none z-[100] outline-none p-4",
+    toasts.some((toast) => toast.variant === 'shortcut')
+      ? "bottom-4 left-1/2 transform -translate-x-1/2 w-[90vw] md:max-w-[500px]" // Ensure it's centered
+      : "top-0 right-0 sm:bottom-0 sm:right-0 sm:top-auto w-[90vw] md:max-w-[420px]"
+  )}
+/>
+Additional Suggestions:
+Check for Conflicting Styles: Make sure there aren’t any CSS styles that override the intended animations or position, especially if there are global CSS rules being applied.
+Testing Environment: Ensure you are testing this in a clean environment where old toasts are not affecting the view.
+Make these changes and let’s see if the shortcut toast now animates correctly from the bottom center. If the issue persists, we may need to examine any additional parent components or styles that could be affecting the toast's position and behavior.
