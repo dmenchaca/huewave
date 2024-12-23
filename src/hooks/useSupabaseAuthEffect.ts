@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
 import { usePaletteStore } from '../store/paletteStore';
 import { cleanupAuthParams } from '../utils/auth';
@@ -12,6 +12,8 @@ export const useSupabaseAuthEffect = () => {
 
   // Handle URL code parameter for email confirmation
   useEffect(() => {
+    if (!isSupabaseConfigured) return;
+
     const code = new URLSearchParams(window.location.search).get('code');
     if (code) {
       console.log('Password reset code detected:', code);
@@ -21,6 +23,8 @@ export const useSupabaseAuthEffect = () => {
 
   // Handle auth state changes
   useEffect(() => {
+    if (!isSupabaseConfigured) return;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('Auth state change event:', event);
       console.log('Session state:', session ? 'Present' : 'None');
