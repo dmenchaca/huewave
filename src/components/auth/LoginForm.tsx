@@ -3,6 +3,7 @@ import { useAuthStore } from '../../store/authStore';
 import { FormInput } from '../forms/FormInput';
 import { Button } from '../common/Button';
 import { toast } from 'sonner';
+import { isSupabaseConfigured } from '../../lib/supabase';
 
 interface LoginFormProps {
   onSuccess: () => void;
@@ -20,6 +21,14 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onForgotPasswor
       clearError();
     }
   }, [error, clearError]);
+
+  React.useEffect(() => {
+    if (!isSupabaseConfigured) {
+      toast.info('Running in demo mode - data will be stored locally', {
+        duration: 5000
+      });
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
