@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { User } from '@supabase/supabase-js';
 import { signIn as signInWithSupabase, signUp as signUpWithSupabase, signOut as signOutWithSupabase } from '../lib/auth';
-import { supabase } from '../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 interface AuthState {
   user: User | null;
@@ -24,6 +24,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   signIn: async (email, password) => {
     try {
+      if (!isSupabaseConfigured) {
+        set({ 
+          user: { 
+            id: 'demo-user',
+            email: email,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          } as User 
+        });
+        return { error: null };
+      }
+
       set({ loading: true, error: null });
       const { user, error } = await signInWithSupabase(email, password);
       if (error) {
@@ -45,6 +57,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   signUp: async (email, password) => {
     try {
+      if (!isSupabaseConfigured) {
+        set({ 
+          user: { 
+            id: 'demo-user',
+            email: email,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          } as User 
+        });
+        return { error: null };
+      }
+
       set({ loading: true, error: null });
       const { user, error } = await signUpWithSupabase(email, password);
       if (error) {
@@ -66,6 +90,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   signOut: async () => {
     try {
+      if (!isSupabaseConfigured) {
+        set({ user: null });
+        return;
+      }
+
       set({ loading: true, error: null });
       const { error } = await signOutWithSupabase();
       if (error) {
