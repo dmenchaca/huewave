@@ -1,6 +1,13 @@
 import { create } from 'zustand';
 import { Color } from '../types';
 import { savePalette as savePaletteToDb, getUserPalettes, updatePalette, deletePalette } from '../lib/palettes';
+import { isSupabaseConfigured } from '../lib/supabase';
+import { 
+  getFallbackPalettes,
+  saveFallbackPalette,
+  updateFallbackPalette,
+  deleteFallbackPalette
+} from './fallbackStore';
 
 interface SavedPalette {
   id: string;
@@ -32,6 +39,12 @@ export const usePaletteStore = create<PaletteState>((set, get) => ({
   fetchPalettes: async (userId) => {
     if (get().loading) return;
     try {
+      if (!isSupabaseConfigured) {
+        const palettes = getFallbackPalettes();
+        set({ savedPalettes: palettes });
+        return;
+      }
+
       set({ loading: true, error: null });
       const palettes = await getUserPalettes(userId);
       set({ savedPalettes: palettes });
@@ -45,6 +58,15 @@ export const usePaletteStore = create<PaletteState>((set, get) => ({
   savePalette: async (name, colors, userId) => {
     if (get().loading) return;
     try {
+      if (!isSupabaseConfigured) {
+        const newPalette = saveFallbackPalette(name, colors);
+        set(state => ({ 
+          savedPalettes: [...state.savedPalettes, newPalette],
+          currentPalette: newPalette
+        }));
+        return;
+      }
+
       set({ loading: true, error: null });
       const newPalette = await savePaletteToDb(name, colors, userId);
       set(state => ({ 
@@ -62,6 +84,19 @@ export const usePaletteStore = create<PaletteState>((set, get) => ({
   updatePalette: async (id, name, colors) => {
     if (get().loading) return;
     try {
+      if (!isSupabaseConfigured) {
+        updateFallbackPalette(id, name, colors);
+        set(state => ({
+          savedPalettes: state.savedPalettes.map(p => 
+            p.id === id ? { ...p, name, colors } : p
+          ),
+          currentPalette: state.currentPalette?.id === id 
+            ? { ...state.currentPalette, name, colors }
+            : state.currentPalette
+        }));
+        return;
+      }
+
       set({ loading: true, error: null });
       await updatePalette(id, { name, colors });
       set(state => ({
@@ -82,6 +117,15 @@ export const usePaletteStore = create<PaletteState>((set, get) => ({
   deletePalette: async (id) => {
     if (get().loading) return;
     try {
+      if (!isSupabaseConfigured) {
+        deleteFallbackPalette(id);
+        set(state => ({
+          savedPalettes: state.savedPalettes.filter(p => p.id !== id),
+          currentPalette: state.currentPalette?.id === id ? null : state.currentPalette
+        }));
+        return;
+      }
+
       set({ loading: true, error: null });
       await deletePalette(id);
       set(state => ({
